@@ -17,6 +17,7 @@
   font-size: 16px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { max-width: 100%; overflow-x: clip; }
 body {
   background: var(--bg);
   background-image:
@@ -27,7 +28,7 @@ body {
 }
 
 /* ---------- app shell ---------- */
-.app { display: flex; min-height: 100vh; }
+.app { display: flex; min-height: 100vh; max-width: 100%; overflow-x: clip; }
 
 /* ---------- sidebar ---------- */
 .sidebar {
