@@ -216,13 +216,6 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 .auth-title { font-family: 'Newsreader', serif; font-weight: 500; font-size: 1.5rem; letter-spacing: -0.01em; }
 .auth-lead { color: var(--muted); font-size: 0.85rem; margin-top: 5px; margin-bottom: 18px; line-height: 1.45; }
 
-.google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 9px; padding: 11px; font-family: 'Hanken Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .15s; }
-.google-btn:hover:not(:disabled) { border-color: var(--faint); background: var(--surface-2); }
-.google-btn:disabled { opacity: 0.6; cursor: default; }
-
-.auth-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--faint); font-size: 0.74rem; }
-.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
-
 .auth-field { display: block; margin-bottom: 12px; }
 .auth-input { width: 100%; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 0.92rem; color: var(--ink); outline: none; transition: border-color .15s, box-shadow .15s, background .15s; }
 .auth-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); background: #fff; }
