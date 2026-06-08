@@ -19,4 +19,4 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/          # use ./build/ se for Create React App
-          server-dir: /financeiro.gmarrone.com.br/   # ajuste pro caminho real do docroot
+          server-dir: /financeiro/   # ajuste pro caminho real do docroot
