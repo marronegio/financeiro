@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createDefaultState } from './state.js';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useCloudState } from './hooks/useCloudState.js';
 import { compute } from './money.js';
+import { applyRollover, manualClose } from './history.js';
 import Sidebar from './components/Sidebar.jsx';
 import PlanejamentoPanel from './components/PlanejamentoPanel.jsx';
 import DespesasPanel from './components/DespesasPanel.jsx';
 import AssinaturasPanel from './components/AssinaturasPanel.jsx';
 import CartaoPanel from './components/CartaoPanel.jsx';
 import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
+import HistoricoPanel from './components/HistoricoPanel.jsx';
 
 const newItem = (kind) =>
   kind === 'parcelamentos'
@@ -57,6 +59,14 @@ const HEADERS = {
     ),
     sub: 'Acompanhe as compras parceladas, a parcela do mês e quanto falta pra quitar cada uma.',
   },
+  historico: {
+    title: (
+      <>
+        Seu histórico <em>mês a mês</em>.
+      </>
+    ),
+    sub: 'Defina os dias do recebimento e da fatura. A cada ciclo, o cartão é zerado, as parcelas avançam e um resumo do mês fica guardado aqui.',
+  },
 };
 
 export default function Dashboard() {
@@ -77,6 +87,23 @@ export default function Dashboard() {
     if (!window.confirm('Limpar todos os dados?')) return;
     setState((s) => ({ ...createDefaultState(), tab: s.tab }));
   };
+
+  const fecharMes = () => {
+    if (
+      !window.confirm(
+        'Fechar o mês agora? Isso zera os gastos avulsos do cartão, avança as parcelas em 1 e salva o resumo do mês.'
+      )
+    )
+      return;
+    setState((s) => manualClose(s));
+  };
+
+  // Fechamento automático dos meses pendentes ao abrir o app.
+  useEffect(() => {
+    if (!state) return;
+    setState((s) => applyRollover(s));
+    // Reage à definição do dia e ao avanço do último fechamento; converge sozinho.
+  }, [state?.recebimentoDia, state?.ultimoFechamento, setState]);
 
   // Enquanto os dados do usuário carregam da nuvem.
   if (!state) {
@@ -115,6 +142,9 @@ export default function Dashboard() {
           {state.tab === 'cartao' && <CartaoPanel state={state} c={c} {...listProps} />}
           {state.tab === 'parcelamentos' && (
             <ParcelamentosPanel state={state} c={c} {...listProps} />
+          )}
+          {state.tab === 'historico' && (
+            <HistoricoPanel state={state} setField={setField} onClose={fecharMes} />
           )}
         </div>
       </main>

@@ -15,6 +15,11 @@ export const createDefaultState = () => ({
   assinaturas: [{ nome: '', valor: '' }],
   cartao: [{ nome: '', valor: '' }],
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
+  // Histórico / ciclo mensal.
+  recebimentoDia: '', // dia do mês em que recebe o salário (1–31)
+  faturaDia: '', // dia do mês em que paga a fatura (1–31)
+  ultimoFechamento: '', // 'YYYY-MM' do último mês já fechado (controle interno)
+  historico: [], // resumos mensais { periodo, salario, gasto, guardado, meta }
 });
 
 export const TABS = [
@@ -23,4 +28,5 @@ export const TABS = [
   { id: 'assinaturas', label: 'Assinaturas', ico: '↻' },
   { id: 'cartao', label: 'Cartão de crédito', ico: '▣' },
   { id: 'parcelamentos', label: 'Parcelamentos', ico: '≣' },
+  { id: 'historico', label: 'Histórico', ico: '◴' },
 ];

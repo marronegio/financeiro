@@ -262,6 +262,32 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 
 .sync-warn { display: inline-block; color: var(--negative); font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 9px; }
 
+/* ---------- histórico ---------- */
+.money-input .suffix { font-family: 'IBM Plex Mono', monospace; color: var(--faint); font-size: 0.78rem; padding-left: 8px; white-space: nowrap; user-select: none; }
+.day-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+@media (max-width: 460px){ .day-grid { grid-template-columns: 1fr; } }
+.hist-empty { border-top: none; margin-top: 0; padding-top: 0; }
+
+.hist-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.hist-row:last-child { border-bottom: none; }
+.hist-per { font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; font-weight: 600; color: var(--ink); text-transform: capitalize; }
+.hist-nums { display: flex; gap: 18px; }
+.hist-num { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hist-num.gasto { color: var(--expense); }
+.hist-lbl { font-family: 'Hanken Grotesk', sans-serif; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+@media (max-width: 380px){ .hist-nums { gap: 12px; } .hist-num { font-size: 0.82rem; } }
+
+/* seletor de período 3/6/12m */
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 2px; gap: 2px; }
+.seg button { border: none; background: transparent; padding: 4px 11px; border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .15s; }
+.seg button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+.seg button:hover:not(.active) { color: var(--ink); }
+
+/* gráfico de linha */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 6px; }
+.chart-legend .ci { display: flex; align-items: center; gap: 7px; font-size: 0.74rem; color: var(--muted); }
+.chart-legend .dot { width: 12px; height: 3px; border-radius: 2px; }
+
 /* ---------- loading ---------- */
 .loading-screen { flex: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--muted); font-size: 0.9rem; }
 .spinner { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line-strong); border-top-color: var(--accent); animation: spin .7s linear infinite; }
