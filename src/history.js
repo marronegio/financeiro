@@ -9,7 +9,7 @@ function nextPeriod(key) {
   return periodKey(d.getFullYear(), d.getMonth());
 }
 
-// Período "devido" mais recente dado o dia de fechamento do ciclo.
+// Período "devido" mais recente dado o dia de fechamento do ciclo. 
 function latestDuePeriod(today, dia) {
   const y = today.getFullYear();
   const m = today.getMonth();

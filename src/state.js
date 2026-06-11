@@ -15,6 +15,7 @@ export const createDefaultState = () => ({
   assinaturas: [{ nome: '', valor: '' }],
   cartao: [{ nome: '', valor: '' }],
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
+  avatar: '', // foto de perfil opcional (data URL); vazio = mostra as iniciais
   // Histórico / ciclo mensal.
   recebimentoDia: '', // dia do mês em que recebe o salário (1–31)
   faturaDia: '', // dia do mês em que paga a fatura (1–31)

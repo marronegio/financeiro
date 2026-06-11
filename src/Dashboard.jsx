@@ -123,7 +123,14 @@ export default function Dashboard() {
 
   return (
     <div className="app">
-      <Sidebar tab={state.tab} onTab={setTab} user={user} onSignOut={signOut} />
+      <Sidebar
+        tab={state.tab}
+        onTab={setTab}
+        user={user}
+        onSignOut={signOut}
+        avatar={state.avatar}
+        onAvatar={(dataUrl) => setField('avatar', dataUrl)}
+      />
       <main className="main">
         <div className="wrap">
           <header>
