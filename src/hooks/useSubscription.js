@@ -3,15 +3,17 @@ import { supabase } from '../lib/supabase.js';
 
 // Retorna 'loading' | 'active' | 'inactive'
 export function useSubscription(user) {
-  const [status, setStatus] = useState('loading');
+  // Guardamos o resultado junto do uid a que ele pertence, pra nunca devolver
+  // um status defasado de outro usuário (ou do estado deslogado).
+  const [resolved, setResolved] = useState(null); // { uid, status } | null
 
   useEffect(() => {
+    let ignore = false;
+
     if (!user) {
-      setStatus('inactive');
+      setResolved({ uid: null, status: 'inactive' });
       return;
     }
-
-    let ignore = false;
 
     async function check() {
       const { data } = await supabase
@@ -20,14 +22,19 @@ export function useSubscription(user) {
         .eq('id', user.id)
         .single();
 
-      if (!ignore) {
-        setStatus(data?.subscription_status === 'active' ? 'active' : 'inactive');
-      }
+      if (ignore) return;
+      // Durante o teste grátis o status no Stripe é 'trialing' — também libera acesso.
+      const ok = data?.subscription_status === 'active' || data?.subscription_status === 'trialing';
+      setResolved({ uid: user.id, status: ok ? 'active' : 'inactive' });
     }
 
     check();
     return () => { ignore = true; };
   }, [user]);
 
-  return status;
+  if (!user) return 'inactive';
+  // Enquanto não houver resultado verificado para ESTE usuário, seguimos carregando
+  // (evita o flash da tela de assinatura logo após o login).
+  if (!resolved || resolved.uid !== user.id) return 'loading';
+  return resolved.status;
 }

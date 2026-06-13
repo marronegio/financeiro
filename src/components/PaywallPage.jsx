@@ -63,14 +63,14 @@ export default function PaywallPage({ paymentResult }) {
           </>
         ) : (
           <>
-            <h2 className="auth-title">Ative seu acesso</h2>
+            <h2 className="auth-title">Comece seu teste grátis</h2>
             <p className="auth-lead">
-              Sua conta foi criada. Para acessar o Folium, ative sua assinatura por <strong>R$27/mês</strong>.
+              Sua conta foi criada. Comece com <strong>7 dias grátis</strong> — depois R$27/mês. Sem cobrança hoje.
             </p>
 
             <div style={{ background: 'var(--bg-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {['Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser'].map(item => (
+                {['7 dias grátis, sem cobrança hoje', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser'].map(item => (
                   <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, color: 'var(--muted)' }}>
                     <span style={{ color: 'var(--accent)', fontWeight: 700 }}>✓</span>
                     {item}
@@ -86,11 +86,11 @@ export default function PaywallPage({ paymentResult }) {
               onClick={handleCheckout}
               disabled={loading}
             >
-              {loading ? 'Redirecionando…' : 'Assinar por R$27/mês'}
+              {loading ? 'Redirecionando…' : 'Começar 7 dias grátis'}
             </button>
 
             <p style={{ textAlign: 'center', marginTop: 16, fontSize: 12.5, color: 'var(--faint)' }}>
-              Sem fidelidade · Cancele quando quiser
+              Depois R$27/mês · cancele quando quiser
             </p>
           </>
         )}

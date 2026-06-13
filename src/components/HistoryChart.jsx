@@ -3,8 +3,8 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { BRL } from '../money.js';
 
 // Cores do tema (iguais às vars --positive / --negative).
-const GREEN = '#0e6e58';
-const RED = '#c2553e';
+const GREEN = '#0e9f6e';
+const RED = '#e0564c';
 
 // Rótulo curto pro eixo Y: R$ 1,2k / R$ 350 / -R$ 1k
 function compact(n) {

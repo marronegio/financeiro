@@ -16,6 +16,9 @@ function useReveal() {
 export default function LandingPage({ onGetStarted, onLogin }) {
   useReveal();
 
+  const scrollTo = (id) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+
   return (
     <div className="lp">
 
@@ -24,6 +27,11 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <div className="lp-nav-brand">
           <div className="lp-logo">F</div>
           <span className="lp-brand-name">Folium</span>
+        </div>
+        <div className="lp-nav-links">
+          <button className="lp-nav-link" onClick={() => scrollTo('recursos')}>Recursos</button>
+          <button className="lp-nav-link" onClick={() => scrollTo('como-funciona')}>Como funciona</button>
+          <button className="lp-nav-link" onClick={() => scrollTo('preco')}>Preço</button>
         </div>
         <div className="lp-nav-actions">
           <button className="lp-btn-ghost" onClick={onLogin}>Entrar</button>
@@ -56,17 +64,17 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
           <div className="lp-hero-ctas">
             <button className="lp-cta-main" onClick={onGetStarted}>
-              Quero controlar meu dinheiro
+              Começar 7 dias grátis
             </button>
-            <button
-              className="lp-cta-sec"
-              onClick={() => document.getElementById('como-funciona').scrollIntoView({ behavior: 'smooth' })}
-            >
+            <button className="lp-cta-sec" onClick={() => scrollTo('como-funciona')}>
               Ver como funciona ↓
             </button>
           </div>
 
-          <p className="lp-hero-footnote">R$27/mês · Sem fidelidade · Cancele quando quiser</p>
+          <p className="lp-hero-footnote">
+            <strong className="lp-trial-pill">7 dias grátis</strong>
+            depois R$27/mês · cancele quando quiser
+          </p>
         </div>
 
         <div className="lp-hero-right">
@@ -123,6 +131,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
       {/* ── strip ── */}
       <div className="lp-strip">
+        <span className="lp-strip-item lp-strip-trial">✦ 7 dias grátis</span>
         <span className="lp-strip-item">☁ Dados na nuvem</span>
         <span className="lp-strip-item">📱 Celular e desktop</span>
         <span className="lp-strip-item">🔒 Só você acessa</span>
@@ -130,11 +139,10 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       </div>
 
       {/* ── problem ── */}
-      <section style={{ background: '#f4f1ea', padding: '108px 0' }}>
+      <section style={{ background: '#ffffff' }}>
         <div className="lp-problem">
           <div className="lp-problem-grid">
             <div>
-              <div className="lp-tag reveal">O problema</div>
               <h2 className="reveal reveal-delay-1">
                 O cartão não é o vilão.<br />
                 É o <em>sintoma</em>.
@@ -180,7 +188,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       </section>
 
       {/* ── features ── */}
-      <section className="lp-features">
+      <section className="lp-features" id="recursos">
         <div className="lp-features-inner">
           <div className="lp-features-head">
             <div className="lp-tag reveal">O que você tem</div>
@@ -241,34 +249,34 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       </section>
 
       {/* ── pricing ── */}
-      <section className="lp-pricing">
-        <div className="lp-tag reveal" style={{ color: '#4fd1a5' }}>Preço</div>
+      <section className="lp-pricing" id="preco">
         <h2 className="reveal reveal-delay-1">
-          Menos do que um jantar.<br />
-          Todo mês, <em>sem surpresa</em>.
+          Experimente <em>7 dias grátis</em>.<br />
+          Depois, menos que um jantar.
         </h2>
         <p className="lp-pricing-sub reveal reveal-delay-2">
-          Um plano, tudo incluso. Sem plano básico, sem upgrade forçado.
+          Teste tudo sem pagar nada. Passados os 7 dias, são R$27/mês — um plano, tudo incluso. Cancele quando quiser.
         </p>
         <div className="lp-price-card reveal reveal-delay-3">
-          <div className="lp-price-label">Plano único</div>
+          <div className="lp-price-badge">7 dias grátis</div>
+          <div className="lp-price-label">Depois do teste</div>
           <div className="lp-price-value">
             <span className="lp-price-currency">R$</span>
             <span className="lp-price-amount">27</span>
           </div>
-          <div className="lp-price-period">por mês</div>
+          <div className="lp-price-period">por mês · cancele quando quiser</div>
           <ul className="lp-price-perks">
+            <li>7 dias grátis, sem cobrança hoje</li>
             <li>Todos os painéis desbloqueados</li>
             <li>Dados salvos na nuvem</li>
             <li>Funciona no celular e no desktop</li>
             <li>Histórico mensal ilimitado</li>
-            <li>Atualizações incluídas</li>
             <li>Cancele quando quiser</li>
           </ul>
           <button className="lp-cta-price" onClick={onGetStarted}>
-            Criar minha conta agora
+            Começar 7 dias grátis
           </button>
-          <p className="lp-price-note">Sem fidelidade. Sem pegadinha.</p>
+          <p className="lp-price-note">Sem cobrança hoje · depois R$27/mês</p>
         </div>
       </section>
 
@@ -280,18 +288,19 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </h2>
         <p className="reveal reveal-delay-1">
           Em menos de cinco minutos você já tem o panorama completo.
-          Tudo que você precisa é ver os números.
+          Experimente 7 dias grátis — sem cobrança hoje.
         </p>
         <button className="lp-cta-final reveal reveal-delay-2" onClick={onGetStarted}>
-          Começar por R$27/mês
+          Começar 7 dias grátis
         </button>
+        <p className="lp-final-note reveal reveal-delay-3">Depois R$27/mês · cancele quando quiser</p>
       </section>
 
       {/* ── footer ── */}
       <footer className="lp-footer">
         <div className="lp-footer-brand">
           <div className="lp-logo">F</div>
-          <span style={{ color: '#7d8c85', fontSize: 14 }}>Folium</span>
+          <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>Folium</span>
         </div>
         <span className="lp-footer-copy">© {new Date().getFullYear()} Folium. Todos os direitos reservados.</span>
       </footer>

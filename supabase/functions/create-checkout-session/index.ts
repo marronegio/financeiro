@@ -46,8 +46,8 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    // Se já tem assinatura ativa, não cria nova sessão
-    if (profile?.subscription_status === 'active') {
+    // Se já tem assinatura ativa (ou em teste), não cria nova sessão
+    if (profile?.subscription_status === 'active' || profile?.subscription_status === 'trialing') {
       return new Response(JSON.stringify({ error: 'Assinatura já ativa.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
       customer: customerId,
       line_items: [{ price: Deno.env.get('STRIPE_PRICE_ID')!, quantity: 1 }],
       mode: 'subscription',
+      subscription_data: { trial_period_days: 7 },
       success_url: `${origin}?payment=success`,
       cancel_url: `${origin}?payment=cancel`,
       locale: 'pt-BR',
