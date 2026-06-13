@@ -56,10 +56,10 @@ export default function AuthScreen() {
     <div className="auth-wrap">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="logo">f</span>
+          <span className="logo">M</span>
           <div>
-            <div className="brand-name">Finanças</div>
-            <div className="brand-sub">Gestão pessoal</div>
+            <div className="brand-name">Mês a Mês</div>
+            <div className="brand-sub">Finanças pessoais</div>
           </div>
         </div>
 

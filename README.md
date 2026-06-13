@@ -1,4 +1,4 @@
-# Dashboard Financeiro
+# Mês a Mês
 
 Aplicação React (Vite) para planejar salário, despesas fixas, assinaturas, compras no cartão e parcelamentos. Todos os dados são salvos automaticamente no `localStorage` do navegador.
 

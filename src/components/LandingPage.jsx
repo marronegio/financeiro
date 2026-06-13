@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import '../landing.css';
+import LandingDemo, { PlanMock } from './LandingDemo.jsx';
 
 function useReveal() {
   useEffect(() => {
@@ -25,8 +26,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── nav ── */}
       <nav className="lp-nav">
         <div className="lp-nav-brand">
-          <div className="lp-logo">F</div>
-          <span className="lp-brand-name">Folium</span>
+          <div className="lp-logo">M</div>
+          <span className="lp-brand-name">Mês a Mês</span>
         </div>
         <div className="lp-nav-links">
           <button className="lp-nav-link" onClick={() => scrollTo('recursos')}>Recursos</button>
@@ -57,7 +58,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </h1>
 
           <p className="lp-hero-sub">
-            O Folium distribui seu salário antes de você gastar.
+            O Mês a Mês distribui seu salário antes de você gastar.
             Quando o cartão fecha, não tem mais surpresa —
             porque você já sabia o número desde o início do mês.
           </p>
@@ -78,53 +79,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </div>
 
         <div className="lp-hero-right">
-          <div className="lp-preview">
-            <div className="lp-preview-header">
-              <span className="lp-preview-title">Planejamento</span>
-              <span className="lp-preview-month">Jun 2026</span>
-            </div>
-            <div className="lp-preview-rows">
-              <div className="lp-preview-row">
-                <span className="lp-preview-row-label">
-                  <span className="lp-preview-row-dot" style={{ background: '#4fd1a5' }} />
-                  Salário
-                </span>
-                <span className="lp-preview-row-val">R$ 4.500</span>
-              </div>
-              <div className="lp-preview-row">
-                <span className="lp-preview-row-label">
-                  <span className="lp-preview-row-dot" style={{ background: '#c2553e' }} />
-                  Despesas fixas
-                </span>
-                <span className="lp-preview-row-val">− R$ 1.840</span>
-              </div>
-              <div className="lp-preview-row">
-                <span className="lp-preview-row-label">
-                  <span className="lp-preview-row-dot" style={{ background: '#b6852a' }} />
-                  Assinaturas
-                </span>
-                <span className="lp-preview-row-val">− R$ 148</span>
-              </div>
-              <div className="lp-preview-row">
-                <span className="lp-preview-row-label">
-                  <span className="lp-preview-row-dot" style={{ background: '#3a6ea5' }} />
-                  Cartão
-                </span>
-                <span className="lp-preview-row-val">− R$ 720</span>
-              </div>
-              <div className="lp-preview-row">
-                <span className="lp-preview-row-label">
-                  <span className="lp-preview-row-dot" style={{ background: '#7a6b8a' }} />
-                  Parcelamentos
-                </span>
-                <span className="lp-preview-row-val">− R$ 380</span>
-              </div>
-            </div>
-            <div className="lp-preview-divider" />
-            <div className="lp-preview-save">
-              <span className="lp-preview-save-label">Disponível pra guardar</span>
-              <span className="lp-preview-save-val">R$ 1.412</span>
-            </div>
+          <div className="lp-hero-card">
+            <PlanMock />
           </div>
         </div>
       </section>
@@ -137,6 +93,21 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <span className="lp-strip-item">🔒 Só você acessa</span>
         <span className="lp-strip-item">⚡ Sem planilhas</span>
       </div>
+
+      {/* ── showcase: app por dentro ── */}
+      <section className="lp-showcase" id="demo">
+        <div className="lp-showcase-head">
+          <div className="lp-tag reveal">Por dentro</div>
+          <h2 className="reveal reveal-delay-1">
+            Veja como o <em>Mês a Mês</em> funciona.
+          </h2>
+          <p className="reveal reveal-delay-2">
+            São os painéis reais do app. Passe pelas abas e veja os números se ajustando — do
+            planejamento ao histórico, tudo conversa entre si.
+          </p>
+        </div>
+        <LandingDemo />
+      </section>
 
       {/* ── problem ── */}
       <section style={{ background: '#ffffff' }}>
@@ -227,7 +198,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               Uma vez por mês.<br />Cinco minutos.<br /><em>O resto se resolve.</em>
             </h2>
             <p className="reveal reveal-delay-2">
-              O Folium não exige que você registre cada compra. Você só precisa configurar o cenário do mês — o resto é acompanhamento.
+              O Mês a Mês não exige que você registre cada compra. Você só precisa configurar o cenário do mês — o resto é acompanhamento.
             </p>
           </div>
           <div className="lp-steps">
@@ -299,10 +270,10 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── footer ── */}
       <footer className="lp-footer">
         <div className="lp-footer-brand">
-          <div className="lp-logo">F</div>
-          <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>Folium</span>
+          <div className="lp-logo">M</div>
+          <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>Mês a Mês</span>
         </div>
-        <span className="lp-footer-copy">© {new Date().getFullYear()} Folium. Todos os direitos reservados.</span>
+        <span className="lp-footer-copy">© {new Date().getFullYear()} Mês a Mês. Todos os direitos reservados.</span>
       </footer>
 
     </div>

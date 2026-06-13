@@ -40,9 +40,9 @@ export default function PaywallPage({ paymentResult }) {
       <div className="auth-card" style={{ maxWidth: 420 }}>
 
         <div className="auth-brand">
-          <span className="logo">f</span>
+          <span className="logo">M</span>
           <div>
-            <div className="brand-name">Folium</div>
+            <div className="brand-name">Mês a Mês</div>
             <div className="brand-sub">Finanças pessoais</div>
           </div>
         </div>

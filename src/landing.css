@@ -1,5 +1,5 @@
 /* ============================================================
-   LANDING PAGE — Folium
+   LANDING PAGE — Mês a Mês
    Design system base: Stripe (stripe.com/br) — extraído via skillui.
    Navy #0a2540 · slate #425466 · accent blurple #635bff
    Gradiente diagonal do hero · sombras suaves · tipografia sans bold
@@ -541,6 +541,78 @@
 }
 .lp-footer-brand { display: flex; align-items: center; gap: 10px; }
 .lp-footer-copy { font-size: 13px; color: var(--faint); }
+
+/* ── hero card (mockup real do app, flutuando) ─────────────── */
+.lp-hero-card { width: 100%; max-width: 400px; animation: floatCard 7s ease-in-out infinite; }
+.lp-hero-card .card { box-shadow: var(--shadow-card); border-color: rgba(255,255,255,0.6); }
+
+/* ── showcase: janela do app com abas ──────────────────────── */
+.lp-showcase { background: var(--bg-slate); padding: 112px var(--lp-px); }
+.lp-showcase-head { max-width: 640px; margin: 0 auto 44px; text-align: center; }
+.lp-showcase-head h2 { font-size: clamp(30px, 3.8vw, 48px); font-weight: 800; line-height: 1.12; color: var(--navy); margin-bottom: 14px; }
+.lp-showcase-head h2 em { color: var(--accent); }
+.lp-showcase-head p { font-size: 18px; color: var(--slate); line-height: 1.6; }
+
+.lp-window {
+  max-width: 860px; margin: 0 auto;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  overflow: hidden; box-shadow: var(--shadow-card);
+}
+.lp-window-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line); background: #fbfcfe;
+}
+.lp-window-dots { display: flex; gap: 6px; }
+.lp-window-dots i { width: 11px; height: 11px; border-radius: 50%; background: #d4dde8; display: block; }
+.lp-window-dots i:nth-child(1) { background: #ff5f57; }
+.lp-window-dots i:nth-child(2) { background: #febc2e; }
+.lp-window-dots i:nth-child(3) { background: #28c840; }
+.lp-window-title { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin: 0 auto; padding-right: 46px; }
+
+.lp-demo-tabs {
+  display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--line);
+  background: #fbfcfe; overflow-x: auto; scrollbar-width: none;
+}
+.lp-demo-tabs::-webkit-scrollbar { display: none; }
+.lp-demo-tab {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  border: 1px solid transparent; background: transparent; cursor: pointer;
+  font-family: 'Hanken Grotesk', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--muted);
+  padding: 7px 13px; border-radius: 999px; transition: all .15s; white-space: nowrap;
+}
+.lp-demo-tab .lp-demo-tab-ico { font-size: 14px; opacity: .8; }
+.lp-demo-tab:hover { color: var(--navy); background: var(--bg-slate); }
+.lp-demo-tab.active { color: #fff; background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 12px rgba(99,91,255,0.35); }
+.lp-demo-tab.active .lp-demo-tab-ico { opacity: 1; }
+
+.lp-demo-body { padding: 22px; background: var(--bg-slate); min-height: 360px; }
+.lp-demo-stage { animation: fadeUp .4s cubic-bezier(.16,.84,.44,1) both; }
+.lp-demo-body .card { max-width: 460px; margin: 0 auto; box-shadow: var(--shadow-soft); }
+
+/* mockups são só demonstração: travam interação dos campos */
+.lp-window input, .lp-window .del-btn, .lp-window .add-btn { pointer-events: none; }
+
+/* ── animações dos exemplos ────────────────────────────────── */
+@keyframes lpGrowX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.lp-grow { transform-origin: left center; animation: lpGrowX .85s cubic-bezier(.16,.84,.44,1) both; }
+
+@keyframes lpRowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.lp-rowin { animation: lpRowIn .5s cubic-bezier(.16,.84,.44,1) both; }
+
+/* gráfico de evolução (histórico) */
+.lp-chart { width: 100%; height: auto; display: block; margin-top: 4px; overflow: visible; }
+.lp-chart-grid { stroke: var(--line); stroke-width: 1; }
+.lp-chart-axis { font-family: 'IBM Plex Mono', monospace; font-size: 11px; fill: var(--faint); }
+.lp-chart-line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+@keyframes lpDraw { from { stroke-dashoffset: 900; } to { stroke-dashoffset: 0; } }
+.lp-chart-draw { stroke-dasharray: 900; animation: lpDraw 1.2s ease both; }
+.lp-chart-draw2 { stroke-dasharray: 900; animation: lpDraw 1.2s ease .25s both; }
+
+@media (max-width: 600px) {
+  .lp-showcase { padding-top: 80px; padding-bottom: 80px; }
+  .lp-demo-body { padding: 14px; }
+  .lp-window-title { display: none; }
+}
 
 /* ── responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {

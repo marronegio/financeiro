@@ -9,7 +9,7 @@ const STEPS = [
     tab: null,
     target: null,
     icon: '◈',
-    title: 'Bem-vindo ao Folium',
+    title: 'Bem-vindo ao Mês a Mês',
     description:
       'Um lugar simples pra você entender pra onde vai o seu dinheiro. Vamos te mostrar o básico em menos de um minuto.',
   },
