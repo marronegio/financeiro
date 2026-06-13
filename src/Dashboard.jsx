@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createDefaultState } from './state.js';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useCloudState } from './hooks/useCloudState.js';
@@ -11,6 +11,10 @@ import AssinaturasPanel from './components/AssinaturasPanel.jsx';
 import CartaoPanel from './components/CartaoPanel.jsx';
 import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
 import HistoricoPanel from './components/HistoricoPanel.jsx';
+import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
+import Onboarding from './components/Onboarding.jsx';
+
+const obKey = (id) => `ob_done_${id}`;
 
 const newItem = (kind) =>
   kind === 'parcelamentos'
@@ -67,11 +71,28 @@ const HEADERS = {
     ),
     sub: 'Defina os dias do recebimento e da fatura. A cada ciclo, o cartão é zerado, as parcelas avançam e um resumo do mês fica guardado aqui.',
   },
+  config: {
+    title: (
+      <>
+        <em>Configurações</em> da conta.
+      </>
+    ),
+    sub: 'Gerencie as configurações de segurança da sua conta.',
+  },
 };
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [state, setState, status] = useCloudState(user.id, createDefaultState);
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !localStorage.getItem(obKey(user.id))
+  );
+
+  function finishOnboarding() {
+    localStorage.setItem(obKey(user.id), '1');
+    setShowOnboarding(false);
+    setTab('plan');
+  }
 
   const setField = (key, value) => setState((s) => ({ ...s, [key]: value }));
   const setTab = (tab) => setState((s) => ({ ...s, tab }));
@@ -88,14 +109,8 @@ export default function Dashboard() {
     setState((s) => ({ ...createDefaultState(), tab: s.tab }));
   };
 
-  const fecharMes = () => {
-    if (
-      !window.confirm(
-        'Fechar o mês agora? Isso zera os gastos avulsos do cartão, avança as parcelas em 1 e salva o resumo do mês.'
-      )
-    )
-      return;
-    setState((s) => manualClose(s));
+  const fecharMes = (guardadoReal) => {
+    setState((s) => manualClose(s, new Date(), guardadoReal));
   };
 
   // Fechamento automático dos meses pendentes ao abrir o app.
@@ -129,16 +144,22 @@ export default function Dashboard() {
         user={user}
         onSignOut={signOut}
         avatar={state.avatar}
-        onAvatar={(dataUrl) => setField('avatar', dataUrl)}
       />
       <main className="main">
         <div className="wrap">
-          <header>
+          <header style={{ position: 'relative' }}>
             {status === 'error' && (
               <div className="sync-warn">⚠ offline — suas mudanças não estão sendo salvas</div>
             )}
             <h1>{head.title}</h1>
             <p className="sub">{head.sub}</p>
+            <button
+              className="help-btn"
+              onClick={() => setShowOnboarding(true)}
+              title="Ver tour de introdução"
+            >
+              ?
+            </button>
           </header>
 
           {state.tab === 'plan' && (
@@ -153,8 +174,22 @@ export default function Dashboard() {
           {state.tab === 'historico' && (
             <HistoricoPanel state={state} setField={setField} onClose={fecharMes} />
           )}
+          {state.tab === 'config' && (
+            <ConfiguracoesPanel
+              user={user}
+              avatar={state.avatar}
+              onAvatar={(dataUrl) => setField('avatar', dataUrl)}
+            />
+          )}
         </div>
       </main>
+      {showOnboarding && (
+        <Onboarding
+          onFinish={finishOnboarding}
+          onSkip={finishOnboarding}
+          onStepChange={setTab}
+        />
+      )}
     </div>
   );
 }

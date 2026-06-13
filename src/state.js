@@ -30,4 +30,5 @@ export const TABS = [
   { id: 'cartao', label: 'Cartão de crédito', ico: '▣' },
   { id: 'parcelamentos', label: 'Parcelamentos', ico: '≣' },
   { id: 'historico', label: 'Histórico', ico: '◴' },
+  { id: 'config', label: 'Configurações', ico: '⚙' },
 ];

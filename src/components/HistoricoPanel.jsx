@@ -1,6 +1,7 @@
-import React, { Suspense, lazy } from 'react';
-import { BRL, onlyDigits } from '../money.js';
+import React, { Suspense, lazy, useState } from 'react';
+import { BRL, onlyDigits, toNumber } from '../money.js';
 import { fmtPeriodo } from '../history.js';
+import MoneyField from './MoneyField.jsx';
 
 // Carrega o gráfico (e todo o MUI Charts) só quando a aba Histórico é aberta.
 const HistoryChart = lazy(() => import('./HistoryChart.jsx'));
@@ -31,8 +32,16 @@ function DayField({ label, value, onChange }) {
 }
 
 export default function HistoricoPanel({ state, setField, onClose }) {
-  // Mais recentes primeiro.
+  const [confirmando, setConfirmando] = useState(false);
+  const [guardadoInput, setGuardadoInput] = useState('');
+
   const historico = [...(state.historico || [])].reverse();
+
+  function handleConfirmar() {
+    onClose(toNumber(guardadoInput));
+    setConfirmando(false);
+    setGuardadoInput('');
+  }
 
   return (
     <div className="panel">
@@ -59,9 +68,30 @@ export default function HistoricoPanel({ state, setField, onClose }) {
           parcelamento avança uma parcela e um resumo do mês é guardado abaixo.
         </p>
 
-        <button className="add-btn" onClick={onClose}>
-          ↦ Fechar mês agora
-        </button>
+        {!confirmando ? (
+          <button className="add-btn" style={{ marginTop: 12 }} onClick={() => setConfirmando(true)}>
+            ↦ Fechar mês agora
+          </button>
+        ) : (
+          <div className="close-confirm">
+            <MoneyField
+              label="Quanto você conseguiu guardar este mês?"
+              value={guardadoInput}
+              onChange={setGuardadoInput}
+            />
+            <div className="close-actions">
+              <button className="btn-confirm" onClick={handleConfirmar}>
+                Confirmar fechamento
+              </button>
+              <button
+                className="btn-cancel"
+                onClick={() => { setConfirmando(false); setGuardadoInput(''); }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Suspense

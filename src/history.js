@@ -29,15 +29,15 @@ export function fmtPeriodo(p) {
 
 // Aplica um fechamento: salva o resumo do mês, zera os gastos avulsos do cartão
 // e avança cada parcelamento ativo em uma parcela. Muta o array `historico` recebido.
-function performClose(state, periodo, historico) {
+function performClose(state, periodo, historico, guardadoReal) {
   const c = compute(state);
   historico.push({
     periodo,
     salario: c.salario,
     gasto: c.gastos,
-    cartao: c.faturaCartao, // gasto no cartão (compras + parcelas do mês)
-    guardado: c.sobra, // "quanto foi guardado" = sobra real do mês
-    meta: c.guardar, // meta de economia, como referência
+    cartao: c.faturaCartao,
+    guardado: guardadoReal !== undefined ? guardadoReal : c.sobra,
+    meta: c.guardar,
   });
 
   const cartao = [{ nome: '', valor: '' }];
@@ -79,10 +79,10 @@ export function applyRollover(state, today = new Date()) {
 }
 
 // Fechamento manual (botão "Fechar mês agora"), independente da data.
-export function manualClose(state, today = new Date()) {
+export function manualClose(state, today = new Date(), guardadoReal) {
   const periodo = periodKey(today.getFullYear(), today.getMonth());
   const historico = [...(state.historico || [])];
-  const next = performClose(state, periodo, historico);
+  const next = performClose(state, periodo, historico, guardadoReal);
   const ultimo =
     state.ultimoFechamento && state.ultimoFechamento > periodo ? state.ultimoFechamento : periodo;
   return { ...next, historico, ultimoFechamento: ultimo };
