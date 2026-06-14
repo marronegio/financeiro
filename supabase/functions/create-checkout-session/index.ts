@@ -70,11 +70,21 @@ Deno.serve(async (req) => {
 
     const { origin } = await req.json()
 
+    // Teste grátis só para quem nunca usou (controle por e-mail — vale mesmo se a
+    // pessoa cancelou e voltou, ou apagou e recriou a conta com o mesmo e-mail).
+    const email = (user.email || '').toLowerCase()
+    const { data: redemption } = await supabaseAdmin
+      .from('trial_redemptions')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle()
+    const trialEligible = !redemption
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [{ price: Deno.env.get('STRIPE_PRICE_ID')!, quantity: 1 }],
       mode: 'subscription',
-      subscription_data: { trial_period_days: 7 },
+      ...(trialEligible ? { subscription_data: { trial_period_days: 7 } } : {}),
       success_url: `${origin}?payment=success`,
       cancel_url: `${origin}?payment=cancel`,
       locale: 'pt-BR',

@@ -1622,6 +1622,46 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.85rem !important;
 }
 
+.cfg-danger-btn {
+  width: 100%;
+  background: var(--negative);
+  border: none;
+  border-radius: 9px;
+  padding: 11px;
+  color: #fff;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter .15s;
+}
+
+.cfg-danger-btn:hover {
+  filter: brightness(1.06);
+}
+
+.btn-danger {
+  background: var(--negative);
+  border: none;
+  border-radius: 9px;
+  padding: 9px 18px;
+  color: #fff;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter .15s;
+}
+
+.btn-danger:hover {
+  filter: brightness(1.06);
+}
+
+.btn-danger:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
 .cfg-msg {
   border-radius: 8px;
   padding: 9px 11px;

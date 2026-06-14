@@ -40,6 +40,40 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
   const [loading,    setLoading]    = useState(false);
   const [msg,        setMsg]        = useState(null);
 
+  // Cancelamento de assinatura
+  const [confirming, setConfirming] = useState(false);
+  const [canceling,  setCanceling]  = useState(false);
+  const [cancelErr,  setCancelErr]  = useState('');
+
+  async function handleCancelSubscription() {
+    setCanceling(true);
+    setCancelErr('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-subscription`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        // Assinatura cancelada e acesso revogado — recarrega para cair no paywall.
+        window.location.reload();
+        return;
+      }
+      setCancelErr(data.error || 'Não foi possível cancelar. Tente novamente.');
+    } catch {
+      setCancelErr('Erro de conexão. Tente novamente.');
+    }
+    setCanceling(false);
+    setConfirming(false);
+  }
+
   const email    = user?.email || '';
   const initials = (email.slice(0, 2) || 'EU').toUpperCase();
 
@@ -168,6 +202,41 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
           </button>
         </form>
       </div>
+
+      {/* Cancelar assinatura */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Assinatura</span>
+        </div>
+        <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+          Cancelar encerra sua assinatura imediatamente e você perde o acesso ao painel. Seus dados
+          ficam salvos caso queira voltar.
+        </p>
+        {cancelErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{cancelErr}</p>}
+        <button type="button" className="cfg-danger-btn" onClick={() => setConfirming(true)}>
+          Cancelar assinatura
+        </button>
+      </div>
+
+      {confirming && (
+        <div className="ob-backdrop">
+          <div className="ob-card">
+            <h2 className="ob-title">Cancelar assinatura?</h2>
+            <p className="ob-desc">
+              Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira
+              voltar depois.
+            </p>
+            <div className="ob-actions">
+              <button className="ob-skip" onClick={() => setConfirming(false)} disabled={canceling}>
+                Voltar
+              </button>
+              <button className="btn-danger" onClick={handleCancelSubscription} disabled={canceling}>
+                {canceling ? 'Cancelando…' : 'Sim, cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cropSrc && (
         <CropEditor

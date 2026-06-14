@@ -59,6 +59,29 @@ Deno.serve(async (req) => {
       break
     }
 
+    case 'customer.subscription.created': {
+      const sub = event.data.object as Stripe.Subscription
+      await updateByCustomer(sub.customer as string, {
+        subscription_status: sub.status,
+        subscription_id: sub.id,
+      })
+      // Marca o e-mail como tendo usado o teste grátis — não pode repetir.
+      if (sub.trial_end) {
+        try {
+          const customer = await stripe.customers.retrieve(sub.customer as string)
+          const email = (customer as Stripe.Customer).email?.toLowerCase()
+          if (email) {
+            await supabase
+              .from('trial_redemptions')
+              .upsert({ email }, { onConflict: 'email' })
+          }
+        } catch (e) {
+          console.warn('Falha ao registrar trial por e-mail:', e.message)
+        }
+      }
+      break
+    }
+
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription
       await updateByCustomer(sub.customer as string, {

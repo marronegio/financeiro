@@ -33,7 +33,14 @@ export function AuthProvider({ children }) {
     user: session?.user ?? null,
     loading,
     signUp: (email, password) =>
-      supabase.auth.signUp({ email, password }),
+      supabase.auth.signUp({
+        email,
+        password,
+        // Link de confirmação volta para a origem onde o cadastro foi feito
+        // (produção em produção, localhost em dev). Precisa estar na allowlist
+        // de Redirect URLs do Supabase.
+        options: { emailRedirectTo: window.location.origin },
+      }),
     signIn: (email, password) =>
       supabase.auth.signInWithPassword({ email, password }),
     resetPassword: (email) =>
