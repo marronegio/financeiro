@@ -40,8 +40,8 @@ export default function Sidebar({ tab, onTab, user, onSignOut, avatar }) {
           <span /><span /><span />
         </button>
         <div className="topbar-brand">
-          <div className="logo">M</div>
-          <div className="brand-name">Mês a Mês</div>
+          <div className="logo">D</div>
+          <div className="brand-name">DinPrev</div>
         </div>
       </div>
 
@@ -54,9 +54,9 @@ export default function Sidebar({ tab, onTab, user, onSignOut, avatar }) {
 
       <aside className={'sidebar' + (open ? ' open' : '')}>
         <div className="brand">
-          <div className="logo">M</div>
+          <div className="logo">D</div>
           <div>
-            <div className="brand-name">Mês a Mês</div>
+            <div className="brand-name">DinPrev</div>
             <div className="brand-sub">Finanças</div>
           </div>
           <button

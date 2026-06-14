@@ -42,7 +42,7 @@ export default function PaywallPage({ paymentResult }) {
         <div className="auth-brand">
           <span className="logo">M</span>
           <div>
-            <div className="brand-name">Mês a Mês</div>
+            <div className="brand-name">DinPrev</div>
             <div className="brand-sub">Finanças pessoais</div>
           </div>
         </div>

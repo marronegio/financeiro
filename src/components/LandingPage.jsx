@@ -26,8 +26,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── nav ── */}
       <nav className="lp-nav">
         <div className="lp-nav-brand">
-          <div className="lp-logo">M</div>
-          <span className="lp-brand-name">Mês a Mês</span>
+          <div className="lp-logo">D</div>
+          <span className="lp-brand-name">DinPrev</span>
         </div>
         <div className="lp-nav-links">
           <button className="lp-nav-link" onClick={() => scrollTo('recursos')}>Recursos</button>
@@ -58,7 +58,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </h1>
 
           <p className="lp-hero-sub">
-            O Mês a Mês distribui seu salário antes de você gastar.
+            O DinPrev distribui seu salário antes de você gastar.
             Quando o cartão fecha, não tem mais surpresa —
             porque você já sabia o número desde o início do mês.
           </p>
@@ -99,7 +99,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <div className="lp-showcase-head">
           <div className="lp-tag reveal">Por dentro</div>
           <h2 className="reveal reveal-delay-1">
-            Veja como o <em>Mês a Mês</em> funciona.
+            Veja como o <em>DinPrev</em> funciona.
           </h2>
           <p className="reveal reveal-delay-2">
             São os painéis reais do app. Passe pelas abas e veja os números se ajustando — do
@@ -198,7 +198,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               Uma vez por mês.<br />Cinco minutos.<br /><em>O resto se resolve.</em>
             </h2>
             <p className="reveal reveal-delay-2">
-              O Mês a Mês não exige que você registre cada compra. Você só precisa configurar o cenário do mês — o resto é acompanhamento.
+              O DinPrev não exige que você registre cada compra. Você só precisa configurar o cenário do mês — o resto é acompanhamento.
             </p>
           </div>
           <div className="lp-steps">
@@ -270,10 +270,10 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── footer ── */}
       <footer className="lp-footer">
         <div className="lp-footer-brand">
-          <div className="lp-logo">M</div>
-          <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>Mês a Mês</span>
+          <div className="lp-logo">D</div>
+          <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>DinPrev</span>
         </div>
-        <span className="lp-footer-copy">© {new Date().getFullYear()} Mês a Mês. Todos os direitos reservados.</span>
+        <span className="lp-footer-copy">© {new Date().getFullYear()} DinPrev. Todos os direitos reservados.</span>
       </footer>
 
     </div>

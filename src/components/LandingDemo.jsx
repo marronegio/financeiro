@@ -274,7 +274,7 @@ export default function LandingDemo() {
     >
       <div className="lp-window-bar">
         <span className="lp-window-dots"><i /><i /><i /></span>
-        <span className="lp-window-title">Mês a Mês — {TABS[active].label}</span>
+        <span className="lp-window-title">DinPrev — {TABS[active].label}</span>
       </div>
 
       <div className="lp-demo-tabs">
