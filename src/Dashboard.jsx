@@ -84,14 +84,20 @@ const HEADERS = {
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [state, setState, status] = useCloudState(user.id, createDefaultState);
-  const [showOnboarding, setShowOnboarding] = useState(
-    () => !localStorage.getItem(obKey(user.id))
-  );
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Abre o tour só na primeira vez: usa a flag salva na nuvem (persiste entre
+  // dispositivos/logins); o localStorage fica como compatibilidade/reforço.
+  useEffect(() => {
+    if (!state) return;
+    const done = state.onboarded === true || !!localStorage.getItem(obKey(user.id));
+    if (!done) setShowOnboarding(true);
+  }, [state?.onboarded, user.id]);
 
   function finishOnboarding() {
     localStorage.setItem(obKey(user.id), '1');
+    setState((s) => ({ ...s, onboarded: true, tab: 'plan' }));
     setShowOnboarding(false);
-    setTab('plan');
   }
 
   const setField = (key, value) => setState((s) => ({ ...s, [key]: value }));
@@ -106,7 +112,7 @@ export default function Dashboard() {
 
   const reset = () => {
     if (!window.confirm('Limpar todos os dados?')) return;
-    setState((s) => ({ ...createDefaultState(), tab: s.tab }));
+    setState((s) => ({ ...createDefaultState(), tab: s.tab, onboarded: s.onboarded }));
   };
 
   const fecharMes = (guardadoReal) => {
