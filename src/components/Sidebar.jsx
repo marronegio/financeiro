@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { TABS } from '../state.js';
-import { useTheme } from '../theme.js';
 
 export default function Sidebar({ tab, onTab, user, onSignOut, avatar }) {
   const email = user?.email || '';
   const initials = (email.slice(0, 2) || 'EU').toUpperCase();
   const [open, setOpen] = useState(false);
-  const { theme, toggle } = useTheme();
 
   // Trava o scroll do body enquanto o drawer está aberto no mobile.
   useEffect(() => {
@@ -91,13 +89,6 @@ export default function Sidebar({ tab, onTab, user, onSignOut, avatar }) {
             </span>
             <span className="who-mail" title={email}>{email || 'Minha carteira'}</span>
           </div>
-          <button
-            className="theme-toggle"
-            onClick={toggle}
-            title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-          >
-            {theme === 'dark' ? '☀ Tema claro' : '☾ Tema escuro'}
-          </button>
           {onSignOut && (
             <button className="signout-btn" onClick={onSignOut}>
               Sair

@@ -8,13 +8,11 @@
     <title>DinPrev</title>
     <script>
       // Aplica o tema antes do CSS pintar (evita flash). Usa a preferência salva
-      // ou, na ausência, a preferência do sistema.
+      // pelo usuário; na ausência, o padrão é o tema claro.
       (function () {
         try {
           var t = localStorage.getItem('theme');
-          if (t !== 'dark' && t !== 'light') {
-            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          }
+          if (t !== 'dark' && t !== 'light') t = 'light';
           document.documentElement.setAttribute('data-theme', t);
         } catch (e) {}
       })();

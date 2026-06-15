@@ -1533,10 +1533,16 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Botão "?" no cabeçalho */
-.help-btn {
+.header-actions {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-btn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -1551,6 +1557,7 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   justify-content: center;
   transition: all .15s;
+  flex-shrink: 0;
 }
 
 .help-btn:hover {
@@ -2276,32 +2283,6 @@ input[type="range"]::-moz-range-thumb {
   height: 100%;
   object-fit: contain;
   display: block;
-}
-
-/* ---------- toggle de tema (sidebar) ---------- */
-.theme-toggle {
-  margin-top: 10px;
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--side-line);
-  color: var(--side-muted);
-  border-radius: 9px;
-  padding: 7px;
-  font-family: 'Hanken Grotesk', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-}
-
-.theme-toggle:hover {
-  color: var(--side-ink);
-  border-color: rgba(255, 255, 255, 0.2);
-  background: var(--side-bg-2);
 }
 
 /* segmented control de aparência (Configurações) reaproveita .seg */

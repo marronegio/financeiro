@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext.jsx';
 import { useCloudState } from './hooks/useCloudState.js';
 import { compute } from './money.js';
 import { applyRollover, manualClose } from './history.js';
+import { useTheme } from './theme.js';
 import Sidebar from './components/Sidebar.jsx';
 import PlanejamentoPanel from './components/PlanejamentoPanel.jsx';
 import DespesasPanel from './components/DespesasPanel.jsx';
@@ -85,6 +86,7 @@ const HEADERS = {
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [state, setState, status] = useCloudState(user.id, createDefaultState);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -160,13 +162,23 @@ export default function Dashboard() {
             )}
             <h1>{head.title}</h1>
             <p className="sub">{head.sub}</p>
-            <button
-              className="help-btn"
-              onClick={() => setShowOnboarding(true)}
-              title="Ver tour de introdução"
-            >
-              ?
-            </button>
+            <div className="header-actions">
+              <button
+                className="help-btn"
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+                aria-label="Alternar tema"
+              >
+                {theme === 'dark' ? '☀' : '☾'}
+              </button>
+              <button
+                className="help-btn"
+                onClick={() => setShowOnboarding(true)}
+                title="Ver tour de introdução"
+              >
+                ?
+              </button>
+            </div>
           </header>
 
           {state.tab === 'plan' && (
