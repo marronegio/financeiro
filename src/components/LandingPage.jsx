@@ -26,7 +26,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── nav ── */}
       <nav className="lp-nav">
         <div className="lp-nav-brand">
-          <div className="lp-logo">D</div>
+          <div className="lp-logo"><img src="/logo.png" alt="DinPrev" /></div>
           <span className="lp-brand-name">DinPrev</span>
         </div>
         <div className="lp-nav-links">
@@ -270,7 +270,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── footer ── */}
       <footer className="lp-footer">
         <div className="lp-footer-brand">
-          <div className="lp-logo">D</div>
+          <div className="lp-logo"><img src="/logo.png" alt="DinPrev" /></div>
           <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>DinPrev</span>
         </div>
         <span className="lp-footer-copy">© {new Date().getFullYear()} DinPrev. Todos os direitos reservados.</span>

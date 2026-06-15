@@ -2100,3 +2100,21 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 5px;
   padding: 1px 5px;
 }
+
+/* ---------- logo (imagem DinPrev) ---------- */
+/* O logo agora é uma imagem própria — remove o quadrado/gradiente decorativo. */
+.brand .logo,
+.topbar-brand .logo,
+.auth-brand .logo {
+  background: none;
+  box-shadow: none;
+}
+
+.brand .logo img,
+.topbar-brand .logo img,
+.auth-brand .logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
