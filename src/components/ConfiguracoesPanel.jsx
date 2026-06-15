@@ -49,6 +49,37 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
 
   const { theme, setTheme } = useTheme();
 
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalErr, setPortalErr] = useState('');
+
+  async function handlePortal() {
+    setPortalLoading(true);
+    setPortalErr('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-portal`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ origin: window.location.origin }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url; // vai pro portal hospedado do Stripe
+        return;
+      }
+      setPortalErr(data.error || 'Não foi possível abrir o portal. Tente novamente.');
+    } catch {
+      setPortalErr('Erro de conexão. Tente novamente.');
+    }
+    setPortalLoading(false);
+  }
+
   async function handleCancelSubscription() {
     setCanceling(true);
     setCancelErr('');
@@ -231,14 +262,23 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
         </form>
       </div>
 
-      {/* Cancelar assinatura */}
+      {/* Assinatura */}
       <div className="card">
         <div className="card-head">
           <span className="card-title">Assinatura</span>
         </div>
         <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
-          Cancelar encerra sua assinatura imediatamente e você perde o acesso ao painel. Seus dados
-          ficam salvos caso queira voltar.
+          Atualize a forma de pagamento, baixe faturas ou gerencie seu plano no portal seguro do
+          Stripe.
+        </p>
+        {portalErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{portalErr}</p>}
+        <button type="button" className="cfg-submit" onClick={handlePortal} disabled={portalLoading}>
+          {portalLoading ? 'Abrindo…' : 'Gerenciar assinatura'}
+        </button>
+
+        <p className="hint" style={{ marginTop: 16, marginBottom: 12 }}>
+          Prefere encerrar agora? Cancelar remove o acesso ao painel imediatamente. Seus dados ficam
+          salvos caso queira voltar.
         </p>
         {cancelErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{cancelErr}</p>}
         <button type="button" className="cfg-danger-btn" onClick={() => setConfirming(true)}>

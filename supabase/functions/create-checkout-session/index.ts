@@ -56,6 +56,19 @@ Deno.serve(async (req) => {
 
     let customerId = profile?.stripe_customer_id
 
+    // Valida o customer salvo. Se ele não existir mais nesta conta/modo do Stripe
+    // (id órfão de uma fase de testes ou de outra conta), descarta e recria — assim
+    // o checkout nunca quebra com "No such customer".
+    if (customerId) {
+      try {
+        const existing = await stripe.customers.retrieve(customerId)
+        if (existing && existing.deleted) customerId = null
+      } catch (err) {
+        if (err && err.code === 'resource_missing') customerId = null
+        else throw err
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email!,
