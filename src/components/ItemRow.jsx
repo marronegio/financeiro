@@ -1,10 +1,25 @@
 import React from 'react';
 import { maskMoney } from '../money.js';
 
-// Linha: nome + valor (R$) + remover. Usada em despesas, assinaturas e cartão.
-export default function ItemRow({ item, namePlaceholder = 'Nome', onChange, onRemove }) {
+// Linha: [categoria opcional] + nome + valor (R$) + remover.
+// Usada em despesas, assinaturas e cartão. `categories` só é passado no cartão.
+export default function ItemRow({ item, namePlaceholder = 'Nome', onChange, onRemove, categories }) {
+  const hasCat = Array.isArray(categories) && categories.length > 0;
   return (
-    <div className="row">
+    <div className={'row' + (hasCat ? ' has-cat' : '')}>
+      {hasCat && (
+        <select
+          className="cat-select"
+          value={item.cat || ''}
+          onChange={(e) => onChange({ ...item, cat: e.target.value })}
+          aria-label="Categoria"
+        >
+          <option value="">Categoria…</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.label}</option>
+          ))}
+        </select>
+      )}
       <div className="name-wrap">
         <input
           className="name-input"

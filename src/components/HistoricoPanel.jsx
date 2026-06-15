@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState } from 'react';
 import { BRL, onlyDigits, toNumber } from '../money.js';
-import { fmtPeriodo } from '../history.js';
+import { fmtPeriodo, computeInsights } from '../history.js';
 import MoneyField from './MoneyField.jsx';
 
 // Carrega o gráfico (e todo o MUI Charts) só quando a aba Histórico é aberta.
@@ -36,6 +36,7 @@ export default function HistoricoPanel({ state, setField, onClose }) {
   const [guardadoInput, setGuardadoInput] = useState('');
 
   const historico = [...(state.historico || [])].reverse();
+  const insights = computeInsights(state.historico);
 
   function handleConfirmar() {
     onClose(toNumber(guardadoInput));
@@ -93,6 +94,22 @@ export default function HistoricoPanel({ state, setField, onClose }) {
           </div>
         )}
       </div>
+
+      {insights.length > 0 && (
+        <div className="card">
+          <div className="card-head">
+            <span className="card-title">Insights</span>
+          </div>
+          {insights.map((ins, i) => (
+            <div className={'insight-row ' + ins.tone} key={i}>
+              <span className="insight-ico">
+                {ins.tone === 'pos' ? '▲' : ins.tone === 'neg' ? '▼' : '•'}
+              </span>
+              <span className="insight-text">{ins.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Suspense
         fallback={

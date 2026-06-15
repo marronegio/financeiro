@@ -1,12 +1,22 @@
-import React from 'react';
-import { BRL } from '../money.js';
+import React, { useState } from 'react';
+import { BRL, toNumber } from '../money.js';
+import { totalGuardado } from '../history.js';
 import MoneyField from './MoneyField.jsx';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
 export default function PlanejamentoPanel({ state, c, setField, reset }) {
+  const [confirmReset, setConfirmReset] = useState(false);
   // Base para as larguras da barra de composição (sempre relativa ao salário).
   const base = c.salario > 0 ? c.salario : c.gastos + c.guardar + Math.max(0, c.sobra) || 1;
   const pct = (v) => Math.max(0, Math.min(100, (v / base) * 100));
   const positive = c.sobra >= 0;
+
+  // Meta de economia (acumulado dos meses fechados vs. alvo total).
+  const meta = toNumber(state.metaEconomia);
+  const guardadoTotal = totalGuardado(state.historico);
+  const metaPct = meta > 0 ? Math.max(0, Math.min(100, (guardadoTotal / meta) * 100)) : 0;
+  const metaFalta = Math.max(0, meta - guardadoTotal);
+  const metaEta = c.guardar > 0 && metaFalta > 0 ? Math.ceil(metaFalta / c.guardar) : 0;
 
   return (
     <div className="panel">
@@ -45,6 +55,46 @@ export default function PlanejamentoPanel({ state, c, setField, reset }) {
               style={{ '--p': c.pctC + '%' }}
               onChange={(e) => setField('split', parseInt(e.target.value, 10))}
             />
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <span className="card-title">Meta de economia</span>
+              {meta > 0 && <span className="card-total">{Math.round(metaPct)}%</span>}
+            </div>
+            <MoneyField
+              label="Meta total (quanto quer juntar)"
+              value={state.metaEconomia}
+              onChange={(v) => setField('metaEconomia', v)}
+            />
+            {meta > 0 ? (
+              <>
+                <div className="usage-meta" style={{ marginTop: 12 }}>
+                  <span>{BRL(guardadoTotal)} guardados</span>
+                  <span>de {BRL(meta)}</span>
+                </div>
+                <div className="usage-bar">
+                  <span style={{ width: metaPct + '%', background: 'var(--positive)' }} />
+                </div>
+                <p className="hint" style={{ borderTop: 'none', marginTop: 8, paddingTop: 0 }}>
+                  {metaFalta > 0 ? (
+                    <>
+                      Faltam <b style={{ color: 'var(--positive)' }}>{BRL(metaFalta)}</b>
+                      {metaEta > 0 && (
+                        <> · no ritmo de {BRL(c.guardar)}/mês, ~{metaEta} {metaEta === 1 ? 'mês' : 'meses'}</>
+                      )}
+                    </>
+                  ) : (
+                    '🎉 Meta atingida! Você já juntou o que planejou.'
+                  )}
+                </p>
+              </>
+            ) : (
+              <p className="hint" style={{ borderTop: 'none', marginTop: 8, paddingTop: 0 }}>
+                Defina quanto quer juntar no total. O progresso usa o que você já guardou nos meses
+                fechados (aba Histórico).
+              </p>
+            )}
           </div>
         </div>
 
@@ -154,12 +204,27 @@ export default function PlanejamentoPanel({ state, c, setField, reset }) {
               </div>
             )}
 
-            <button className="reset" onClick={reset}>
+            <button className="reset" onClick={() => setConfirmReset(true)}>
               ↺ Limpar tudo
             </button>
           </div>
         </div>
       </div>
+
+      {confirmReset && (
+        <ConfirmDialog
+          title="Limpar todos os dados?"
+          message="Isso apaga salário, despesas, assinaturas, cartão, parcelamentos e a meta. Esta ação não pode ser desfeita."
+          confirmLabel="Limpar tudo"
+          cancelLabel="Cancelar"
+          danger
+          onConfirm={() => {
+            reset();
+            setConfirmReset(false);
+          }}
+          onCancel={() => setConfirmReset(false)}
+        />
+      )}
     </div>
   );
 }

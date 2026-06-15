@@ -13,8 +13,9 @@ export const createDefaultState = () => ({
     { nome: 'Telefone', valor: '' },
   ],
   assinaturas: [{ nome: '', valor: '' }],
-  cartao: [{ nome: '', valor: '' }],
+  cartao: [{ nome: '', valor: '', cat: '' }],
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
+  metaEconomia: '', // meta total de economia (quanto quer juntar no acumulado)
   avatar: '', // foto de perfil opcional (data URL); vazio = mostra as iniciais
   onboarded: false, // true depois que o usuário viu/pulou o tour de introdução
   // Histórico / ciclo mensal.
@@ -32,4 +33,15 @@ export const TABS = [
   { id: 'parcelamentos', label: 'Parcelamentos', ico: '≣' },
   { id: 'historico', label: 'Histórico', ico: '◴' },
   { id: 'config', label: 'Configurações', ico: '⚙' },
+];
+
+// Categorias/etiquetas para as compras no cartão.
+export const CARD_CATEGORIES = [
+  { id: 'alimentacao', label: 'Alimentação', color: '#e0564c' },
+  { id: 'transporte', label: 'Transporte', color: '#3a6ea5' },
+  { id: 'lazer', label: 'Lazer', color: '#9b6bff' },
+  { id: 'saude', label: 'Saúde', color: '#0e9f6e' },
+  { id: 'casa', label: 'Casa', color: '#d98a00' },
+  { id: 'compras', label: 'Compras', color: '#635bff' },
+  { id: 'outros', label: 'Outros', color: '#8898aa' },
 ];

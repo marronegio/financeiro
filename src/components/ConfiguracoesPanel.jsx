@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase.js';
+import { useTheme } from '../theme.js';
 import CropEditor from './CropEditor.jsx';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
 function PasswordField({ label, value, onChange }) {
   const [show, setShow] = useState(false);
@@ -44,6 +46,8 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
   const [confirming, setConfirming] = useState(false);
   const [canceling,  setCanceling]  = useState(false);
   const [cancelErr,  setCancelErr]  = useState('');
+
+  const { theme, setTheme } = useTheme();
 
   async function handleCancelSubscription() {
     setCanceling(true);
@@ -172,6 +176,30 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
         />
       </div>
 
+      {/* Aparência */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Aparência</span>
+        </div>
+        <div className="cfg-appearance">
+          <span className="field-label" style={{ margin: 0 }}>Tema do aplicativo</span>
+          <div className="seg">
+            <button
+              className={theme === 'light' ? 'active' : ''}
+              onClick={() => setTheme('light')}
+            >
+              ☀ Claro
+            </button>
+            <button
+              className={theme === 'dark' ? 'active' : ''}
+              onClick={() => setTheme('dark')}
+            >
+              ☾ Escuro
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Alterar senha */}
       <div className="card">
         <div className="card-head">
@@ -219,23 +247,16 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
       </div>
 
       {confirming && (
-        <div className="ob-backdrop">
-          <div className="ob-card">
-            <h2 className="ob-title">Cancelar assinatura?</h2>
-            <p className="ob-desc">
-              Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira
-              voltar depois.
-            </p>
-            <div className="ob-actions">
-              <button className="ob-skip" onClick={() => setConfirming(false)} disabled={canceling}>
-                Voltar
-              </button>
-              <button className="btn-danger" onClick={handleCancelSubscription} disabled={canceling}>
-                {canceling ? 'Cancelando…' : 'Sim, cancelar'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Cancelar assinatura?"
+          message="Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar depois."
+          confirmLabel="Sim, cancelar"
+          cancelLabel="Voltar"
+          danger
+          busy={canceling}
+          onConfirm={handleCancelSubscription}
+          onCancel={() => setConfirming(false)}
+        />
       )}
 
       {cropSrc && (

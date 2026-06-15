@@ -33,6 +33,45 @@
   font-size: 16px;
 }
 
+/* ---------- modo escuro ---------- */
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --bg-2: #18233a;
+  --surface: #111c2e;
+  --surface-2: #16223a;
+  --ink: #e7edf5;
+  --muted: #a3b1c6;
+  --faint: #6b7a93;
+  --line: #233048;
+  --line-strong: #33425e;
+  --accent: #7c75ff;
+  --accent-soft: rgba(124, 117, 255, 0.16);
+  --accent-line: rgba(124, 117, 255, 0.40);
+  --expense: #f1796b;
+  --savings: #34d399;
+  --credit: #e6a93b;
+  --debit: #6b9bd6;
+  --positive: #34d399;
+  --negative: #f1796b;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 5px rgba(0, 0, 0, 0.45), 0 12px 24px -10px rgba(0, 0, 0, 0.55);
+  --side-bg: #0a1322;
+  --side-bg-2: #16223a;
+  --side-line: rgba(255, 255, 255, 0.08);
+  --side-ink: #e7edf5;
+  --side-muted: #8fa0b8;
+  --side-accent: #7c75ff;
+}
+
+/* mensagens de erro continuam legíveis no escuro */
+[data-theme="dark"] .warn,
+[data-theme="dark"] .auth-msg.err,
+[data-theme="dark"] .cfg-err {
+  color: #f5a99f;
+  background: rgba(241, 121, 107, 0.12);
+  border-color: rgba(241, 121, 107, 0.4);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -715,7 +754,7 @@ label.field:last-child {
 .money-input:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  background: #fff;
+  background: var(--surface);
 }
 
 .money-input .prefix {
@@ -758,6 +797,126 @@ input::placeholder {
   margin-bottom: 7px;
 }
 
+/* linha do cartão com categoria: [categoria] nome valor remover */
+.row.has-cat {
+  grid-template-columns: 116px 1fr 116px 34px;
+}
+
+.cat-select {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0 8px;
+  height: 100%;
+  min-height: 36px;
+  color: var(--ink);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  min-width: 0;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+
+.cat-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+@media (max-width: 480px) {
+  .row.has-cat {
+    grid-template-columns: 92px 1fr 92px 30px;
+    gap: 6px;
+  }
+  .cat-select {
+    font-size: 0.76rem;
+    padding: 0 5px;
+  }
+}
+
+/* gastos por categoria (resumo do cartão) */
+.catline {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.catline:last-child {
+  border-bottom: none;
+}
+
+.catline-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.catline-lbl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.catline-amt {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.catline-bar {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+
+.catline-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  transition: width .35s ease;
+}
+
+/* insights do histórico */
+.insight-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.insight-row:last-child {
+  border-bottom: none;
+}
+
+.insight-ico {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.insight-row.pos .insight-ico {
+  color: var(--positive);
+}
+
+.insight-row.neg .insight-ico {
+  color: var(--negative);
+}
+
+.insight-row.neutral .insight-ico {
+  color: var(--faint);
+}
+
 .row .name-wrap,
 .row .val-wrap {
   background: var(--surface-2);
@@ -773,7 +932,7 @@ input::placeholder {
 .row .val-wrap:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  background: #fff;
+  background: var(--surface);
 }
 
 .row .val-wrap .prefix {
@@ -1516,7 +1675,7 @@ input[type="range"]::-moz-range-thumb {
 .cfg-input-wrap:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  background: #fff;
+  background: var(--surface);
 }
 
 .cfg-input {
@@ -2011,7 +2170,7 @@ input[type="range"]::-moz-range-thumb {
 .auth-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  background: #fff;
+  background: var(--surface);
 }
 
 .auth-input::placeholder {
@@ -2117,4 +2276,39 @@ input[type="range"]::-moz-range-thumb {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+/* ---------- toggle de tema (sidebar) ---------- */
+.theme-toggle {
+  margin-top: 10px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--side-line);
+  color: var(--side-muted);
+  border-radius: 9px;
+  padding: 7px;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.theme-toggle:hover {
+  color: var(--side-ink);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--side-bg-2);
+}
+
+/* segmented control de aparência (Configurações) reaproveita .seg */
+.cfg-appearance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }

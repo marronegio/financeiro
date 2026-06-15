@@ -19,6 +19,8 @@ const obKey = (id) => `ob_done_${id}`;
 const newItem = (kind) =>
   kind === 'parcelamentos'
     ? { nome: '', total: '', parcelas: '', pagas: '' }
+    : kind === 'cartao'
+    ? { nome: '', valor: '', cat: '' }
     : { nome: '', valor: '' };
 
 // Cabeçalho próprio de cada aba — título com palavra em destaque + subtítulo.
@@ -111,7 +113,6 @@ export default function Dashboard() {
     setState((s) => ({ ...s, [kind]: s[kind].filter((_, idx) => idx !== i) }));
 
   const reset = () => {
-    if (!window.confirm('Limpar todos os dados?')) return;
     setState((s) => ({ ...createDefaultState(), tab: s.tab, onboarded: s.onboarded }));
   };
 

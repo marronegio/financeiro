@@ -1,4 +1,4 @@
-import { compute, computeParcela } from './money.js';
+import { BRL, compute, computeParcela } from './money.js';
 
 // ---- chaves de período no formato 'YYYY-MM' (comparáveis como string) ----
 const periodKey = (y, m0) => `${y}-${String(m0 + 1).padStart(2, '0')}`;
@@ -25,6 +25,64 @@ export function fmtPeriodo(p) {
   return new Date(y, m - 1, 1)
     .toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
     .replace('.', '');
+}
+
+// Soma de tudo que já foi guardado (acumulado, líquido) nos meses fechados.
+export function totalGuardado(historico) {
+  return (historico || []).reduce((s, h) => s + (Number(h.guardado) || 0), 0);
+}
+
+// Gera insights comparando o último mês fechado com o anterior. Retorna uma lista
+// de { tone: 'pos'|'neg'|'neutral', text }.
+export function computeInsights(historico) {
+  const h = historico || [];
+  if (h.length === 0) return [];
+
+  const out = [];
+  const last = h[h.length - 1];
+  const total = totalGuardado(h);
+
+  out.push({
+    tone: total >= 0 ? 'pos' : 'neg',
+    text: `Você já guardou ${BRL(total)} no total em ${h.length} ${h.length === 1 ? 'mês fechado' : 'meses fechados'}.`,
+  });
+
+  if (h.length >= 2) {
+    const prev = h[h.length - 2];
+    const ref = fmtPeriodo(prev.periodo);
+
+    const dg = (Number(last.guardado) || 0) - (Number(prev.guardado) || 0);
+    if (Math.abs(dg) >= 0.01) {
+      out.push({
+        tone: dg >= 0 ? 'pos' : 'neg',
+        text: `Você guardou ${BRL(Math.abs(dg))} ${dg >= 0 ? 'a mais' : 'a menos'} que em ${ref}.`,
+      });
+    }
+
+    if (prev.gasto > 0) {
+      const pg = ((last.gasto - prev.gasto) / prev.gasto) * 100;
+      if (Math.abs(pg) >= 1) {
+        out.push({
+          tone: pg <= 0 ? 'pos' : 'neg',
+          text: `Seus gastos ${pg >= 0 ? 'subiram' : 'caíram'} ${Math.abs(Math.round(pg))}% em relação a ${ref}.`,
+        });
+      }
+    }
+
+    if (prev.cartao > 0 && last.cartao != null) {
+      const pc = ((last.cartao - prev.cartao) / prev.cartao) * 100;
+      if (Math.abs(pc) >= 1) {
+        out.push({
+          tone: pc <= 0 ? 'pos' : 'neg',
+          text: `O gasto no cartão ${pc >= 0 ? 'aumentou' : 'diminuiu'} ${Math.abs(Math.round(pc))}%.`,
+        });
+      }
+    }
+
+    out.push({ tone: 'neutral', text: `Média guardada por mês: ${BRL(total / h.length)}.` });
+  }
+
+  return out;
 }
 
 // Aplica um fechamento: salva o resumo do mês, zera os gastos avulsos do cartão
