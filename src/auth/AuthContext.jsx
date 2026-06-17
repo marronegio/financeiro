@@ -6,6 +6,9 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  // true quando o usuário abriu o link de recuperação de senha (deve ver a tela
+  // de "definir nova senha" em vez do app).
+  const [recovery, setRecovery] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -18,8 +21,10 @@ export function AuthProvider({ children }) {
     });
 
     // Mantém o estado em sincronia com login/logout/refresh de token.
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      // Disparado quando o link do e-mail de recuperação é aberto.
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true);
     });
 
     return () => {
@@ -32,6 +37,8 @@ export function AuthProvider({ children }) {
     session,
     user: session?.user ?? null,
     loading,
+    recovery,
+    clearRecovery: () => setRecovery(false),
     signUp: (email, password) =>
       supabase.auth.signUp({
         email,

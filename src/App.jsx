@@ -5,6 +5,7 @@ import AuthScreen from './components/AuthScreen.jsx';
 import Dashboard from './Dashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import PaywallPage from './components/PaywallPage.jsx';
+import ResetPasswordScreen from './components/ResetPasswordScreen.jsx';
 
 function Spinner({ label = 'Carregando…' }) {
   return (
@@ -18,7 +19,7 @@ function Spinner({ label = 'Carregando…' }) {
 }
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, recovery } = useAuth();
   const subscription = useSubscription(user);
   const [showAuth, setShowAuth] = useState(false);
 
@@ -27,6 +28,9 @@ export default function App() {
   const paymentResult = params.get('payment'); // 'success' | 'cancel' | null
 
   if (loading) return <Spinner />;
+
+  // Recuperação de senha (link do e-mail) tem prioridade sobre tudo.
+  if (recovery) return <ResetPasswordScreen />;
 
   // Não logado
   if (!user) {
