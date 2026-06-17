@@ -14,6 +14,7 @@ export const createDefaultState = () => ({
   ],
   assinaturas: [{ nome: '', valor: '' }],
   cartao: [{ nome: '', valor: '', cat: '' }],
+  abates: [], // valores abatidos da fatura (estornos, cashback, créditos)
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
   metaEconomia: '', // meta total de economia (quanto quer juntar no acumulado)
   avatar: '', // foto de perfil opcional (data URL); vazio = mostra as iniciais

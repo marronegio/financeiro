@@ -39,6 +39,28 @@ export default function CartaoPanel({ state, c, updateItem, addItem, removeItem 
               junto com a parcela do mês dos seus parcelamentos.
             </p>
           </div>
+
+          <div className="card">
+            <div className="card-head">
+              <span className="card-title">Abates</span>
+              <span className="card-total" style={{ color: 'var(--positive)' }}>
+                {c.totAbates > 0 ? '− ' : ''}{BRL(c.totAbates)}
+              </span>
+            </div>
+            <EditableList
+              kind="abates"
+              items={state.abates || []}
+              namePlaceholder="Ex: Estorno, cashback, crédito…"
+              addLabel="Adicionar abate"
+              updateItem={updateItem}
+              addItem={addItem}
+              removeItem={removeItem}
+            />
+            <p className="hint">
+              Valores descontados da fatura — estornos, cashback, créditos. São subtraídos do total a
+              pagar.
+            </p>
+          </div>
         </div>
 
         <div className="sticky">
@@ -50,7 +72,11 @@ export default function CartaoPanel({ state, c, updateItem, addItem, removeItem 
             <div className="hero">
               <div className="lo-label">Total da fatura</div>
               <div className="lo-value">{BRL(c.faturaCartao)}</div>
-              <div className="lo-note">compras no cartão + parcelas do mês</div>
+              <div className="lo-note">
+                {c.totAbates > 0
+                  ? 'compras + assinaturas + parcelas − abates'
+                  : 'compras + assinaturas + parcelas do mês'}
+              </div>
             </div>
 
             <div>
@@ -63,11 +89,29 @@ export default function CartaoPanel({ state, c, updateItem, addItem, removeItem 
               </div>
               <div className="summary-line">
                 <span className="lbl">
+                  <span className="dot" style={{ background: '#9b6bff' }} />
+                  Assinaturas
+                </span>
+                <span className="amt">{BRL(c.totAss)}</span>
+              </div>
+              <div className="summary-line">
+                <span className="lbl">
                   <span className="dot" style={{ background: 'var(--debit)' }} />
                   Parcelas do mês
                 </span>
                 <span className="amt">{BRL(c.parcelaMensal)}</span>
               </div>
+              {c.totAbates > 0 && (
+                <div className="summary-line">
+                  <span className="lbl">
+                    <span className="dot" style={{ background: 'var(--positive)' }} />
+                    Abates
+                  </span>
+                  <span className="amt" style={{ color: 'var(--positive)' }}>
+                    − {BRL(c.totAbates)}
+                  </span>
+                </div>
+              )}
               <div className="summary-line total">
                 <span className="lbl">
                   <strong>Total da fatura</strong>

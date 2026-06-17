@@ -39,6 +39,7 @@ export function compute(state) {
   const totDesp = state.despesas.reduce((s, it) => s + toNumber(it.valor), 0);
   const totAss = state.assinaturas.reduce((s, it) => s + toNumber(it.valor), 0);
   const totCartao = state.cartao.reduce((s, it) => s + toNumber(it.valor), 0);
+  const totAbates = (state.abates || []).reduce((s, it) => s + toNumber(it.valor), 0);
 
   let parcelaMensal = 0;
   let parcelaRestante = 0;
@@ -52,9 +53,10 @@ export function compute(state) {
     parcelaRestante += p.falta;
   });
 
-  const faturaCartao = totCartao + parcelaMensal;
-  // Gastos somam tudo: despesas fixas + assinaturas + compras no crédito + parcelas do mês.
-  const gastos = totDesp + totAss + totCartao + parcelaMensal;
+  // A fatura inclui compras, assinaturas e a parcela do mês; os abates reduzem.
+  const faturaCartao = totCartao + totAss + parcelaMensal - totAbates;
+  // Gastos somam tudo (menos os abates, que diminuem o desembolso real).
+  const gastos = totDesp + totAss + totCartao + parcelaMensal - totAbates;
   const sobra = salario - gastos - guardar;
   const pctC = state.split;
   const pctD = 100 - state.split;
@@ -62,7 +64,7 @@ export function compute(state) {
   const debito = (Math.max(0, sobra) * pctD) / 100;
 
   return {
-    salario, guardar, totDesp, totAss, totCartao,
+    salario, guardar, totDesp, totAss, totCartao, totAbates,
     parcelaMensal, parcelaRestante, parcelaAtivas, faturaCartao,
     gastos, sobra, pctC, pctD, credito, debito,
   };

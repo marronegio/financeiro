@@ -125,7 +125,7 @@ describe('compute', () => {
     expect(c.parcelaMensal).toBeCloseTo(10, 2);
     expect(c.parcelaAtivas).toBe(1);
     expect(c.parcelaRestante).toBeCloseTo(120, 2);
-    expect(c.faturaCartao).toBeCloseTo(40, 2); // cartão 30 + parcela 10
+    expect(c.faturaCartao).toBeCloseTo(90, 2); // cartão 30 + assinaturas 50 + parcela 10
     expect(c.gastos).toBeCloseTo(290, 2); // 200 + 50 + 30 + 10
     expect(c.sobra).toBeCloseTo(610, 2); // 1000 - 290 - 100
     expect(c.pctC).toBe(40);
@@ -140,7 +140,21 @@ describe('compute', () => {
     const c = compute(s);
     expect(c.parcelaMensal).toBe(0);
     expect(c.parcelaAtivas).toBe(0);
-    expect(c.faturaCartao).toBeCloseTo(30, 2);
+    expect(c.faturaCartao).toBeCloseTo(80, 2); // cartão 30 + assinaturas 50
+  });
+
+  it('abates reduzem a fatura e os gastos', () => {
+    const s = baseState();
+    s.abates = [{ nome: 'Estorno', valor: '40,00' }];
+    const c = compute(s);
+    expect(c.totAbates).toBeCloseTo(40, 2);
+    expect(c.faturaCartao).toBeCloseTo(50, 2); // 30 + 50 + 10 − 40
+    expect(c.gastos).toBeCloseTo(250, 2); // 290 − 40
+    expect(c.sobra).toBeCloseTo(650, 2); // 1000 − 250 − 100
+  });
+
+  it('sem abates, totAbates é 0', () => {
+    expect(compute(baseState()).totAbates).toBe(0);
   });
 
   it('sobra negativa zera crédito e débito (não usa valor negativo)', () => {
