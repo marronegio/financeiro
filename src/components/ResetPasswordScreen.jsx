@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../auth/AuthContext.jsx';
+import PasswordInput from './PasswordInput.jsx';
 
 // Mostrada quando o usuário abre o link de recuperação de senha do e-mail.
 export default function ResetPasswordScreen() {
@@ -59,23 +60,17 @@ export default function ResetPasswordScreen() {
             <form onSubmit={submit} noValidate>
               <label className="auth-field">
                 <span className="field-label">Nova senha</span>
-                <input
-                  type="password"
-                  className="auth-input"
+                <PasswordInput
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  placeholder="••••••••"
                   autoComplete="new-password"
                 />
               </label>
               <label className="auth-field">
                 <span className="field-label">Confirmar nova senha</span>
-                <input
-                  type="password"
-                  className="auth-input"
+                <PasswordInput
                   value={confirmar}
                   onChange={(e) => setConfirmar(e.target.value)}
-                  placeholder="••••••••"
                   autoComplete="new-password"
                 />
               </label>

@@ -54,6 +54,14 @@ const STEPS = [
       'Comprou parcelado? Cadastre aqui e o app avança as parcelas automaticamente todo mês, até quitá-las.',
   },
   {
+    tab: 'economias',
+    target: '[data-tour="tab-economias"]',
+    icon: '◎',
+    title: 'Economias',
+    description:
+      'Crie metas de quanto quer juntar e até quando. O app calcula quanto poupar por mês pra chegar no prazo, e um resumo aparece no Planejamento.',
+  },
+  {
     tab: 'historico',
     target: '[data-tour="tab-historico"]',
     icon: '◴',

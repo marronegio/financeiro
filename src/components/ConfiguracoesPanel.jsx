@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js';
 import { useTheme } from '../theme.js';
 import CropEditor from './CropEditor.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
+import EyeIcon from './EyeIcon.jsx';
 
 function PasswordField({ label, value, onChange }) {
   const [show, setShow] = useState(false);
@@ -25,7 +26,7 @@ function PasswordField({ label, value, onChange }) {
           tabIndex={-1}
           aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
         >
-          {show ? '○' : '●'}
+          <EyeIcon off={show} />
         </button>
       </div>
     </label>

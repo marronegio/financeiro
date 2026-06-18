@@ -34,7 +34,7 @@ export default function App() {
 
   // Não logado
   if (!user) {
-    if (showAuth) return <AuthScreen />;
+    if (showAuth) return <AuthScreen onBack={() => setShowAuth(false)} />;
     return <LandingPage onGetStarted={() => setShowAuth(true)} onLogin={() => setShowAuth(true)} />;
   }
 

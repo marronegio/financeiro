@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
+import PasswordInput from './PasswordInput.jsx';
 
-export default function AuthScreen() {
+export default function AuthScreen({ onBack }) {
   const { signIn, signUp, resetPassword } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
   const [email, setEmail] = useState('');
@@ -55,6 +56,12 @@ export default function AuthScreen() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
+        {onBack && (
+          <button type="button" className="auth-back" onClick={onBack}>
+            ← Voltar
+          </button>
+        )}
+
         <div className="auth-brand">
           <span className="logo"><img src="/logo.png" alt="DinPrev" /></span>
           <div>
@@ -84,12 +91,9 @@ export default function AuthScreen() {
           </label>
           <label className="auth-field">
             <span className="field-label">Senha</span>
-            <input
-              type="password"
-              className="auth-input"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
               autoComplete={isSignup ? 'new-password' : 'current-password'}
             />
           </label>
