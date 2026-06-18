@@ -785,6 +785,229 @@ input.name-input {
   font-size: 0.88rem;
 }
 
+/* ---------- metas de economia ---------- */
+.goal {
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  margin-bottom: 12px;
+  transition: border-color .15s;
+}
+
+.goal.done {
+  border-color: var(--accent-line);
+}
+
+.goal-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* input.goal-name: especificidade igual à regra global input[type="text"]
+   (e vem depois), garantindo a mesma fonte/tamanho dos outros campos de nome. */
+input.goal-name {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+input.goal-name:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.goal-bar {
+  height: 16px;
+  border-radius: 9px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+
+.goal-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 9px;
+  transition: width .4s ease;
+}
+
+.goal-stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 8px 0 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-of {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.goal-pct {
+  color: var(--positive);
+}
+
+.goal-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.goal-f {
+  display: block;
+}
+
+.goal-f-l {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.goal-box {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.goal-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.goal-box .prefix {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--faint);
+  font-size: 0.8rem;
+  padding-right: 6px;
+}
+
+.goal-box input {
+  padding: 8px 0;
+  font-size: 0.86rem;
+}
+
+.goal-note {
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1.5;
+}
+
+.goal-note b {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .goal-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* link discreto no cabeçalho de um card (ex.: "Gerenciar") */
+.card-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent);
+  transition: opacity .15s;
+}
+
+.card-link:hover {
+  text-decoration: underline;
+}
+
+/* resumo compacto de metas (painel principal) */
+.goal-mini {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.goal-mini:last-child {
+  border-bottom: none;
+}
+
+.goal-mini-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.goal-mini-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.goal-mini-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.goal-mini-bar {
+  height: 8px;
+  border-radius: 5px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+
+.goal-mini-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--positive);
+  transition: width .4s ease;
+}
+
+.goal-mini-vals {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-mini-cur {
+  color: var(--positive);
+  font-weight: 600;
+}
+
 input::placeholder {
   color: var(--faint);
 }

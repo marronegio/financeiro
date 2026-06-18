@@ -11,6 +11,7 @@ import DespesasPanel from './components/DespesasPanel.jsx';
 import AssinaturasPanel from './components/AssinaturasPanel.jsx';
 import CartaoPanel from './components/CartaoPanel.jsx';
 import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
+import EconomiasPanel from './components/EconomiasPanel.jsx';
 import HistoricoPanel from './components/HistoricoPanel.jsx';
 import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
 import Onboarding from './components/Onboarding.jsx';
@@ -22,6 +23,8 @@ const newItem = (kind) =>
     ? { nome: '', total: '', parcelas: '', pagas: '' }
     : kind === 'cartao'
     ? { nome: '', valor: '', cat: '' }
+    : kind === 'metas'
+    ? { nome: '', valor: '', guardado: '', prazo: '' }
     : { nome: '', valor: '' };
 
 // Cabeçalho próprio de cada aba — título com palavra em destaque + subtítulo.
@@ -65,6 +68,14 @@ const HEADERS = {
       </>
     ),
     sub: 'Acompanhe as compras parceladas, a parcela do mês e quanto falta pra quitar cada uma.',
+  },
+  economias: {
+    title: (
+      <>
+        Suas <em>economias</em>.
+      </>
+    ),
+    sub: 'Defina metas de quanto quer juntar e até quando, e acompanhe o progresso de cada uma.',
   },
   historico: {
     title: (
@@ -182,7 +193,7 @@ export default function Dashboard() {
           </header>
 
           {state.tab === 'plan' && (
-            <PlanejamentoPanel state={state} c={c} setField={setField} reset={reset} />
+            <PlanejamentoPanel state={state} c={c} setField={setField} reset={reset} onTab={setTab} />
           )}
           {state.tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
           {state.tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
@@ -190,6 +201,7 @@ export default function Dashboard() {
           {state.tab === 'parcelamentos' && (
             <ParcelamentosPanel state={state} c={c} {...listProps} />
           )}
+          {state.tab === 'economias' && <EconomiasPanel state={state} {...listProps} />}
           {state.tab === 'historico' && (
             <HistoricoPanel state={state} setField={setField} onClose={fecharMes} />
           )}

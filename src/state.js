@@ -16,7 +16,7 @@ export const createDefaultState = () => ({
   cartao: [{ nome: '', valor: '', cat: '' }],
   abates: [], // valores abatidos da fatura (estornos, cashback, créditos)
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
-  metaEconomia: '', // meta total de economia (quanto quer juntar no acumulado)
+  metas: [], // metas de economia: { nome, valor (alvo), guardado (já juntei), prazo 'YYYY-MM' }
   avatar: '', // foto de perfil opcional (data URL); vazio = mostra as iniciais
   onboarded: false, // true depois que o usuário viu/pulou o tour de introdução
   // Histórico / ciclo mensal.
@@ -32,6 +32,7 @@ export const TABS = [
   { id: 'assinaturas', label: 'Assinaturas', ico: '↻' },
   { id: 'cartao', label: 'Cartão de crédito', ico: '▣' },
   { id: 'parcelamentos', label: 'Parcelamentos', ico: '≣' },
+  { id: 'economias', label: 'Economias', ico: '◎' },
   { id: 'historico', label: 'Histórico', ico: '◴' },
   { id: 'config', label: 'Configurações', ico: '⚙' },
 ];
