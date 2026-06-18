@@ -34,13 +34,14 @@ function PasswordField({ label, value, onChange }) {
 }
 
 export default function ConfiguracoesPanel({
-  user, avatar, onAvatar,
+  user, avatar, onAvatar, trialing = false,
   isDuo = false, profiles = [], activeProfile, canAddPartner = false,
   onAddPartner, onRenameProfile, onRemovePartner,
 }) {
   const fileRef = useRef(null);
   const [cropSrc, setCropSrc] = useState(null);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [canceledMsg, setCanceledMsg] = useState('');
 
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha,  setNovaSenha]  = useState('');
@@ -103,6 +104,20 @@ export default function ConfiguracoesPanel({
       );
       const data = await res.json();
       if (res.ok && data.ok) {
+        if (data.immediate === false) {
+          // Cancelamento agendado para o fim do teste — o acesso continua até lá.
+          const until = data.accessUntil
+            ? new Date(data.accessUntil * 1000).toLocaleDateString('pt-BR')
+            : null;
+          setCanceledMsg(
+            until
+              ? `Cancelamento agendado. Você mantém o acesso até ${until}, quando o teste grátis termina — sem nenhuma cobrança.`
+              : 'Cancelamento agendado para o fim do teste grátis. Você mantém o acesso até lá, sem cobrança.'
+          );
+          setConfirming(false);
+          setCanceling(false);
+          return;
+        }
         // Assinatura cancelada e acesso revogado — recarrega para cair no paywall.
         window.location.reload();
         return;
@@ -334,19 +349,28 @@ export default function ConfiguracoesPanel({
         </button>
 
         <p className="hint" style={{ marginTop: 16, marginBottom: 12 }}>
-          Prefere encerrar agora? Cancelar remove o acesso ao painel imediatamente. Seus dados ficam
-          salvos caso queira voltar.
+          {trialing
+            ? 'Prefere encerrar? Como você está no teste grátis, o cancelamento vale só no fim do período — você mantém o acesso até lá e não é cobrado. Seus dados ficam salvos.'
+            : 'Prefere encerrar agora? Cancelar remove o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar.'}
         </p>
         {cancelErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{cancelErr}</p>}
-        <button type="button" className="cfg-danger-btn" onClick={() => setConfirming(true)}>
-          Cancelar assinatura
-        </button>
+        {canceledMsg ? (
+          <p className="cfg-msg cfg-ok" style={{ marginTop: 0 }}>{canceledMsg}</p>
+        ) : (
+          <button type="button" className="cfg-danger-btn" onClick={() => setConfirming(true)}>
+            Cancelar assinatura
+          </button>
+        )}
       </div>
 
       {confirming && (
         <ConfirmDialog
-          title="Cancelar assinatura?"
-          message="Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar depois."
+          title={trialing ? 'Cancelar no fim do teste?' : 'Cancelar assinatura?'}
+          message={
+            trialing
+              ? 'Você mantém o acesso até o fim do teste grátis e não será cobrado. Quando o teste terminar, o acesso ao painel é removido. Seus dados ficam salvos.'
+              : 'Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar depois.'
+          }
           confirmLabel="Sim, cancelar"
           cancelLabel="Voltar"
           danger

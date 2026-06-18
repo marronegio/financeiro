@@ -20,7 +20,7 @@ function Spinner({ label = 'Carregando…' }) {
 
 export default function App() {
   const { user, loading, recovery } = useAuth();
-  const { status: subStatus, plan } = useSubscription(user);
+  const { status: subStatus, plan, trialing } = useSubscription(user);
   const [showAuth, setShowAuth] = useState(false);
 
   // Lê resultado do redirect do Stripe (?payment=success|cancel)
@@ -47,5 +47,5 @@ export default function App() {
   }
 
   // Logado + assinatura ativa
-  return <Dashboard plan={plan} />;
+  return <Dashboard plan={plan} trialing={trialing} />;
 }
