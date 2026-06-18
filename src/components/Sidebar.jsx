@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { TABS } from '../state.js';
 
-export default function Sidebar({ tab, onTab, user, onSignOut, avatar }) {
+const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
+
+export default function Sidebar({
+  tab, onTab, user, onSignOut, avatar,
+  profiles = [], activeProfile, onSwitchProfile, canAddPartner, onAddPartner,
+}) {
   const email = user?.email || '';
   const initials = (email.slice(0, 2) || 'EU').toUpperCase();
   const [open, setOpen] = useState(false);
+
+  // Mostra o seletor de perfis só quando faz sentido (plano Duo: há parceiro ou
+  // a opção de adicioná-lo). No Solo a barra fica idêntica à de antes.
+  const showProfiles = profiles.length > 1 || canAddPartner;
 
   // Trava o scroll do body enquanto o drawer está aberto no mobile.
   useEffect(() => {
@@ -67,6 +76,35 @@ export default function Sidebar({ tab, onTab, user, onSignOut, avatar }) {
             ×
           </button>
         </div>
+
+        {showProfiles && (
+          <>
+            <div className="nav-label">Perfis</div>
+            <div className="profile-switch">
+              {profiles.map((p) => (
+                <button
+                  key={p.id}
+                  className={'profile-chip' + (activeProfile === p.id ? ' active' : '')}
+                  onClick={() => { onSwitchProfile?.(p.id); setOpen(false); }}
+                >
+                  <span className={'av' + (p.avatar ? ' has-photo' : '')}>
+                    {p.avatar ? <img src={p.avatar} alt="" /> : profInitials(p.name)}
+                  </span>
+                  <span className="profile-chip-name">{p.name}</span>
+                </button>
+              ))}
+              {canAddPartner && (
+                <button
+                  className="profile-chip profile-chip-add"
+                  onClick={() => { onAddPartner?.(); setOpen(false); }}
+                >
+                  <span className="av av-add">+</span>
+                  <span className="profile-chip-name">Adicionar parceiro(a)</span>
+                </button>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="nav-label">Painéis</div>
         <nav className="nav">

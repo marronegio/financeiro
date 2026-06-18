@@ -33,9 +33,14 @@ function PasswordField({ label, value, onChange }) {
   );
 }
 
-export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
+export default function ConfiguracoesPanel({
+  user, avatar, onAvatar,
+  isDuo = false, profiles = [], activeProfile, canAddPartner = false,
+  onAddPartner, onRenameProfile, onRemovePartner,
+}) {
   const fileRef = useRef(null);
   const [cropSrc, setCropSrc] = useState(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha,  setNovaSenha]  = useState('');
@@ -167,8 +172,59 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
     setLoading(false);
   }
 
+  const hasPartner = profiles.some((p) => p.id === 'partner');
+
   return (
     <div className="panel single">
+      {/* Perfis (plano Duo) */}
+      {isDuo && (
+        <div className="card">
+          <div className="card-head">
+            <span className="card-title">Perfis</span>
+          </div>
+          <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+            No plano Duo você tem dois perfis independentes — cada um com seu próprio planejamento,
+            cartão, parcelamentos, economias e histórico. Renomeie como preferir.
+          </p>
+
+          {profiles.map((p) => (
+            <label className="cfg-field" key={p.id}>
+              <span className="field-label">
+                {p.id === 'main' ? 'Seu perfil' : 'Perfil do parceiro(a)'}
+                {activeProfile === p.id && <span className="cfg-active-tag"> · ativo</span>}
+              </span>
+              <div className="cfg-input-wrap">
+                <input
+                  className="cfg-input"
+                  value={p.name}
+                  maxLength={24}
+                  onChange={(e) => onRenameProfile?.(p.id, e.target.value)}
+                  placeholder={p.id === 'main' ? 'Você' : 'Parceiro(a)'}
+                />
+              </div>
+            </label>
+          ))}
+
+          {canAddPartner && (
+            <button type="button" className="cfg-submit" onClick={onAddPartner} style={{ marginTop: 6 }}>
+              Adicionar parceiro(a)
+            </button>
+          )}
+
+          {hasPartner && (
+            <>
+              <p className="hint" style={{ marginTop: 16, marginBottom: 12 }}>
+                Remover o parceiro(a) apaga <b>todos os dados desse perfil</b>. Essa ação não pode ser
+                desfeita.
+              </p>
+              <button type="button" className="cfg-danger-btn" onClick={() => setConfirmingRemove(true)}>
+                Remover parceiro(a)
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Foto de perfil */}
       <div className="card">
         <div className="card-head">
@@ -297,6 +353,18 @@ export default function ConfiguracoesPanel({ user, avatar, onAvatar }) {
           busy={canceling}
           onConfirm={handleCancelSubscription}
           onCancel={() => setConfirming(false)}
+        />
+      )}
+
+      {confirmingRemove && (
+        <ConfirmDialog
+          title="Remover parceiro(a)?"
+          message="Todos os dados desse perfil (planejamento, cartão, parcelamentos, economias e histórico) serão apagados. Essa ação não pode ser desfeita."
+          confirmLabel="Sim, remover"
+          cancelLabel="Voltar"
+          danger
+          onConfirm={() => { onRemovePartner?.(); setConfirmingRemove(false); }}
+          onCancel={() => setConfirmingRemove(false)}
         />
       )}
 

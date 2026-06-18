@@ -26,6 +26,38 @@ export const createDefaultState = () => ({
   historico: [], // resumos mensais { periodo, salario, gasto, guardado, meta }
 });
 
+// ── Perfis (plano Duo) ──────────────────────────────────────────────
+// O blob salvo na nuvem (v2) guarda 1 ou 2 perfis, cada um com seu próprio
+// estado financeiro completo (a forma de createDefaultState). O perfil 'main'
+// é o titular da conta; 'partner' só existe no plano Duo.
+export const PROFILE_NAMES = { main: 'Você', partner: 'Parceiro(a)' };
+
+export const createDefaultProfiles = () => ({
+  v: 2,
+  activeProfile: 'main',
+  profiles: {
+    main: { name: PROFILE_NAMES.main, data: createDefaultState() },
+  },
+});
+
+// Normaliza o que veio do banco para a forma v2. Aceita:
+//  - null/{}                  → conta nova
+//  - estado plano antigo (v1) → vira profiles.main.data, sem perda
+//  - já v2                    → retorna garantindo que 'main' exista
+export const migrateState = (raw) => {
+  if (raw && raw.v === 2 && raw.profiles && raw.profiles.main) {
+    return raw;
+  }
+  const flat = raw && typeof raw === 'object' ? raw : {};
+  return {
+    v: 2,
+    activeProfile: 'main',
+    profiles: {
+      main: { name: PROFILE_NAMES.main, data: { ...createDefaultState(), ...flat } },
+    },
+  };
+};
+
 export const TABS = [
   { id: 'plan', label: 'Planejamento', ico: '◷' },
   { id: 'despesas', label: 'Despesas fixas', ico: '⊟' },

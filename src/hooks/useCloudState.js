@@ -3,7 +3,10 @@ import { supabase } from '../lib/supabase.js';
 
 // Carrega o estado financeiro do usuário a partir da tabela `finances` (uma linha
 // por usuário, coluna `state` em JSONB) e regrava com debounce a cada mudança.
-export function useCloudState(userId, makeInitial) {
+// `migrate` (opcional) recebe o `state` cru do banco (ou undefined) e devolve a
+// forma canônica — usado para normalizar/migrar esquemas. Quando omitido, faz o
+// shallow-merge clássico com o estado inicial.
+export function useCloudState(userId, makeInitial, migrate) {
   const [state, setState] = useState(null); // null enquanto carrega
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
   const saveTimer = useRef(null);
@@ -27,11 +30,15 @@ export function useCloudState(userId, makeInitial) {
       if (!active) return;
       if (error) {
         console.error('Falha ao carregar dados:', error);
-        setState(initial);
+        setState(migrate ? migrate(data?.state) : initial);
         setStatus('error');
         return;
       }
-      setState(data?.state ? { ...initial, ...data.state } : initial);
+      setState(
+        migrate
+          ? migrate(data?.state)
+          : data?.state ? { ...initial, ...data.state } : initial
+      );
       setStatus('ready');
     })();
 

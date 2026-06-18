@@ -81,7 +81,20 @@ Deno.serve(async (req) => {
         .upsert({ id: user.id, stripe_customer_id: customerId })
     }
 
-    const { origin } = await req.json()
+    const { origin, plan } = await req.json()
+
+    // 4 combinações tier × ciclo → 4 price IDs. Aceita as chaves novas
+    // ('solo-monthly' etc.) e os valores antigos ('monthly'/'annual' = Solo).
+    const PRICE_BY_PLAN: Record<string, string | undefined> = {
+      'solo-monthly': Deno.env.get('STRIPE_PRICE_ID'),
+      'solo-annual': Deno.env.get('STRIPE_PRICE_ID_ANNUAL'),
+      'duo-monthly': Deno.env.get('STRIPE_PRICE_ID_DUO'),
+      'duo-annual': Deno.env.get('STRIPE_PRICE_ID_DUO_ANNUAL'),
+      // compatibilidade com versões anteriores do frontend
+      monthly: Deno.env.get('STRIPE_PRICE_ID'),
+      annual: Deno.env.get('STRIPE_PRICE_ID_ANNUAL'),
+    }
+    const priceId = PRICE_BY_PLAN[plan] ?? Deno.env.get('STRIPE_PRICE_ID')!
 
     // Teste grátis só para quem nunca usou (controle por e-mail — vale mesmo se a
     // pessoa cancelou e voltou, ou apagou e recriou a conta com o mesmo e-mail).
@@ -95,7 +108,7 @@ Deno.serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      line_items: [{ price: Deno.env.get('STRIPE_PRICE_ID')!, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
       ...(trialEligible ? { subscription_data: { trial_period_days: 7 } } : {}),
       success_url: `${origin}?payment=success`,

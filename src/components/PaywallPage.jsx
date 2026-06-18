@@ -1,11 +1,60 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { PLANS, planKey, normalizePlanKey, ANNUAL_SAVE } from '../plans.js';
+
+// Segmented control simples, no estilo do card de auth.
+function Segmented({ label, options, value, onChange }) {
+  return (
+    <div
+      role="tablist"
+      aria-label={label}
+      style={{ display: 'flex', gap: 4, background: 'var(--bg-2)', border: '1px solid var(--line)', borderRadius: 999, padding: 4, marginBottom: 12 }}
+    >
+      {options.map((opt) => {
+        const active = value === opt.id;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(opt.id)}
+            style={{
+              flex: 1,
+              padding: '9px 12px',
+              borderRadius: 999,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 13.5,
+              fontWeight: 700,
+              fontFamily: 'inherit',
+              background: active ? 'var(--accent)' : 'transparent',
+              color: active ? '#fff' : 'var(--muted)',
+              transition: 'background 0.18s, color 0.18s',
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function PaywallPage({ paymentResult }) {
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const initial = PLANS[normalizePlanKey(localStorage.getItem('dinprev_plan'))];
+  const [tier, setTier] = useState(initial.tier);
+  const [cycle, setCycle] = useState(initial.cycle);
+  const plan = PLANS[planKey(tier, cycle)];
+
+  const perks = tier === 'duo'
+    ? ['Dois perfis independentes — você + parceiro(a)', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser']
+    : ['7 dias grátis, sem cobrança hoje', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser'];
 
   async function handleCheckout() {
     setLoading(true);
@@ -21,7 +70,7 @@ export default function PaywallPage({ paymentResult }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ origin: window.location.origin }),
+        body: JSON.stringify({ origin: window.location.origin, plan: planKey(tier, cycle) }),
       }
     );
 
@@ -65,12 +114,32 @@ export default function PaywallPage({ paymentResult }) {
           <>
             <h2 className="auth-title">Comece seu teste grátis</h2>
             <p className="auth-lead">
-              Sua conta foi criada. Comece com <strong>7 dias grátis</strong> — depois R$27/mês. Sem cobrança hoje.
+              Sua conta foi criada. Comece com <strong>7 dias grátis</strong> — depois{' '}
+              {plan.short}. Sem cobrança hoje.
             </p>
 
-            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
+            <Segmented
+              label="Plano"
+              value={tier}
+              onChange={setTier}
+              options={[
+                { id: 'solo', label: 'Solo' },
+                { id: 'duo', label: 'Duo · 2 perfis' },
+              ]}
+            />
+            <Segmented
+              label="Período de cobrança"
+              value={cycle}
+              onChange={setCycle}
+              options={[
+                { id: 'monthly', label: 'Mensal' },
+                { id: 'annual', label: `Anual · ${ANNUAL_SAVE[tier]}` },
+              ]}
+            />
+
+            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '16px 18px', margin: '20px 0 24px' }}>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {['7 dias grátis, sem cobrança hoje', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser'].map(item => (
+                {perks.map(item => (
                   <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, color: 'var(--muted)' }}>
                     <span style={{ color: 'var(--accent)', fontWeight: 700 }}>✓</span>
                     {item}
@@ -90,7 +159,7 @@ export default function PaywallPage({ paymentResult }) {
             </button>
 
             <p style={{ textAlign: 'center', marginTop: 16, fontSize: 12.5, color: 'var(--faint)' }}>
-              Depois R$27/mês · cancele quando quiser
+              Depois {plan.short} · cancele quando quiser
             </p>
           </>
         )}

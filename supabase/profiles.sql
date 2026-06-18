@@ -6,8 +6,12 @@ create table if not exists public.profiles (
   stripe_customer_id    text unique,
   subscription_id       text,
   subscription_status   text not null default 'inactive',
+  plan                  text not null default 'solo', -- 'solo' | 'duo' (gravado pelo webhook a partir do price)
   updated_at            timestamptz not null default now()
 );
+
+-- Para bases já existentes (rode uma vez se a coluna ainda não existir):
+alter table public.profiles add column if not exists plan text not null default 'solo';
 
 alter table public.profiles enable row level security;
 

@@ -1,6 +1,35 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../landing.css';
 import LandingDemo, { PlanMock } from './LandingDemo.jsx';
+import { PLANS, planKey, planPerks } from '../plans.js';
+
+// Card de preço de um plano (Solo ou Duo) para o ciclo selecionado.
+function PriceCard({ planId, onStart }) {
+  const plan = PLANS[planId];
+  const isDuo = plan.tier === 'duo';
+  return (
+    <div className={'lp-price-card' + (isDuo ? ' lp-price-card-duo' : '')}>
+      <div className="lp-price-badge">{isDuo ? 'Ideal para casais' : '7 dias grátis'}</div>
+      <div className="lp-price-label">{isDuo ? 'Duo · 2 perfis' : 'Solo'}</div>
+      <div className="lp-price-value">
+        <span className="lp-price-currency">R$</span>
+        <span className="lp-price-amount">{plan.amount}</span>
+        {plan.cents && <span className="lp-price-cents">{plan.cents}</span>}
+      </div>
+      <div className="lp-price-period">{plan.period}</div>
+      {plan.economy && <div className="lp-price-economy">{plan.economy}</div>}
+      <ul className="lp-price-perks">
+        {planPerks(plan.tier).map((perk) => (
+          <li key={perk}>{perk}</li>
+        ))}
+      </ul>
+      <button className="lp-cta-price" onClick={() => onStart(planId)}>
+        Começar 7 dias grátis
+      </button>
+      <p className="lp-price-note">{plan.note}</p>
+    </div>
+  );
+}
 
 function useReveal() {
   useEffect(() => {
@@ -16,6 +45,14 @@ function useReveal() {
 
 export default function LandingPage({ onGetStarted, onLogin }) {
   useReveal();
+  const [billing, setBilling] = useState('annual');
+  const annual = billing === 'annual';
+
+  // Guarda o plano escolhido para a edge function de checkout ler depois do cadastro.
+  const start = (planId) => {
+    localStorage.setItem('dinprev_plan', planId);
+    onGetStarted();
+  };
 
   const scrollTo = (id) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -64,7 +101,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </p>
 
           <div className="lp-hero-ctas">
-            <button className="lp-cta-main" onClick={onGetStarted}>
+            <button className="lp-cta-main" onClick={() => start(planKey('solo', billing))}>
               Começar 7 dias grátis
             </button>
             <button className="lp-cta-sec" onClick={() => scrollTo('como-funciona')}>
@@ -74,7 +111,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
           <p className="lp-hero-footnote">
             <strong className="lp-trial-pill">7 dias grátis</strong>
-            depois R$27/mês · cancele quando quiser
+            depois a partir de R$19,90/mês · cancele quando quiser
           </p>
         </div>
 
@@ -226,28 +263,33 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           Depois, menos que um jantar.
         </h2>
         <p className="lp-pricing-sub reveal reveal-delay-2">
-          Teste tudo sem pagar nada. Passados os 7 dias, são R$27/mês — um plano, tudo incluso. Cancele quando quiser.
+          Teste tudo sem pagar nada. Passados os 7 dias, escolha o plano ideal — sozinho ou a dois. Cancele quando quiser.
         </p>
-        <div className="lp-price-card reveal reveal-delay-3">
-          <div className="lp-price-badge">7 dias grátis</div>
-          <div className="lp-price-label">Depois do teste</div>
-          <div className="lp-price-value">
-            <span className="lp-price-currency">R$</span>
-            <span className="lp-price-amount">27</span>
-          </div>
-          <div className="lp-price-period">por mês · cancele quando quiser</div>
-          <ul className="lp-price-perks">
-            <li>7 dias grátis, sem cobrança hoje</li>
-            <li>Todos os painéis desbloqueados</li>
-            <li>Dados salvos na nuvem</li>
-            <li>Funciona no celular e no desktop</li>
-            <li>Histórico mensal ilimitado</li>
-            <li>Cancele quando quiser</li>
-          </ul>
-          <button className="lp-cta-price" onClick={onGetStarted}>
-            Começar 7 dias grátis
+
+        <div className="lp-billing-toggle reveal reveal-delay-2" role="tablist" aria-label="Período de cobrança">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!annual}
+            className={!annual ? 'active' : ''}
+            onClick={() => setBilling('monthly')}
+          >
+            Mensal
           </button>
-          <p className="lp-price-note">Sem cobrança hoje · depois R$27/mês</p>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={annual}
+            className={annual ? 'active' : ''}
+            onClick={() => setBilling('annual')}
+          >
+            Anual <span className="lp-billing-save">economize</span>
+          </button>
+        </div>
+
+        <div className="lp-price-cards reveal reveal-delay-3">
+          <PriceCard planId={planKey('solo', billing)} onStart={start} />
+          <PriceCard planId={planKey('duo', billing)} onStart={start} />
         </div>
       </section>
 
@@ -261,10 +303,10 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           Em menos de cinco minutos você já tem o panorama completo.
           Experimente 7 dias grátis — sem cobrança hoje.
         </p>
-        <button className="lp-cta-final reveal reveal-delay-2" onClick={onGetStarted}>
+        <button className="lp-cta-final reveal reveal-delay-2" onClick={() => start(planKey('solo', billing))}>
           Começar 7 dias grátis
         </button>
-        <p className="lp-final-note reveal reveal-delay-3">Depois R$27/mês · cancele quando quiser</p>
+        <p className="lp-final-note reveal reveal-delay-3">Depois a partir de R$19,90/mês · cancele quando quiser</p>
       </section>
 
       {/* ── footer ── */}

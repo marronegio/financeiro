@@ -20,7 +20,7 @@ function Spinner({ label = 'Carregando…' }) {
 
 export default function App() {
   const { user, loading, recovery } = useAuth();
-  const subscription = useSubscription(user);
+  const { status: subStatus, plan } = useSubscription(user);
   const [showAuth, setShowAuth] = useState(false);
 
   // Lê resultado do redirect do Stripe (?payment=success|cancel)
@@ -39,13 +39,13 @@ export default function App() {
   }
 
   // Logado — aguarda verificação de assinatura
-  if (subscription === 'loading') return <Spinner label="Verificando assinatura…" />;
+  if (subStatus === 'loading') return <Spinner label="Verificando assinatura…" />;
 
   // Logado — sem assinatura ativa (ou voltando do Stripe)
-  if (subscription !== 'active') {
+  if (subStatus !== 'active') {
     return <PaywallPage paymentResult={paymentResult} />;
   }
 
   // Logado + assinatura ativa
-  return <Dashboard />;
+  return <Dashboard plan={plan} />;
 }

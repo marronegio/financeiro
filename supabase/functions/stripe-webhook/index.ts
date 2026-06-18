@@ -1,6 +1,17 @@
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Price IDs do plano Duo — usados para gravar o tier ('solo'/'duo') em profiles.
+const DUO_PRICE_IDS = new Set(
+  [Deno.env.get('STRIPE_PRICE_ID_DUO'), Deno.env.get('STRIPE_PRICE_ID_DUO_ANNUAL')]
+    .filter(Boolean) as string[]
+)
+
+function planFromSubscription(sub: Stripe.Subscription): 'solo' | 'duo' {
+  const priceId = sub.items?.data?.[0]?.price?.id
+  return priceId && DUO_PRICE_IDS.has(priceId) ? 'duo' : 'solo'
+}
+
 Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
@@ -64,6 +75,7 @@ Deno.serve(async (req) => {
       await updateByCustomer(sub.customer as string, {
         subscription_status: sub.status,
         subscription_id: sub.id,
+        plan: planFromSubscription(sub),
       })
       // Marca o e-mail como tendo usado o teste grátis — não pode repetir.
       if (sub.trial_end) {
@@ -86,6 +98,7 @@ Deno.serve(async (req) => {
       const sub = event.data.object as Stripe.Subscription
       await updateByCustomer(sub.customer as string, {
         subscription_status: sub.status,
+        plan: planFromSubscription(sub),
       })
       break
     }

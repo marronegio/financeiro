@@ -220,6 +220,90 @@ body {
   opacity: 1;
 }
 
+/* Seletor de perfil (plano Duo) */
+.profile-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  color: var(--side-muted);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: left;
+  transition: all .15s;
+}
+
+.profile-chip:hover {
+  color: var(--side-ink);
+  background: var(--side-bg-2);
+}
+
+.profile-chip.active {
+  background: var(--side-bg-2);
+  color: var(--side-ink);
+  box-shadow: inset 3px 0 0 var(--side-accent);
+}
+
+.profile-chip .av {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--side-bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--side-accent);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profile-chip.active .av {
+  background: var(--side-bg);
+}
+
+.profile-chip .av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.profile-chip .av-add {
+  color: var(--side-muted);
+  font-size: 1rem;
+}
+
+.profile-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-chip-add {
+  font-weight: 500;
+}
+
+.cfg-active-tag {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .side-foot {
   margin-top: auto;
   padding: 16px 12px 4px;

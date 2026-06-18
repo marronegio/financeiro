@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createDefaultState } from './state.js';
 import { useAuth } from './auth/AuthContext.jsx';
-import { useCloudState } from './hooks/useCloudState.js';
+import { useProfiles } from './hooks/useProfiles.js';
 import { compute } from './money.js';
 import { applyRollover, manualClose } from './history.js';
 import { useTheme } from './theme.js';
@@ -16,7 +16,7 @@ import HistoricoPanel from './components/HistoricoPanel.jsx';
 import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
 import Onboarding from './components/Onboarding.jsx';
 
-const obKey = (id) => `ob_done_${id}`;
+const obKey = (id, profile) => `ob_done_${id}_${profile}`;
 
 const newItem = (kind) =>
   kind === 'parcelamentos'
@@ -95,22 +95,26 @@ const HEADERS = {
   },
 };
 
-export default function Dashboard() {
+export default function Dashboard({ plan }) {
   const { user, signOut } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
-  const [state, setState, status] = useCloudState(user.id, createDefaultState);
+  const {
+    state, setState, status,
+    active, profileList, isDuo, canAddPartner,
+    switchProfile, addPartner, renameProfile, removePartner,
+  } = useProfiles(user.id, plan);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Abre o tour só na primeira vez: usa a flag salva na nuvem (persiste entre
-  // dispositivos/logins); o localStorage fica como compatibilidade/reforço.
+  // Abre o tour só na primeira vez (por perfil): usa a flag salva na nuvem
+  // (persiste entre dispositivos/logins); o localStorage fica como reforço.
   useEffect(() => {
     if (!state) return;
-    const done = state.onboarded === true || !!localStorage.getItem(obKey(user.id));
+    const done = state.onboarded === true || !!localStorage.getItem(obKey(user.id, active));
     if (!done) setShowOnboarding(true);
-  }, [state?.onboarded, user.id]);
+  }, [state?.onboarded, user.id, active]);
 
   function finishOnboarding() {
-    localStorage.setItem(obKey(user.id), '1');
+    localStorage.setItem(obKey(user.id, active), '1');
     setState((s) => ({ ...s, onboarded: true, tab: 'plan' }));
     setShowOnboarding(false);
   }
@@ -164,6 +168,11 @@ export default function Dashboard() {
         user={user}
         onSignOut={signOut}
         avatar={state.avatar}
+        profiles={profileList}
+        activeProfile={active}
+        onSwitchProfile={switchProfile}
+        canAddPartner={canAddPartner}
+        onAddPartner={addPartner}
       />
       <main className="main">
         <div className="wrap">
@@ -210,6 +219,13 @@ export default function Dashboard() {
               user={user}
               avatar={state.avatar}
               onAvatar={(dataUrl) => setField('avatar', dataUrl)}
+              isDuo={isDuo}
+              profiles={profileList}
+              activeProfile={active}
+              canAddPartner={canAddPartner}
+              onAddPartner={addPartner}
+              onRenameProfile={renameProfile}
+              onRemovePartner={removePartner}
             />
           )}
         </div>
