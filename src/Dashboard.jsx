@@ -15,6 +15,11 @@ import EconomiasPanel from './components/EconomiasPanel.jsx';
 import HistoricoPanel from './components/HistoricoPanel.jsx';
 import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
 import Onboarding from './components/Onboarding.jsx';
+import ProfileGate from './components/ProfileGate.jsx';
+
+// Marca, por sessão do navegador, que o usuário Duo já escolheu um perfil. Some
+// ao fechar a aba (sessionStorage) — então cada nova sessão volta a perguntar.
+const GATE_KEY = 'dinprev_profile_chosen';
 
 const obKey = (id, profile) => `ob_done_${id}_${profile}`;
 
@@ -102,8 +107,23 @@ export default function Dashboard({ plan, trialing }) {
     state, setState, status,
     active, profileList, isDuo, canAddPartner,
     switchProfile, addPartner, renameProfile, removePartner,
+    mainNeedsPinSetup, verifyPin, completeMainSetup,
   } = useProfiles(user.id, plan);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Gate de seleção de perfil (estilo Netflix) — só no Duo, uma vez por sessão.
+  const [profileChosen, setProfileChosen] = useState(
+    () => !isDuo || sessionStorage.getItem(GATE_KEY) === '1'
+  );
+  const markChosen = () => {
+    sessionStorage.setItem(GATE_KEY, '1');
+    setProfileChosen(true);
+  };
+  const chooseProfile = (id) => { switchProfile(id); markChosen(); };
+  const createProfile = (opts) => { addPartner(opts); markChosen(); };
+  // Reabre a tela de perfis a partir da sidebar — o PIN (de quem tiver) é pedido
+  // de novo, pois o ProfileGate remonta com o estado de desbloqueio zerado.
+  const openProfiles = () => setProfileChosen(false);
 
   // Abre o tour só na primeira vez (por perfil): usa a flag salva na nuvem
   // (persiste entre dispositivos/logins); o localStorage fica como reforço.
@@ -156,6 +176,23 @@ export default function Dashboard({ plan, trialing }) {
     );
   }
 
+  // Antes do dashboard, o usuário Duo escolhe (ou cria) o perfil em que vai entrar.
+  if (isDuo && !profileChosen) {
+    return (
+      <div className="app">
+        <ProfileGate
+          profiles={profileList}
+          canAddPartner={canAddPartner}
+          mainNeedsPinSetup={mainNeedsPinSetup}
+          onPick={chooseProfile}
+          onCreate={createProfile}
+          onVerifyPin={verifyPin}
+          onMainSetup={completeMainSetup}
+        />
+      </div>
+    );
+  }
+
   const c = compute(state);
   const listProps = { updateItem, addItem, removeItem };
   const head = HEADERS[state.tab] ?? HEADERS.plan;
@@ -168,11 +205,9 @@ export default function Dashboard({ plan, trialing }) {
         user={user}
         onSignOut={signOut}
         avatar={state.avatar}
-        profiles={profileList}
-        activeProfile={active}
-        onSwitchProfile={switchProfile}
-        canAddPartner={canAddPartner}
-        onAddPartner={addPartner}
+        isDuo={isDuo}
+        activeProfile={profileList.find((p) => p.id === active)}
+        onOpenProfiles={openProfiles}
       />
       <main className="main">
         <div className="wrap">

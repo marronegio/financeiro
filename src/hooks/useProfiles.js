@@ -23,6 +23,11 @@ export function useProfiles(userId, planTier) {
   const isDuoRef = useRef(isDuo);
   isDuoRef.current = isDuo;
 
+  // Ref do blob cru para leituras síncronas (ex.: conferir PIN num clique) sem
+  // depender da closure do render.
+  const rawRef = useRef(raw);
+  rawRef.current = raw;
+
   const active = resolveActive(raw, isDuo);
   const hasPartner = !!raw?.profiles?.partner;
   const state = raw ? raw.profiles[active].data : null;
@@ -47,17 +52,40 @@ export function useProfiles(userId, planTier) {
     });
   }, [setRaw]);
 
-  const addPartner = useCallback(() => {
+  // Cria o perfil do parceiro e já o torna ativo. Aceita nome, foto e PIN
+  // opcionais (vindos da tela de seleção estilo Netflix); sem nome, cai no padrão.
+  const addPartner = useCallback((opts = {}) => {
     setRaw((r) => {
       if (!r || !isDuoRef.current || r.profiles.partner) return r;
+      const data = createDefaultState();
+      if (opts.avatar) data.avatar = opts.avatar;
+      const partner = { name: opts.name?.trim() || PROFILE_NAMES.partner, data };
+      if (opts.pin) partner.pin = opts.pin; // PIN opcional de 4 dígitos
       return {
         ...r,
         activeProfile: 'partner',
-        profiles: {
-          ...r.profiles,
-          partner: { name: PROFILE_NAMES.partner, data: createDefaultState() },
-        },
+        profiles: { ...r.profiles, partner },
       };
+    });
+  }, [setRaw]);
+
+  // Confere o PIN de um perfil. Perfil sem PIN é sempre liberado.
+  const verifyPin = useCallback((id, pin) => {
+    const p = rawRef.current?.profiles?.[id];
+    if (!p) return false;
+    if (!p.pin) return true;
+    return p.pin === pin;
+  }, []);
+
+  // Conclui o passo único de "primeiro login" do perfil principal: grava o PIN
+  // escolhido (ou nenhum) e marca que a oferta já foi feita, pra não repetir.
+  const completeMainSetup = useCallback((pin) => {
+    setRaw((r) => {
+      if (!r) return r;
+      const main = { ...r.profiles.main, pinPrompted: true };
+      if (pin) main.pin = pin;
+      else delete main.pin;
+      return { ...r, profiles: { ...r.profiles, main } };
     });
   }, [setRaw]);
 
@@ -76,15 +104,19 @@ export function useProfiles(userId, planTier) {
     });
   }, [setRaw]);
 
-  // Lista para o seletor. O parceiro só aparece dentro do plano Duo.
+  // Lista para o seletor. O parceiro só aparece dentro do plano Duo. `hasPin`
+  // diz ao gate quais perfis pedem PIN antes de entrar (sem expor o PIN em si).
   const profileList = raw
     ? [
-        { id: 'main', name: raw.profiles.main.name, avatar: raw.profiles.main.data.avatar },
+        { id: 'main', name: raw.profiles.main.name, avatar: raw.profiles.main.data.avatar, hasPin: !!raw.profiles.main.pin },
         ...(isDuo && raw.profiles.partner
-          ? [{ id: 'partner', name: raw.profiles.partner.name, avatar: raw.profiles.partner.data.avatar }]
+          ? [{ id: 'partner', name: raw.profiles.partner.name, avatar: raw.profiles.partner.data.avatar, hasPin: !!raw.profiles.partner.pin }]
           : []),
       ]
     : [];
+
+  // Só no Duo e enquanto o titular ainda não passou pela oferta de PIN.
+  const mainNeedsPinSetup = isDuo && !!raw && !raw.profiles.main.pinPrompted;
 
   return {
     state,
@@ -95,9 +127,12 @@ export function useProfiles(userId, planTier) {
     isDuo,
     hasPartner,
     canAddPartner: isDuo && !hasPartner,
+    mainNeedsPinSetup,
     switchProfile,
     addPartner,
     renameProfile,
     removePartner,
+    verifyPin,
+    completeMainSetup,
   };
 }
