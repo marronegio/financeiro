@@ -73,7 +73,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </div>
         <div className="lp-nav-actions">
           <button className="lp-btn-ghost" onClick={onLogin}>Entrar</button>
-          <button className="lp-btn-primary" onClick={onGetStarted}>Começar</button>
+          <button className="lp-btn-primary" onClick={() => scrollTo('preco')}>Começar</button>
         </div>
       </nav>
 
@@ -101,7 +101,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </p>
 
           <div className="lp-hero-ctas">
-            <button className="lp-cta-main" onClick={() => start(planKey('solo', billing))}>
+            <button className="lp-cta-main" onClick={() => scrollTo('preco')}>
               Começar 7 dias grátis
             </button>
             <button className="lp-cta-sec" onClick={() => scrollTo('como-funciona')}>
@@ -303,7 +303,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           Em menos de cinco minutos você já tem o panorama completo.
           Experimente 7 dias grátis — sem cobrança hoje.
         </p>
-        <button className="lp-cta-final reveal reveal-delay-2" onClick={() => start(planKey('solo', billing))}>
+        <button className="lp-cta-final reveal reveal-delay-2" onClick={() => scrollTo('preco')}>
           Começar 7 dias grátis
         </button>
         <p className="lp-final-note reveal reveal-delay-3">Depois a partir de R$19,90/mês · cancele quando quiser</p>
