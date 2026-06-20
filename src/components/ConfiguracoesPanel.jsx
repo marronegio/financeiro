@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js';
 import { useTheme } from '../theme.js';
 import CropEditor from './CropEditor.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
+import PinDialog from './PinDialog.jsx';
 import EyeIcon from './EyeIcon.jsx';
 
 function PasswordField({ label, value, onChange }) {
@@ -36,12 +37,14 @@ function PasswordField({ label, value, onChange }) {
 export default function ConfiguracoesPanel({
   user, avatar, onAvatar, trialing = false,
   isDuo = false, profiles = [], activeProfile, canAddPartner = false,
-  onAddPartner, onRenameProfile, onRemovePartner,
+  onAddPartner, onRenameProfile, onRemovePartner, onVerifyPin, onSetPin,
 }) {
   const fileRef = useRef(null);
   const [cropSrc, setCropSrc] = useState(null);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [canceledMsg, setCanceledMsg] = useState('');
+  // PIN em edição: { id, name, mode: 'add'|'change'|'remove' } ou null.
+  const [pinEdit, setPinEdit] = useState(null);
 
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha,  setNovaSenha]  = useState('');
@@ -203,7 +206,7 @@ export default function ConfiguracoesPanel({
           </p>
 
           {profiles.map((p) => (
-            <label className="cfg-field" key={p.id}>
+            <div className="cfg-field" key={p.id}>
               <span className="field-label">
                 {p.id === 'main' ? 'Seu perfil' : 'Perfil do parceiro(a)'}
                 {activeProfile === p.id && <span className="cfg-active-tag"> · ativo</span>}
@@ -217,7 +220,26 @@ export default function ConfiguracoesPanel({
                   placeholder={p.id === 'main' ? 'Você' : 'Parceiro(a)'}
                 />
               </div>
-            </label>
+              <div className="cfg-pin-row">
+                <span className="cfg-pin-status">
+                  {p.hasPin ? '🔒 PIN ativo' : 'Sem PIN'}
+                </span>
+                {p.hasPin ? (
+                  <div className="cfg-pin-btns">
+                    <button type="button" className="cfg-link-btn" onClick={() => setPinEdit({ id: p.id, name: p.name, mode: 'change' })}>
+                      Trocar PIN
+                    </button>
+                    <button type="button" className="cfg-link-btn cfg-link-danger" onClick={() => setPinEdit({ id: p.id, name: p.name, mode: 'remove' })}>
+                      Remover
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" className="cfg-link-btn" onClick={() => setPinEdit({ id: p.id, name: p.name, mode: 'add' })}>
+                    Adicionar PIN
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
 
           {canAddPartner && (
@@ -389,6 +411,16 @@ export default function ConfiguracoesPanel({
           danger
           onConfirm={() => { onRemovePartner?.(); setConfirmingRemove(false); }}
           onCancel={() => setConfirmingRemove(false)}
+        />
+      )}
+
+      {pinEdit && (
+        <PinDialog
+          mode={pinEdit.mode}
+          profileName={pinEdit.name}
+          verify={(pin) => onVerifyPin?.(pinEdit.id, pin)}
+          onConfirm={(pin) => { onSetPin?.(pinEdit.id, pin); setPinEdit(null); }}
+          onCancel={() => setPinEdit(null)}
         />
       )}
 

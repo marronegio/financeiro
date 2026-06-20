@@ -1,30 +1,8 @@
 import React, { useState, useRef } from 'react';
 import CropEditor from './CropEditor.jsx';
+import PinField from './PinField.jsx';
 
 const initials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
-
-// Campo de PIN de 4 dígitos. `masked` esconde os dígitos (desbloqueio);
-// visível na definição, pra evitar erro de digitação sem precisar confirmar.
-function PinField({ value, onChange, masked = false, autoFocus = false, onComplete }) {
-  return (
-    <input
-      className="pg-pin-input"
-      inputMode="numeric"
-      autoComplete="off"
-      type={masked ? 'password' : 'text'}
-      value={value}
-      maxLength={4}
-      autoFocus={autoFocus}
-      placeholder="••••"
-      aria-label="PIN de 4 dígitos"
-      onChange={(e) => {
-        const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-        onChange(v);
-        if (v.length === 4) onComplete?.(v);
-      }}
-    />
-  );
-}
 
 // Tela estilo Netflix mostrada (uma vez por sessão) antes do dashboard no plano
 // Duo: o usuário escolhe em qual perfil entrar. Perfis com PIN pedem o código
@@ -32,7 +10,7 @@ function PinField({ value, onChange, masked = false, autoFocus = false, onComple
 // é possível definir um PIN opcional de 4 dígitos.
 export default function ProfileGate({
   profiles = [], canAddPartner = false, mainNeedsPinSetup = false,
-  onPick, onCreate, onVerifyPin, onMainSetup,
+  onPick, onCreate, onVerifyPin, onMainSetup, onRecover, onSetPin,
 }) {
   const [mode, setMode] = useState(mainNeedsPinSetup ? 'setup' : 'select');
 
@@ -51,6 +29,14 @@ export default function ProfileGate({
   const [unlockPin, setUnlockPin] = useState('');
   const [unlockErr, setUnlockErr] = useState(false);
 
+  // Recuperação por senha da conta (quando esqueceu o PIN).
+  const [recoverMode, setRecoverMode] = useState(false);
+  const [recoverPw, setRecoverPw] = useState('');
+  const [recoverErr, setRecoverErr] = useState('');
+  const [recovering, setRecovering] = useState(false);
+  const [recoverVerified, setRecoverVerified] = useState(false); // senha ok → definir novo PIN
+  const [recoverPin, setRecoverPin] = useState('');
+
   // Perfis já liberados nesta passagem pelo gate (incluindo um PIN recém-criado),
   // pra não pedir o código de novo logo depois de defini-lo.
   const [unlocked, setUnlocked] = useState(() => new Set());
@@ -64,12 +50,22 @@ export default function ProfileGate({
     reader.readAsDataURL(file);
   }
 
+  function resetRecover() {
+    setRecoverMode(false);
+    setRecoverPw('');
+    setRecoverErr('');
+    setRecovering(false);
+    setRecoverVerified(false);
+    setRecoverPin('');
+  }
+
   function pick(id) {
     const p = profiles.find((x) => x.id === id);
     if (p?.hasPin && !unlocked.has(id)) {
       setTarget(p);
       setUnlockPin('');
       setUnlockErr(false);
+      resetRecover();
       setMode('unlock');
       return;
     }
@@ -85,6 +81,37 @@ export default function ProfileGate({
       setUnlockErr(true);
       setUnlockPin('');
     }
+  }
+
+  // Recuperação: confere a senha da conta. Se confere, segue para a definição de
+  // um PIN novo (a senha é a credencial real, acima do PIN).
+  async function submitRecover(e) {
+    e.preventDefault();
+    if (!recoverPw || recovering) return;
+    setRecovering(true);
+    setRecoverErr('');
+    const ok = await onRecover?.(recoverPw);
+    setRecovering(false);
+    if (ok) {
+      setRecoverVerified(true);
+      setRecoverPw('');
+    } else {
+      setRecoverErr('Senha incorreta. Tente novamente.');
+      setRecoverPw('');
+    }
+  }
+
+  // Grava o PIN novo (ou remove, se entrar sem PIN) e entra no perfil.
+  function submitNewPin(e) {
+    e?.preventDefault();
+    if (recoverPin.length !== 4) return;
+    onSetPin?.(target.id, recoverPin);
+    onPick?.(target.id);
+  }
+
+  function enterWithoutPin() {
+    onSetPin?.(target.id, '');
+    onPick?.(target.id);
   }
 
   function submitCreate(e) {
@@ -107,6 +134,7 @@ export default function ProfileGate({
     setTarget(null);
     setUnlockPin('');
     setUnlockErr(false);
+    resetRecover();
     setMode('select');
   }
 
@@ -213,7 +241,7 @@ export default function ProfileGate({
         )}
 
         {/* ── desbloqueio por PIN ── */}
-        {mode === 'unlock' && target && (
+        {mode === 'unlock' && target && !recoverMode && (
           <form className="pg-create" onSubmit={submitUnlock}>
             <span className={'pg-av pg-av-lg' + (target.avatar ? ' has-photo' : '')}>
               {target.avatar ? <img src={target.avatar} alt="" /> : initials(target.name)}
@@ -228,12 +256,65 @@ export default function ProfileGate({
               onComplete={() => submitUnlock()}
             />
             {unlockErr && <p className="pg-error">PIN incorreto. Tente de novo.</p>}
+            <button type="button" className="pg-link" onClick={() => setRecoverMode(true)}>
+              Esqueci o PIN
+            </button>
             <div className="pg-create-actions">
               <button type="button" className="pg-btn-ghost" onClick={backToSelect}>
                 Voltar
               </button>
               <button type="submit" className="pg-btn" disabled={unlockPin.length !== 4}>
                 Entrar
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ── recuperação: passo 1, senha da conta ── */}
+        {mode === 'unlock' && target && recoverMode && !recoverVerified && (
+          <form className="pg-create" onSubmit={submitRecover}>
+            <h1 className="pg-title">Esqueceu o PIN?</h1>
+            <p className="pg-sub">
+              Confirme a senha da sua conta para redefinir o PIN do perfil <b>{target.name}</b>.
+            </p>
+            <input
+              className="pg-input"
+              type="password"
+              autoComplete="current-password"
+              autoFocus
+              placeholder="Senha da conta"
+              value={recoverPw}
+              onChange={(e) => { setRecoverPw(e.target.value); setRecoverErr(''); }}
+            />
+            {recoverErr && <p className="pg-error">{recoverErr}</p>}
+            <div className="pg-create-actions">
+              <button type="button" className="pg-btn-ghost" onClick={resetRecover} disabled={recovering}>
+                Voltar
+              </button>
+              <button type="submit" className="pg-btn" disabled={!recoverPw || recovering}>
+                {recovering ? 'Verificando…' : 'Continuar'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ── recuperação: passo 2, definir novo PIN ── */}
+        {mode === 'unlock' && target && recoverMode && recoverVerified && (
+          <form className="pg-create" onSubmit={submitNewPin}>
+            <h1 className="pg-title">Defina um novo PIN</h1>
+            <p className="pg-sub">
+              Escolha um novo PIN de 4 dígitos para o perfil <b>{target.name}</b>.
+            </p>
+            <PinField value={recoverPin} onChange={setRecoverPin} autoFocus />
+            <button type="button" className="pg-link" onClick={enterWithoutPin}>
+              Entrar sem PIN
+            </button>
+            <div className="pg-create-actions">
+              <button type="button" className="pg-btn-ghost" onClick={resetRecover}>
+                Voltar
+              </button>
+              <button type="submit" className="pg-btn" disabled={recoverPin.length !== 4}>
+                Salvar e entrar
               </button>
             </div>
           </form>

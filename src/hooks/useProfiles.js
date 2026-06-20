@@ -77,15 +77,17 @@ export function useProfiles(userId, planTier) {
     return p.pin === pin;
   }, []);
 
-  // Conclui o passo único de "primeiro login" do perfil principal: grava o PIN
-  // escolhido (ou nenhum) e marca que a oferta já foi feita, pra não repetir.
-  const completeMainSetup = useCallback((pin) => {
+  // Define (pin com 4 dígitos) ou remove (pin vazio) o PIN de um perfil. Usado
+  // pela oferta de "primeiro login", pela tela de Configurações e pela
+  // recuperação. No principal, marca pinPrompted pra não repetir a oferta.
+  const setProfilePin = useCallback((id, pin) => {
     setRaw((r) => {
-      if (!r) return r;
-      const main = { ...r.profiles.main, pinPrompted: true };
-      if (pin) main.pin = pin;
-      else delete main.pin;
-      return { ...r, profiles: { ...r.profiles, main } };
+      if (!r || !r.profiles[id]) return r;
+      const p = { ...r.profiles[id] };
+      if (pin) p.pin = pin;
+      else delete p.pin;
+      if (id === 'main') p.pinPrompted = true;
+      return { ...r, profiles: { ...r.profiles, [id]: p } };
     });
   }, [setRaw]);
 
@@ -133,6 +135,6 @@ export function useProfiles(userId, planTier) {
     renameProfile,
     removePartner,
     verifyPin,
-    completeMainSetup,
+    setProfilePin,
   };
 }

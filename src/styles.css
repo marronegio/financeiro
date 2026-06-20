@@ -2071,6 +2071,59 @@ input[type="range"]::-moz-range-thumb {
   filter: brightness(1.06);
 }
 
+/* linha de gerenciamento de PIN (Configurações → Perfis) */
+.cfg-pin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cfg-pin-status {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.cfg-pin-btns {
+  display: flex;
+  gap: 14px;
+}
+
+.cfg-link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.cfg-link-btn:hover {
+  text-decoration: underline;
+}
+
+.cfg-link-danger {
+  color: var(--negative);
+}
+
+/* campos do modal de PIN */
+.pin-dialog-field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.pin-dialog-field .field-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.pin-dialog .pg-pin-input {
+  width: 100%;
+}
+
 .cfg-submit:disabled {
   opacity: 0.55;
   cursor: default;
@@ -2640,6 +2693,22 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.85rem;
   font-weight: 600;
   margin-top: 12px;
+}
+
+.pg-link {
+  margin-top: 14px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.pg-link:hover {
+  text-decoration: underline;
 }
 
 .pg-lock {

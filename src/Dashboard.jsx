@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createDefaultState } from './state.js';
+import { supabase } from './lib/supabase.js';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useProfiles } from './hooks/useProfiles.js';
 import { compute } from './money.js';
@@ -107,7 +108,7 @@ export default function Dashboard({ plan, trialing }) {
     state, setState, status,
     active, profileList, isDuo, canAddPartner,
     switchProfile, addPartner, renameProfile, removePartner,
-    mainNeedsPinSetup, verifyPin, completeMainSetup,
+    mainNeedsPinSetup, verifyPin, setProfilePin,
   } = useProfiles(user.id, plan);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -124,6 +125,14 @@ export default function Dashboard({ plan, trialing }) {
   // Reabre a tela de perfis a partir da sidebar — o PIN (de quem tiver) é pedido
   // de novo, pois o ProfileGate remonta com o estado de desbloqueio zerado.
   const openProfiles = () => setProfileChosen(false);
+
+  // Recuperação de PIN: confere a senha da conta (a credencial real, acima do
+  // PIN). Sucesso libera a remoção do PIN esquecido na tela de perfis.
+  const recoverWithPassword = async (password) => {
+    if (!password) return false;
+    const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
+    return !error;
+  };
 
   // Abre o tour só na primeira vez (por perfil): usa a flag salva na nuvem
   // (persiste entre dispositivos/logins); o localStorage fica como reforço.
@@ -187,7 +196,9 @@ export default function Dashboard({ plan, trialing }) {
           onPick={chooseProfile}
           onCreate={createProfile}
           onVerifyPin={verifyPin}
-          onMainSetup={completeMainSetup}
+          onMainSetup={(pin) => setProfilePin('main', pin)}
+          onRecover={recoverWithPassword}
+          onSetPin={setProfilePin}
         />
       </div>
     );
@@ -262,6 +273,8 @@ export default function Dashboard({ plan, trialing }) {
               onAddPartner={addPartner}
               onRenameProfile={renameProfile}
               onRemovePartner={removePartner}
+              onVerifyPin={verifyPin}
+              onSetPin={setProfilePin}
             />
           )}
         </div>
