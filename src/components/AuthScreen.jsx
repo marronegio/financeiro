@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { isValidCPF, formatCPF, onlyDigits } from '../cpf.js';
 import PasswordInput from './PasswordInput.jsx';
 
 export default function AuthScreen({ onBack }) {
   const { signIn, signUp, resetPassword } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
   const [email, setEmail] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -21,13 +23,17 @@ export default function AuthScreen({ onBack }) {
       setError('Preencha e-mail e senha.');
       return;
     }
+    if (isSignup && !isValidCPF(cpf)) {
+      setError('Digite um CPF válido.');
+      return;
+    }
     if (password.length < 6) {
       setError('A senha precisa ter ao menos 6 caracteres.');
       return;
     }
     setBusy(true);
     const { data, error } = isSignup
-      ? await signUp(email, password)
+      ? await signUp(email, password, onlyDigits(cpf))
       : await signIn(email, password);
     setBusy(false);
 
@@ -89,6 +95,21 @@ export default function AuthScreen({ onBack }) {
               autoComplete="email"
             />
           </label>
+          {isSignup && (
+            <label className="auth-field">
+              <span className="field-label">CPF</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className="auth-input"
+                value={cpf}
+                onChange={(e) => setCpf(formatCPF(e.target.value))}
+                placeholder="000.000.000-00"
+                autoComplete="off"
+                maxLength={14}
+              />
+            </label>
+          )}
           <label className="auth-field">
             <span className="field-label">Senha</span>
             <PasswordInput

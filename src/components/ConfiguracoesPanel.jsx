@@ -62,6 +62,50 @@ export default function ConfiguracoesPanel({
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalErr, setPortalErr] = useState('');
 
+  // Exclusão de conta
+  const [deleting, setDeleting] = useState(false);     // modal aberto
+  const [delPassword, setDelPassword] = useState('');
+  const [delErr, setDelErr] = useState('');
+  const [delBusy, setDelBusy] = useState(false);
+
+  async function handleDeleteAccount() {
+    setDelBusy(true);
+    setDelErr('');
+    // Reconfirma a identidade pela senha da conta antes de algo irreversível.
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: delPassword,
+    });
+    if (signInErr) {
+      setDelErr('Senha incorreta.');
+      setDelBusy(false);
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        await supabase.auth.signOut();
+        window.location.href = '/'; // volta para a landing
+        return;
+      }
+      setDelErr(data.error || 'Não foi possível excluir a conta. Tente novamente.');
+    } catch {
+      setDelErr('Erro de conexão. Tente novamente.');
+    }
+    setDelBusy(false);
+  }
+
   async function handlePortal() {
     setPortalLoading(true);
     setPortalErr('');
@@ -384,6 +428,43 @@ export default function ConfiguracoesPanel({
           </button>
         )}
       </div>
+
+      {/* Excluir conta (LGPD) */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Excluir conta</span>
+        </div>
+        <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+          Apaga <b>permanentemente</b> sua conta e todos os dados — perfis, planejamento, cartão,
+          parcelamentos, economias e histórico{isDuo ? ', incluindo o perfil do parceiro(a)' : ''}.
+          A assinatura é cancelada e seus dados são removidos do nosso sistema e do provedor de
+          pagamento. Esta ação não pode ser desfeita.
+        </p>
+        <button type="button" className="cfg-danger-btn" onClick={() => { setDeleting(true); setDelPassword(''); setDelErr(''); }}>
+          Excluir minha conta
+        </button>
+      </div>
+
+      {deleting && (
+        <div className="ob-backdrop" onClick={() => !delBusy && setDeleting(false)}>
+          <div className="ob-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="ob-title">Excluir conta definitivamente?</h2>
+            <p className="ob-desc">
+              Tudo será apagado e não há como recuperar. Para confirmar, digite a senha da sua conta.
+            </p>
+            <PasswordField label="Senha da conta" value={delPassword} onChange={(v) => { setDelPassword(v); setDelErr(''); }} />
+            {delErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0 }}>{delErr}</p>}
+            <div className="ob-actions">
+              <button className="ob-skip" onClick={() => setDeleting(false)} disabled={delBusy}>
+                Voltar
+              </button>
+              <button className="btn-danger" onClick={handleDeleteAccount} disabled={delBusy || !delPassword}>
+                {delBusy ? 'Excluindo…' : 'Excluir tudo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirming && (
         <ConfirmDialog

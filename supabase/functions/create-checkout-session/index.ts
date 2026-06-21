@@ -6,6 +6,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const onlyDigits = (s: string) => (s || '').replace(/\D/g, '')
+
+// Valida os dígitos verificadores do CPF (consistência do número, não existência).
+function isValidCPF(value: string): boolean {
+  const cpf = onlyDigits(value)
+  if (cpf.length !== 11) return false
+  if (/^(\d)\1{10}$/.test(cpf)) return false
+  const digit = (len: number) => {
+    let sum = 0
+    for (let i = 0; i < len; i++) sum += parseInt(cpf[i], 10) * (len + 1 - i)
+    const r = (sum * 10) % 11
+    return r === 10 ? 0 : r
+  }
+  return digit(9) === parseInt(cpf[9], 10) && digit(10) === parseInt(cpf[10], 10)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -42,7 +58,7 @@ Deno.serve(async (req) => {
     // Busca ou cria o customer no Stripe
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('stripe_customer_id, subscription_status')
+      .select('stripe_customer_id, subscription_status, cpf')
       .eq('id', user.id)
       .single()
 
@@ -81,6 +97,17 @@ Deno.serve(async (req) => {
         .upsert({ id: user.id, stripe_customer_id: customerId })
     }
 
+    // CPF: source of truth é profiles.cpf (write-once). Se ainda não há, pega do
+    // metadata do cadastro, valida e persiste — daí em diante não muda mais.
+    let cpf = onlyDigits(profile?.cpf || '')
+    if (!cpf) {
+      const metaCpf = onlyDigits((user.user_metadata as Record<string, unknown> | null)?.cpf as string || '')
+      if (metaCpf && isValidCPF(metaCpf)) {
+        cpf = metaCpf
+        await supabaseAdmin.from('profiles').upsert({ id: user.id, cpf })
+      }
+    }
+
     const { origin, plan } = await req.json()
 
     // 4 combinações tier × ciclo → 4 price IDs. Aceita as chaves novas
@@ -96,15 +123,18 @@ Deno.serve(async (req) => {
     }
     const priceId = PRICE_BY_PLAN[plan] ?? Deno.env.get('STRIPE_PRICE_ID')!
 
-    // Teste grátis só para quem nunca usou (controle por e-mail — vale mesmo se a
-    // pessoa cancelou e voltou, ou apagou e recriou a conta com o mesmo e-mail).
-    const email = (user.email || '').toLowerCase()
-    const { data: redemption } = await supabaseAdmin
-      .from('trial_redemptions')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle()
-    const trialEligible = !redemption
+    // Teste grátis só para quem nunca usou. O controle é por CPF — assim a pessoa
+    // não escapa criando outros e-mails. Contas antigas sem CPF (legado) seguem
+    // elegíveis; todo cadastro novo exige CPF.
+    let trialEligible = true
+    if (cpf) {
+      const { data: redemption } = await supabaseAdmin
+        .from('trial_redemptions')
+        .select('cpf')
+        .eq('cpf', cpf)
+        .maybeSingle()
+      trialEligible = !redemption
+    }
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

@@ -39,14 +39,14 @@ export function AuthProvider({ children }) {
     loading,
     recovery,
     clearRecovery: () => setRecovery(false),
-    signUp: (email, password) =>
+    signUp: (email, password, cpf) =>
       supabase.auth.signUp({
         email,
         password,
-        // Link de confirmação volta para a origem onde o cadastro foi feito
-        // (produção em produção, localhost em dev). Precisa estar na allowlist
-        // de Redirect URLs do Supabase.
-        options: { emailRedirectTo: window.location.origin },
+        // CPF guardado no metadata; vira a chave do controle de teste grátis
+        // (persistido em profiles.cpf no primeiro checkout). Link de confirmação
+        // volta para a origem do cadastro (precisa estar na allowlist do Supabase).
+        options: { data: { cpf: cpf || null }, emailRedirectTo: window.location.origin },
       }),
     signIn: (email, password) =>
       supabase.auth.signInWithPassword({ email, password }),

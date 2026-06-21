@@ -77,18 +77,23 @@ Deno.serve(async (req) => {
         subscription_id: sub.id,
         plan: planFromSubscription(sub),
       })
-      // Marca o e-mail como tendo usado o teste grátis — não pode repetir.
+      // Marca o CPF como tendo usado o teste grátis — não pode repetir, mesmo
+      // que a pessoa crie outro e-mail. O CPF vem de profiles (gravado no checkout).
       if (sub.trial_end) {
         try {
-          const customer = await stripe.customers.retrieve(sub.customer as string)
-          const email = (customer as Stripe.Customer).email?.toLowerCase()
-          if (email) {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('cpf')
+            .eq('stripe_customer_id', sub.customer as string)
+            .single()
+          const cpf = prof?.cpf
+          if (cpf) {
             await supabase
               .from('trial_redemptions')
-              .upsert({ email }, { onConflict: 'email' })
+              .upsert({ cpf }, { onConflict: 'cpf' })
           }
         } catch (e) {
-          console.warn('Falha ao registrar trial por e-mail:', e.message)
+          console.warn('Falha ao registrar trial por CPF:', e.message)
         }
       }
       break
