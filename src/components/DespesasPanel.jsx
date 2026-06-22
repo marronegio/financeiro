@@ -16,6 +16,7 @@ export default function DespesasPanel({ state, c, updateItem, addItem, removeIte
             items={state.despesas}
             namePlaceholder="Nome"
             addLabel="Adicionar despesa"
+            showVenc
             updateItem={updateItem}
             addItem={addItem}
             removeItem={removeItem}

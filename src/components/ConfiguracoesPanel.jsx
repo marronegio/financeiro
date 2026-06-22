@@ -38,6 +38,7 @@ export default function ConfiguracoesPanel({
   user, avatar, onAvatar, trialing = false,
   isDuo = false, profiles = [], activeProfile, canAddPartner = false,
   onAddPartner, onRenameProfile, onRemovePartner, onVerifyPin, onSetPin,
+  emailVencimentos = true, onToggleEmailVencimentos,
 }) {
   const fileRef = useRef(null);
   const [cropSrc, setCropSrc] = useState(null);
@@ -364,6 +365,34 @@ export default function ConfiguracoesPanel({
               onClick={() => setTheme('dark')}
             >
               ☾ Escuro
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Notificações */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Notificações</span>
+        </div>
+        <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+          Receba um e-mail no dia anterior ao vencimento de cada despesa fixa (o aviso de
+          “vence amanhã”), enviado para <b style={{ color: 'var(--ink)' }}>{email}</b>.
+        </p>
+        <div className="cfg-appearance">
+          <span className="field-label" style={{ margin: 0 }}>Avisos de vencimento por e-mail</span>
+          <div className="seg">
+            <button
+              className={emailVencimentos ? 'active' : ''}
+              onClick={() => onToggleEmailVencimentos?.(true)}
+            >
+              Ativado
+            </button>
+            <button
+              className={!emailVencimentos ? 'active' : ''}
+              onClick={() => onToggleEmailVencimentos?.(false)}
+            >
+              Desativado
             </button>
           </div>
         </div>

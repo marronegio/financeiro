@@ -7,10 +7,10 @@ export const createDefaultState = () => ({
   split: 40,
   tab: 'plan',
   despesas: [
-    { nome: 'Aluguel', valor: '' },
-    { nome: 'Luz', valor: '' },
-    { nome: 'Internet', valor: '' },
-    { nome: 'Telefone', valor: '' },
+    { nome: 'Aluguel', valor: '', venc: '' },
+    { nome: 'Luz', valor: '', venc: '' },
+    { nome: 'Internet', valor: '', venc: '' },
+    { nome: 'Telefone', valor: '', venc: '' },
   ],
   assinaturas: [{ nome: '', valor: '' }],
   cartao: [{ nome: '', valor: '', cat: '' }],
@@ -19,6 +19,7 @@ export const createDefaultState = () => ({
   metas: [], // metas de economia: { nome, valor (alvo), guardado (já juntei), prazo 'YYYY-MM' }
   avatar: '', // foto de perfil opcional (data URL); vazio = mostra as iniciais
   onboarded: false, // true depois que o usuário viu/pulou o tour de introdução
+  emailVencimentos: true, // receber por e-mail o aviso de "vence amanhã" das despesas fixas
   // Histórico / ciclo mensal.
   recebimentoDia: '', // dia do mês em que recebe o salário (1–31)
   faturaDia: '', // dia do mês em que paga a fatura (1–31)

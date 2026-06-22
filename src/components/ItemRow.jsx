@@ -1,12 +1,28 @@
 import React from 'react';
 import { maskMoney } from '../money.js';
 
-// Linha: [categoria opcional] + nome + valor (R$) + remover.
-// Usada em despesas, assinaturas e cartão. `categories` só é passado no cartão.
-export default function ItemRow({ item, namePlaceholder = 'Nome', onChange, onRemove, categories }) {
+// Mantém só dígitos e limita o dia de vencimento ao intervalo 1–31.
+const maskDia = (raw) => {
+  const d = raw.replace(/\D/g, '').slice(0, 2);
+  if (d === '') return '';
+  const n = Math.min(31, parseInt(d, 10));
+  return String(n);
+};
+
+// Linha: [categoria opcional] + nome + [vencimento opcional] + valor (R$) + remover.
+// Usada em despesas, assinaturas e cartão. `categories` só é passado no cartão;
+// `showVenc` só é passado nas despesas fixas.
+export default function ItemRow({
+  item,
+  namePlaceholder = 'Nome',
+  onChange,
+  onRemove,
+  categories,
+  showVenc = false,
+}) {
   const hasCat = Array.isArray(categories) && categories.length > 0;
   return (
-    <div className={'row' + (hasCat ? ' has-cat' : '')}>
+    <div className={'row' + (hasCat ? ' has-cat' : '') + (showVenc ? ' has-venc' : '')}>
       {hasCat && (
         <select
           className="cat-select"
@@ -30,6 +46,20 @@ export default function ItemRow({ item, namePlaceholder = 'Nome', onChange, onRe
           autoComplete="off"
         />
       </div>
+      {showVenc && (
+        <div className="venc-wrap" title="Dia do vencimento">
+          <span className="prefix">dia</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={item.venc || ''}
+            onChange={(e) => onChange({ ...item, venc: maskDia(e.target.value) })}
+            placeholder="—"
+            aria-label="Dia do vencimento"
+            autoComplete="off"
+          />
+        </div>
+      )}
       <div className="val-wrap">
         <span className="prefix">R$</span>
         <input

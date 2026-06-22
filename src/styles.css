@@ -645,6 +645,10 @@ h1 em {
     gap: 6px;
   }
 
+  .row.has-venc {
+    grid-template-columns: 1fr 60px 104px 30px;
+  }
+
   .pcard-fields {
     grid-template-columns: 1fr 1fr;
   }
@@ -1123,6 +1127,40 @@ input::placeholder {
 /* linha do cartão com categoria: [categoria] nome valor remover */
 .row.has-cat {
   grid-template-columns: 116px 1fr 116px 34px;
+}
+
+/* linha de despesa fixa: nome [dia venc.] valor remover */
+.row.has-venc {
+  grid-template-columns: 1fr 78px 134px 34px;
+}
+
+.row .venc-wrap {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+}
+
+.row .venc-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+.row .venc-wrap .prefix {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--faint);
+  font-size: 0.8rem;
+  padding-right: 6px;
+  user-select: none;
+}
+
+.row .venc-wrap input {
+  width: 100%;
+  min-width: 0;
+  text-align: right;
 }
 
 .cat-select {
@@ -2978,6 +3016,104 @@ input[type="range"]::-moz-range-thumb {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+/* ── Avisos de vencimento (toasts estilo push) ───────────────────── */
+.toast-stack {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, calc(100vw - 36px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  gap: 11px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  padding: 13px 14px;
+  box-shadow: var(--shadow-md);
+  animation: toast-in 0.22s ease-out;
+}
+
+.toast-urgent {
+  border-left-color: var(--expense);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-ico {
+  font-size: 1.15rem;
+  line-height: 1.4;
+}
+
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-text {
+  margin: 0 0 9px;
+  font-size: 0.88rem;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toast-btn {
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--muted);
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+
+.toast-btn:hover {
+  background: var(--surface);
+}
+
+.toast-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.toast-btn.primary:hover {
+  filter: brightness(1.06);
+}
+
+@media (max-width: 480px) {
+  .toast-stack {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+  }
 }
 
 /* segmented control de aparência (Configurações) reaproveita .seg */

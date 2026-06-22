@@ -11,6 +11,7 @@ export default function EditableList({
   addItem,
   removeItem,
   categories,
+  showVenc,
 }) {
   return (
     <>
@@ -20,6 +21,7 @@ export default function EditableList({
           item={it}
           namePlaceholder={namePlaceholder}
           categories={categories}
+          showVenc={showVenc}
           onChange={(next) => updateItem(kind, i, next)}
           onRemove={() => removeItem(kind, i)}
         />

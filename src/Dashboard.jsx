@@ -17,6 +17,7 @@ import HistoricoPanel from './components/HistoricoPanel.jsx';
 import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import ProfileGate from './components/ProfileGate.jsx';
+import DespesaAlerts from './components/DespesaAlerts.jsx';
 
 // Marca, por sessão do navegador, que o usuário Duo já escolheu um perfil. Some
 // ao fechar a aba (sessionStorage) — então cada nova sessão volta a perguntar.
@@ -31,6 +32,8 @@ const newItem = (kind) =>
     ? { nome: '', valor: '', cat: '' }
     : kind === 'metas'
     ? { nome: '', valor: '', guardado: '', prazo: '' }
+    : kind === 'despesas'
+    ? { nome: '', valor: '', venc: '' }
     : { nome: '', valor: '' };
 
 // Cabeçalho próprio de cada aba — título com palavra em destaque + subtítulo.
@@ -158,6 +161,14 @@ export default function Dashboard({ plan, trialing }) {
   const removeItem = (kind, i) =>
     setState((s) => ({ ...s, [kind]: s[kind].filter((_, idx) => idx !== i) }));
 
+  // "Já paguei": marca a despesa como quitada para o período do vencimento atual,
+  // suprimindo o aviso até o próximo mês.
+  const marcarDespesaPaga = (idx, duePeriod) =>
+    setState((s) => ({
+      ...s,
+      despesas: s.despesas.map((d, i) => (i === idx ? { ...d, pago: duePeriod } : d)),
+    }));
+
   const reset = () => {
     setState((s) => ({ ...createDefaultState(), tab: s.tab, onboarded: s.onboarded }));
   };
@@ -275,6 +286,8 @@ export default function Dashboard({ plan, trialing }) {
               onRemovePartner={removePartner}
               onVerifyPin={verifyPin}
               onSetPin={setProfilePin}
+              emailVencimentos={state.emailVencimentos !== false}
+              onToggleEmailVencimentos={(v) => setField('emailVencimentos', v)}
             />
           )}
         </div>
@@ -285,6 +298,9 @@ export default function Dashboard({ plan, trialing }) {
           onSkip={finishOnboarding}
           onStepChange={setTab}
         />
+      )}
+      {!showOnboarding && (
+        <DespesaAlerts despesas={state.despesas} onPaid={marcarDespesaPaga} />
       )}
     </div>
   );
