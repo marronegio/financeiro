@@ -70,6 +70,8 @@ describe('applyRollover', () => {
 
     // cartão zerado
     expect(r.cartao).toEqual([{ nome: '', valor: '' }]);
+    // renda extra zerada
+    expect(r.rendaExtra).toEqual([{ nome: '', valor: '' }]);
     // parcela avançou 0 -> 1
     expect(r.parcelamentos[0].pagas).toBe('1');
     // não muta o estado original
@@ -141,6 +143,15 @@ describe('manualClose', () => {
     expect(r.ultimoFechamento).toBe('2026-06');
     expect(r.cartao).toEqual([{ nome: '', valor: '' }]);
     expect(r.parcelamentos[0].pagas).toBe('1');
+  });
+
+  it('zera a renda extra e a registra no resumo do mês', () => {
+    const s = baseState({ rendaExtra: [{ nome: 'Freela', valor: '300,00' }] });
+    const r = manualClose(s, TODAY);
+    expect(r.rendaExtra).toEqual([{ nome: '', valor: '' }]);
+    expect(r.historico[0].rendaExtra).toBeCloseTo(300, 2);
+    // não muta o estado original
+    expect(s.rendaExtra[0].valor).toBe('300,00');
   });
 
   it('usa o "guardado real" informado quando passado', () => {

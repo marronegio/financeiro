@@ -157,6 +157,19 @@ describe('compute', () => {
     expect(compute(baseState()).totAbates).toBe(0);
   });
 
+  it('renda extra soma à renda disponível e aumenta a sobra', () => {
+    const s = baseState();
+    s.rendaExtra = [{ nome: 'Freela', valor: '300,00' }, { nome: 'Venda', valor: '50,00' }];
+    const c = compute(s);
+    expect(c.totRendaExtra).toBeCloseTo(350, 2);
+    expect(c.sobra).toBeCloseTo(960, 2); // 1000 + 350 − 290 − 100
+    expect(c.gastos).toBeCloseTo(290, 2); // renda extra não mexe nos gastos
+  });
+
+  it('sem renda extra, totRendaExtra é 0', () => {
+    expect(compute(baseState()).totRendaExtra).toBe(0);
+  });
+
   it('sobra negativa zera crédito e débito (não usa valor negativo)', () => {
     const s = baseState();
     s.salario = '100,00'; // gastos passam do salário

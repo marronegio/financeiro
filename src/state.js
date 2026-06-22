@@ -13,6 +13,7 @@ export const createDefaultState = () => ({
     { nome: 'Telefone', valor: '', venc: '' },
   ],
   assinaturas: [{ nome: '', valor: '' }],
+  rendaExtra: [{ nome: '', valor: '' }], // ganhos avulsos do mês (freela, venda, bônus); zera no fechamento
   cartao: [{ nome: '', valor: '', cat: '' }],
   abates: [], // valores abatidos da fatura (estornos, cashback, créditos)
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
@@ -61,6 +62,7 @@ export const migrateState = (raw) => {
 
 export const TABS = [
   { id: 'plan', label: 'Planejamento', ico: '◷' },
+  { id: 'rendaextra', label: 'Renda extra', ico: '⊕' },
   { id: 'despesas', label: 'Despesas fixas', ico: '⊟' },
   { id: 'assinaturas', label: 'Assinaturas', ico: '↻' },
   { id: 'cartao', label: 'Cartão de crédito', ico: '▣' },

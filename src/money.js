@@ -40,6 +40,7 @@ export function compute(state) {
   const totAss = state.assinaturas.reduce((s, it) => s + toNumber(it.valor), 0);
   const totCartao = state.cartao.reduce((s, it) => s + toNumber(it.valor), 0);
   const totAbates = (state.abates || []).reduce((s, it) => s + toNumber(it.valor), 0);
+  const totRendaExtra = (state.rendaExtra || []).reduce((s, it) => s + toNumber(it.valor), 0);
 
   let parcelaMensal = 0;
   let parcelaRestante = 0;
@@ -57,14 +58,15 @@ export function compute(state) {
   const faturaCartao = totCartao + totAss + parcelaMensal - totAbates;
   // Gastos somam tudo (menos os abates, que diminuem o desembolso real).
   const gastos = totDesp + totAss + totCartao + parcelaMensal - totAbates;
-  const sobra = salario - gastos - guardar;
+  // A renda extra do mês soma à renda disponível, aumentando a sobra.
+  const sobra = salario + totRendaExtra - gastos - guardar;
   const pctC = state.split;
   const pctD = 100 - state.split;
   const credito = (Math.max(0, sobra) * pctC) / 100;
   const debito = (Math.max(0, sobra) * pctD) / 100;
 
   return {
-    salario, guardar, totDesp, totAss, totCartao, totAbates,
+    salario, guardar, totDesp, totAss, totCartao, totAbates, totRendaExtra,
     parcelaMensal, parcelaRestante, parcelaAtivas, faturaCartao,
     gastos, sobra, pctC, pctD, credito, debito,
   };

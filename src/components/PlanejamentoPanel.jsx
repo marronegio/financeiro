@@ -6,8 +6,9 @@ import MetasResumo from './MetasResumo.jsx';
 
 export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) {
   const [confirmReset, setConfirmReset] = useState(false);
-  // Base para as larguras da barra de composição (sempre relativa ao salário).
-  const base = c.salario > 0 ? c.salario : c.gastos + c.guardar + Math.max(0, c.sobra) || 1;
+  // Base para as larguras da barra de composição (renda total disponível no mês).
+  const renda = c.salario + c.totRendaExtra;
+  const base = renda > 0 ? renda : c.gastos + c.guardar + Math.max(0, c.sobra) || 1;
   const pct = (v) => Math.max(0, Math.min(100, (v / base) * 100));
   const positive = c.sobra >= 0;
 
@@ -103,6 +104,15 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
                 </span>
                 <span className="amt">{BRL(c.salario)}</span>
               </div>
+              {c.totRendaExtra > 0 && (
+                <div className="summary-line">
+                  <span className="lbl">
+                    <span className="dot" style={{ background: 'var(--positive)' }} />
+                    Renda extra
+                  </span>
+                  <span className="amt">+ {BRL(c.totRendaExtra)}</span>
+                </div>
+              )}
               <div className="summary-line minus">
                 <span className="lbl">
                   <span className="dot" style={{ background: 'var(--expense)' }} />
@@ -149,7 +159,7 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
               </div>
             </div>
 
-            {c.sobra < 0 && c.salario > 0 && (
+            {c.sobra < 0 && renda > 0 && (
               <div className="warn show">
                 <span>⚠</span>
                 <span>

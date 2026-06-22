@@ -22,6 +22,14 @@ const STEPS = [
       'Comece informando seu salário e quanto quer guardar por mês. O app calcula quanto sobra e como dividir entre crédito e débito.',
   },
   {
+    tab: 'rendaextra',
+    target: '[data-tour="tab-rendaextra"]',
+    icon: '⊕',
+    title: 'Renda Extra',
+    description:
+      'Ganhou um dinheiro a mais? Freela, venda, bônus — lance aqui. Soma à sua renda disponível e zera sozinho no fechamento do mês.',
+  },
+  {
     tab: 'despesas',
     target: '[data-tour="tab-despesas"]',
     icon: '⊟',

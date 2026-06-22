@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar.jsx';
 import PlanejamentoPanel from './components/PlanejamentoPanel.jsx';
 import DespesasPanel from './components/DespesasPanel.jsx';
 import AssinaturasPanel from './components/AssinaturasPanel.jsx';
+import RendaExtraPanel from './components/RendaExtraPanel.jsx';
 import CartaoPanel from './components/CartaoPanel.jsx';
 import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
 import EconomiasPanel from './components/EconomiasPanel.jsx';
@@ -45,6 +46,14 @@ const HEADERS = {
       </>
     ),
     sub: 'Planeje a renda e os gastos, defina quanto guardar, e acompanhe as compras do cartão contra o limite que sobra pra você.',
+  },
+  rendaextra: {
+    title: (
+      <>
+        Sua renda <em>extra</em> do mês.
+      </>
+    ),
+    sub: 'Ganhos avulsos como freelas, vendas e bônus. Somam à sua renda disponível e zeram a cada fechamento de mês.',
   },
   despesas: {
     title: (
@@ -155,11 +164,11 @@ export default function Dashboard({ plan, trialing }) {
   const setTab = (tab) => setState((s) => ({ ...s, tab }));
 
   const updateItem = (kind, i, item) =>
-    setState((s) => ({ ...s, [kind]: s[kind].map((it, idx) => (idx === i ? item : it)) }));
+    setState((s) => ({ ...s, [kind]: (s[kind] || []).map((it, idx) => (idx === i ? item : it)) }));
   const addItem = (kind) =>
-    setState((s) => ({ ...s, [kind]: [...s[kind], newItem(kind)] }));
+    setState((s) => ({ ...s, [kind]: [...(s[kind] || []), newItem(kind)] }));
   const removeItem = (kind, i) =>
-    setState((s) => ({ ...s, [kind]: s[kind].filter((_, idx) => idx !== i) }));
+    setState((s) => ({ ...s, [kind]: (s[kind] || []).filter((_, idx) => idx !== i) }));
 
   // "Já paguei": marca a despesa como quitada para o período do vencimento atual,
   // suprimindo o aviso até o próximo mês.
@@ -261,6 +270,7 @@ export default function Dashboard({ plan, trialing }) {
           {state.tab === 'plan' && (
             <PlanejamentoPanel state={state} c={c} setField={setField} reset={reset} onTab={setTab} />
           )}
+          {state.tab === 'rendaextra' && <RendaExtraPanel state={state} c={c} {...listProps} />}
           {state.tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
           {state.tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
           {state.tab === 'cartao' && <CartaoPanel state={state} c={c} {...listProps} />}
