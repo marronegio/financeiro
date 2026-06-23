@@ -1,0 +1,24 @@
+# Configuração do projeto Supabase (versionada).
+# Ref do projeto vinculado (Dashboard → Project Settings → Reference ID).
+project_id = "kbyobwxpsyntfygtqjir"
+
+# --- Edge Functions -----------------------------------------------------------
+# A stripe-webhook recebe chamadas do Stripe, que NÃO enviam um JWT do Supabase
+# (apenas o header stripe-signature). Por isso o verify_jwt precisa ficar OFF,
+# senão a plataforma rejeita com 401 antes do código rodar. A segurança aqui é
+# garantida pela verificação da assinatura do Stripe (constructEventAsync).
+[functions.stripe-webhook]
+verify_jwt = false
+
+# As demais funções autenticam o usuário pelo JWT e devem mantê-lo ligado.
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.customer-portal]
+verify_jwt = true
+
+[functions.cancel-subscription]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
