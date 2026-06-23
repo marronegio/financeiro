@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { isValidCPF, formatCPF, onlyDigits } from '../cpf.js';
+import { trackMetaEvent } from '../lib/metaPixel.js';
 import PasswordInput from './PasswordInput.jsx';
 
 export default function AuthScreen({ onBack }) {
@@ -40,6 +41,10 @@ export default function AuthScreen({ onBack }) {
     if (error) {
       setError(traduzErro(error.message));
       return;
+    }
+    // Cadastro confirmado com sucesso no Supabase (sem erro) — conversão de registro.
+    if (isSignup) {
+      trackMetaEvent('CompleteRegistration');
     }
     // Se a confirmação por e-mail estiver ligada, não há sessão imediata no cadastro.
     if (isSignup && !data.session) {

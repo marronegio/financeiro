@@ -12,6 +12,8 @@ export const PLANS = {
     economy: '',
     note: 'Sem cobrança hoje · depois R$27/mês',
     short: 'R$27/mês',
+    // Valor cobrado por ciclo (BRL) — usado no evento Purchase do Meta Pixel.
+    value: 27,
   },
   'solo-annual': {
     tier: 'solo', cycle: 'annual',
@@ -20,6 +22,7 @@ export const PLANS = {
     economy: 'Economize R$85,20 por ano',
     note: 'Sem cobrança hoje · depois R$238,80/ano',
     short: 'R$238,80/ano (R$19,90/mês)',
+    value: 238.8,
   },
   'duo-monthly': {
     tier: 'duo', cycle: 'monthly',
@@ -28,6 +31,7 @@ export const PLANS = {
     economy: '',
     note: 'Sem cobrança hoje · depois R$44,90/mês',
     short: 'R$44,90/mês',
+    value: 44.9,
   },
   'duo-annual': {
     tier: 'duo', cycle: 'annual',
@@ -36,6 +40,7 @@ export const PLANS = {
     economy: 'Economize R$60 por ano',
     note: 'Sem cobrança hoje · depois R$478,80/ano',
     short: 'R$478,80/ano (R$39,90/mês)',
+    value: 478.8,
   },
 };
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../landing.css';
 import LandingDemo, { PlanMock } from './LandingDemo.jsx';
 import { PLANS, planKey, planPerks } from '../plans.js';
+import { trackMetaEvent } from '../lib/metaPixel.js';
 
 // Card de preço de um plano (Solo ou Duo) para o ciclo selecionado.
 function PriceCard({ planId, onStart }) {
@@ -51,6 +52,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
   // Guarda o plano escolhido para a edge function de checkout ler depois do cadastro.
   const start = (planId) => {
     localStorage.setItem('dinprev_plan', planId);
+    // Interesse demonstrado (clicou em "começar") antes do cadastro completo.
+    trackMetaEvent('Lead');
     onGetStarted();
   };
 

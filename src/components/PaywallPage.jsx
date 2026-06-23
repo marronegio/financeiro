@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PLANS, planKey, normalizePlanKey, ANNUAL_SAVE } from '../plans.js';
+import { trackMetaEvent } from '../lib/metaPixel.js';
 
 // Segmented control simples, no estilo do card de auth.
 function Segmented({ label, options, value, onChange }) {
@@ -52,6 +53,17 @@ export default function PaywallPage({ paymentResult }) {
   const [cycle, setCycle] = useState(initial.cycle);
   const plan = PLANS[planKey(tier, cycle)];
 
+  // Conversão de compra: o Stripe redireciona de volta com ?payment=success quando o
+  // checkout é concluído. Dispara o Purchase uma única vez — a guarda em sessionStorage
+  // evita recontar quando o usuário clica em "Recarregar" (que mantém o ?payment=success).
+  useEffect(() => {
+    if (paymentResult !== 'success') return;
+    if (sessionStorage.getItem('dinprev_purchase_tracked')) return;
+    sessionStorage.setItem('dinprev_purchase_tracked', '1');
+    const purchased = PLANS[normalizePlanKey(localStorage.getItem('dinprev_plan'))];
+    trackMetaEvent('Purchase', { value: purchased.value, currency: 'BRL' });
+  }, [paymentResult]);
+
   const perks = tier === 'duo'
     ? ['Dois perfis independentes — você + parceiro(a)', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser']
     : ['7 dias grátis, sem cobrança hoje', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser'];
@@ -78,6 +90,8 @@ export default function PaywallPage({ paymentResult }) {
     setLoading(false);
 
     if (data.url) {
+      // Sessão de checkout criada com sucesso — usuário está iniciando o pagamento.
+      trackMetaEvent('InitiateCheckout', { value: plan.value, currency: 'BRL' });
       window.location.href = data.url;
     } else {
       setError(data.error || 'Erro ao iniciar pagamento. Tente novamente.');
