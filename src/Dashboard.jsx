@@ -15,6 +15,7 @@ import CartaoPanel from './components/CartaoPanel.jsx';
 import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
 import EconomiasPanel from './components/EconomiasPanel.jsx';
 import HistoricoPanel from './components/HistoricoPanel.jsx';
+import ContatoPanel from './components/ContatoPanel.jsx';
 import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import ProfileGate from './components/ProfileGate.jsx';
@@ -102,6 +103,14 @@ const HEADERS = {
       </>
     ),
     sub: 'Defina os dias do recebimento e da fatura. A cada ciclo, o cartão é zerado, as parcelas avançam e um resumo do mês fica guardado aqui.',
+  },
+  contato: {
+    title: (
+      <>
+        <em>Fale</em> conosco.
+      </>
+    ),
+    sub: 'Relate um problema ou peça ajuda. Sua mensagem chega direto na nossa equipe e respondemos no e-mail informado.',
   },
   config: {
     title: (
@@ -318,6 +327,7 @@ export default function Dashboard({ plan, trialing }) {
           {state.tab === 'historico' && (
             <HistoricoPanel state={state} setField={setField} onClose={fecharMes} />
           )}
+          {state.tab === 'contato' && <ContatoPanel user={user} />}
           {state.tab === 'config' && (
             <ConfiguracoesPanel
               user={user}

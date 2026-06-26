@@ -71,6 +71,7 @@ export const TABS = [
   { id: 'parcelamentos', label: 'Parcelamentos', ico: '≣' },
   { id: 'economias', label: 'Economias', ico: '◎' },
   { id: 'historico', label: 'Histórico', ico: '◴' },
+  { id: 'contato', label: 'Fale conosco', ico: '✉' },
   { id: 'config', label: 'Configurações', ico: '⚙' },
 ];
 
