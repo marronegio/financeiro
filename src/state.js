@@ -87,6 +87,9 @@ export const CARD_CATEGORIES = [
 ];
 
 // Categorias efetivas do perfil: usa as personalizadas se houver, senão o padrão.
-// Garante o fallback para perfis salvos antes de a lista ser editável.
-export const getCardCategories = (state) =>
-  state?.cardCategories?.length ? state.cardCategories : CARD_CATEGORIES;
+// Garante o fallback para perfis salvos antes de a lista ser editável. "Outros"
+// é o destino das compras sem etiqueta, então fica sempre por último.
+export const getCardCategories = (state) => {
+  const cats = state?.cardCategories?.length ? state.cardCategories : CARD_CATEGORIES;
+  return [...cats].sort((a, b) => (a.id === 'outros') - (b.id === 'outros'));
+};

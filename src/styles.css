@@ -1198,6 +1198,43 @@ input::placeholder {
 }
 
 /* formulário "Fale conosco" */
+/* E-mail da conta: valor fixo, exibido como texto estático (sem caixa) e
+   totalmente inerte — não recebe foco, clique nem seleção. */
+.auth-input-locked,
+.auth-input-locked:focus {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.65;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* O autofill do navegador troca o fundo/cor dos campos preenchidos (nome),
+   o que os deixava sem a aparência de caixa dos demais. Reforça aqui o fundo e o
+   texto do próprio app. */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-2) inset;
+  caret-color: var(--ink);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* O e-mail é readOnly mas alguns navegadores ainda o autofillam — mantém o campo
+   transparente (sem caixa) mesmo nesse caso. Vem depois da regra acima pra vencer. */
+.auth-input-locked:-webkit-autofill,
+.auth-input-locked:-webkit-autofill:hover,
+.auth-input-locked:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--muted);
+  -webkit-box-shadow: none;
+  background: transparent;
+}
+
 .contato-textarea {
   resize: vertical;
   min-height: 110px;
@@ -1249,8 +1286,8 @@ input::placeholder {
 
 .cat-mgr-row {
   display: grid;
-  grid-template-columns: 36px 1fr 34px;
-  gap: 8px;
+  grid-template-columns: 28px 1fr 34px;
+  gap: 10px;
   align-items: center;
   margin-bottom: 7px;
 }
@@ -1262,13 +1299,26 @@ input::placeholder {
 }
 
 .cat-color {
-  width: 36px;
-  height: 34px;
-  padding: 2px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--surface-2);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
+  overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: transform .12s, box-shadow .15s;
+}
+
+.cat-color:hover {
+  transform: scale(1.08);
+}
+
+.cat-color:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .cat-color::-webkit-color-swatch-wrapper {
@@ -1277,7 +1327,12 @@ input::placeholder {
 
 .cat-color::-webkit-color-swatch {
   border: none;
-  border-radius: 5px;
+  border-radius: 50%;
+}
+
+.cat-color::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
 }
 
 .cat-name-input {

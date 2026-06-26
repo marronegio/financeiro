@@ -107,12 +107,15 @@ export default function ContatoPanel({ user }) {
               </label>
 
               <label className="auth-field">
-                <span className="field-label">E-mail</span>
+                <span className="field-label">E-mail da conta</span>
                 <input
-                  className="auth-input"
+                  className="auth-input auth-input-locked"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
+                  title="E-mail vinculado à sua conta"
                   placeholder="voce@email.com"
                   autoComplete="email"
                   required
