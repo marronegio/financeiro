@@ -14,7 +14,9 @@ export const createDefaultState = () => ({
   ],
   assinaturas: [{ nome: '', valor: '' }],
   rendaExtra: [{ nome: '', valor: '' }], // ganhos avulsos do mês (freela, venda, bônus); zera no fechamento
+  somarRendaExtra: true, // se a renda extra entra na sobra do planejamento
   cartao: [{ nome: '', valor: '', cat: '' }],
+  cardCategories: CARD_CATEGORIES.map((c) => ({ ...c })), // etiquetas das compras (editáveis pelo usuário)
   abates: [], // valores abatidos da fatura (estornos, cashback, créditos)
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],
   metas: [], // metas de economia: { nome, valor (alvo), guardado (já juntei), prazo 'YYYY-MM' }
@@ -82,3 +84,8 @@ export const CARD_CATEGORIES = [
   { id: 'compras', label: 'Compras', color: '#635bff' },
   { id: 'outros', label: 'Outros', color: '#8898aa' },
 ];
+
+// Categorias efetivas do perfil: usa as personalizadas se houver, senão o padrão.
+// Garante o fallback para perfis salvos antes de a lista ser editável.
+export const getCardCategories = (state) =>
+  state?.cardCategories?.length ? state.cardCategories : CARD_CATEGORIES;

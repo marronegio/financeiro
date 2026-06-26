@@ -1,17 +1,31 @@
 import React from 'react';
 import { BRL, toNumber } from '../money.js';
-import { CARD_CATEGORIES } from '../state.js';
+import { getCardCategories } from '../state.js';
 import EditableList from './EditableList.jsx';
+import CategoryManager from './CategoryManager.jsx';
 
-export default function CartaoPanel({ state, c, updateItem, addItem, removeItem }) {
-  // Total por categoria (itens sem categoria contam como "Outros").
-  const porCategoria = CARD_CATEGORIES.map((cat) => ({
-    ...cat,
-    total: state.cartao.reduce(
-      (s, it) => s + ((it.cat || 'outros') === cat.id ? toNumber(it.valor) : 0),
-      0
-    ),
-  }))
+export default function CartaoPanel({
+  state,
+  c,
+  updateItem,
+  addItem,
+  removeItem,
+  addCategory,
+  updateCategory,
+  removeCategory,
+}) {
+  const categories = getCardCategories(state);
+  const known = new Set(categories.map((cat) => cat.id));
+
+  // Total por categoria (itens sem etiqueta — ou com etiqueta removida — caem em "Outros").
+  const porCategoria = categories
+    .map((cat) => ({
+      ...cat,
+      total: state.cartao.reduce((s, it) => {
+        const id = known.has(it.cat) ? it.cat : 'outros';
+        return s + (id === cat.id ? toNumber(it.valor) : 0);
+      }, 0),
+    }))
     .filter((cat) => cat.total > 0)
     .sort((a, b) => b.total - a.total);
 
@@ -29,7 +43,7 @@ export default function CartaoPanel({ state, c, updateItem, addItem, removeItem 
               items={state.cartao}
               namePlaceholder="Ex: Mercado, iFood…"
               addLabel="Adicionar compra"
-              categories={CARD_CATEGORIES}
+              categories={categories}
               updateItem={updateItem}
               addItem={addItem}
               removeItem={removeItem}
@@ -39,6 +53,13 @@ export default function CartaoPanel({ state, c, updateItem, addItem, removeItem 
               junto com a parcela do mês dos seus parcelamentos.
             </p>
           </div>
+
+          <CategoryManager
+            categories={categories}
+            onAdd={addCategory}
+            onUpdate={updateCategory}
+            onRemove={removeCategory}
+          />
 
           <div className="card">
             <div className="card-head">

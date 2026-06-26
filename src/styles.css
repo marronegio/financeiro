@@ -1197,6 +1197,110 @@ input::placeholder {
   }
 }
 
+/* gerenciador de categorias do cartão */
+.cat-mgr-head {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cat-mgr-toggle {
+  color: var(--faint);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.cat-mgr {
+  margin-top: 4px;
+}
+
+.cat-mgr-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 34px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.cat-mgr-add {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.cat-color {
+  width: 36px;
+  height: 34px;
+  padding: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.cat-color::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.cat-color::-webkit-color-swatch {
+  border: none;
+  border-radius: 5px;
+}
+
+.cat-name-input {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  height: 34px;
+  padding: 0 11px;
+  color: var(--ink);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 0.88rem;
+  outline: none;
+  min-width: 0;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+
+.cat-name-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+.cat-add-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--accent);
+  cursor: pointer;
+  height: 34px;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cat-add-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.cat-add-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.cat-lock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  font-size: 0.9rem;
+  color: var(--faint);
+}
+
 /* gastos por categoria (resumo do cartão) */
 .catline {
   padding: 9px 0;

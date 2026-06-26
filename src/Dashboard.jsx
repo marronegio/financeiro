@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createDefaultState } from './state.js';
+import { createDefaultState, CARD_CATEGORIES } from './state.js';
 import { supabase } from './lib/supabase.js';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useProfiles } from './hooks/useProfiles.js';
@@ -170,6 +170,32 @@ export default function Dashboard({ plan, trialing }) {
   const removeItem = (kind, i) =>
     setState((s) => ({ ...s, [kind]: (s[kind] || []).filter((_, idx) => idx !== i) }));
 
+  // ── Categorias do cartão (personalizáveis por perfil) ──────────────
+  // Semeia com as padrão caso o perfil ainda não tenha a lista salva.
+  const catsOf = (s) => (s.cardCategories?.length ? s.cardCategories : CARD_CATEGORIES);
+
+  const addCategory = (label, color) =>
+    setState((s) => {
+      const nome = label.trim();
+      if (!nome) return s;
+      const id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      return { ...s, cardCategories: [...catsOf(s), { id, label: nome, color }] };
+    });
+
+  const updateCategory = (id, patch) =>
+    setState((s) => ({
+      ...s,
+      cardCategories: catsOf(s).map((cat) => (cat.id === id ? { ...cat, ...patch } : cat)),
+    }));
+
+  const removeCategory = (id) =>
+    setState((s) => ({
+      ...s,
+      cardCategories: catsOf(s).filter((cat) => cat.id !== id),
+      // Compras marcadas com a categoria removida voltam a ficar sem etiqueta.
+      cartao: (s.cartao || []).map((it) => (it.cat === id ? { ...it, cat: '' } : it)),
+    }));
+
   // "Já paguei": marca a despesa como quitada para o período do vencimento atual,
   // suprimindo o aviso até o próximo mês.
   const marcarDespesaPaga = (idx, duePeriod) =>
@@ -270,10 +296,21 @@ export default function Dashboard({ plan, trialing }) {
           {state.tab === 'plan' && (
             <PlanejamentoPanel state={state} c={c} setField={setField} reset={reset} onTab={setTab} />
           )}
-          {state.tab === 'rendaextra' && <RendaExtraPanel state={state} c={c} {...listProps} />}
+          {state.tab === 'rendaextra' && (
+            <RendaExtraPanel state={state} c={c} setField={setField} {...listProps} />
+          )}
           {state.tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
           {state.tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
-          {state.tab === 'cartao' && <CartaoPanel state={state} c={c} {...listProps} />}
+          {state.tab === 'cartao' && (
+            <CartaoPanel
+              state={state}
+              c={c}
+              {...listProps}
+              addCategory={addCategory}
+              updateCategory={updateCategory}
+              removeCategory={removeCategory}
+            />
+          )}
           {state.tab === 'parcelamentos' && (
             <ParcelamentosPanel state={state} c={c} {...listProps} />
           )}

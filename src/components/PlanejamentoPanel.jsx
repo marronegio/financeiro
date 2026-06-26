@@ -7,7 +7,7 @@ import MetasResumo from './MetasResumo.jsx';
 export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) {
   const [confirmReset, setConfirmReset] = useState(false);
   // Base para as larguras da barra de composição (renda total disponível no mês).
-  const renda = c.salario + c.totRendaExtra;
+  const renda = c.salario + c.rendaExtraNoPlano;
   const base = renda > 0 ? renda : c.gastos + c.guardar + Math.max(0, c.sobra) || 1;
   const pct = (v) => Math.max(0, Math.min(100, (v / base) * 100));
   const positive = c.sobra >= 0;
@@ -104,7 +104,7 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
                 </span>
                 <span className="amt">{BRL(c.salario)}</span>
               </div>
-              {c.totRendaExtra > 0 && (
+              {c.somarRendaExtra && c.totRendaExtra > 0 && (
                 <div className="summary-line">
                   <span className="lbl">
                     <span className="dot" style={{ background: 'var(--positive)' }} />
