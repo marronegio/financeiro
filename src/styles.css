@@ -1268,6 +1268,22 @@ input::placeholder {
   margin: 0 0 6px;
 }
 
+/* controle de ordenação da lista de compras */
+.list-sort {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.list-sort-lbl {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 /* gerenciador de categorias do cartão */
 .cat-mgr-head {
   cursor: pointer;

@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BRL, toNumber } from '../money.js';
 import { getCardCategories } from '../state.js';
 import EditableList from './EditableList.jsx';
 import CategoryManager from './CategoryManager.jsx';
+
+const SORTS = [
+  { id: 'add', label: 'Data' },
+  { id: 'valor', label: 'Valor' },
+  { id: 'categoria', label: 'Categoria' },
+];
 
 export default function CartaoPanel({
   state,
@@ -14,8 +20,28 @@ export default function CartaoPanel({
   updateCategory,
   removeCategory,
 }) {
+  const [sort, setSort] = useState('add');
   const categories = getCardCategories(state);
   const known = new Set(categories.map((cat) => cat.id));
+
+  // Ordem de exibição das compras (índices originais). Mantém os índices intactos
+  // para a edição; itens sem valor preenchido ficam sempre no fim (junto do botão
+  // "Adicionar"), e a ordenação é estável (preserva a ordem de adição em empates).
+  const catRank = new Map(categories.map((cat, i) => [cat.id, i]));
+  const rankOf = (it) => (catRank.has(it.cat) ? catRank.get(it.cat) : catRank.get('outros') ?? categories.length);
+  const order = state.cartao.map((_, i) => i);
+  if (sort !== 'add') {
+    order.sort((a, b) => {
+      const ia = state.cartao[a];
+      const ib = state.cartao[b];
+      const va = toNumber(ia.valor);
+      const vb = toNumber(ib.valor);
+      // Compras ainda vazias (sem valor) vão para o fim, qualquer que seja o modo.
+      if ((va === 0) !== (vb === 0)) return va === 0 ? 1 : -1;
+      const cmp = sort === 'valor' ? vb - va : rankOf(ia) - rankOf(ib);
+      return cmp !== 0 ? cmp : a - b; // empate: ordem de adição (estável)
+    });
+  }
 
   // Total por categoria (itens sem etiqueta — ou com etiqueta removida — caem em "Outros").
   const porCategoria = categories
@@ -38,12 +64,29 @@ export default function CartaoPanel({
               <span className="card-title">Compras no cartão</span>
               <span className="card-total">{BRL(c.totCartao)}</span>
             </div>
+            {state.cartao.length > 1 && (
+              <div className="list-sort">
+                <span className="list-sort-lbl">Ordenar por</span>
+                <div className="seg">
+                  {SORTS.map((s) => (
+                    <button
+                      key={s.id}
+                      className={sort === s.id ? 'active' : ''}
+                      onClick={() => setSort(s.id)}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <EditableList
               kind="cartao"
               items={state.cartao}
               namePlaceholder="Ex: Mercado, iFood…"
               addLabel="Adicionar compra"
               categories={categories}
+              order={order}
               updateItem={updateItem}
               addItem={addItem}
               removeItem={removeItem}

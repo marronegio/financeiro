@@ -12,13 +12,17 @@ export default function EditableList({
   removeItem,
   categories,
   showVenc,
+  order,
 }) {
+  // `order` (opcional) é uma lista de índices originais na ordem de exibição —
+  // permite reordenar a lista sem alterar os índices usados na edição/remoção.
+  const displayOrder = order || items.map((_, i) => i);
   return (
     <>
-      {items.map((it, i) => (
+      {displayOrder.map((i) => (
         <ItemRow
           key={i}
-          item={it}
+          item={items[i]}
           namePlaceholder={namePlaceholder}
           categories={categories}
           showVenc={showVenc}
