@@ -200,8 +200,10 @@ body {
 
 .tab .ico {
   width: 22px;
-  text-align: center;
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   opacity: 0.85;
 }
 

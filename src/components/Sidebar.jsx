@@ -1,7 +1,33 @@
 import React, { useEffect, useState } from 'react';
+import {
+  FiPieChart,
+  FiTrendingUp,
+  FiFileText,
+  FiRepeat,
+  FiCreditCard,
+  FiLayers,
+  FiTarget,
+  FiClock,
+  FiMail,
+  FiSettings,
+} from 'react-icons/fi';
 import { TABS } from '../state.js';
 
 const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
+
+// Ícone (react-icons) de cada aba. Mantém a escolha visual junto da renderização.
+const TAB_ICONS = {
+  plan: FiPieChart,
+  rendaextra: FiTrendingUp,
+  despesas: FiFileText,
+  assinaturas: FiRepeat,
+  cartao: FiCreditCard,
+  parcelamentos: FiLayers,
+  economias: FiTarget,
+  historico: FiClock,
+  contato: FiMail,
+  config: FiSettings,
+};
 
 export default function Sidebar({
   tab, onTab, user, onSignOut, avatar,
@@ -99,16 +125,20 @@ export default function Sidebar({
 
         <div className="nav-label">Painéis</div>
         <nav className="nav">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={'tab' + (tab === t.id ? ' active' : '')}
-              onClick={() => pick(t.id)}
-              data-tour={`tab-${t.id}`}
-            >
-              <span className="ico">{t.ico}</span> {t.label}
-            </button>
-          ))}
+          {TABS.map((t) => {
+            const Icon = TAB_ICONS[t.id];
+            return (
+              <button
+                key={t.id}
+                className={'tab' + (tab === t.id ? ' active' : '')}
+                onClick={() => pick(t.id)}
+                data-tour={`tab-${t.id}`}
+              >
+                <span className="ico">{Icon && <Icon size={18} aria-hidden="true" />}</span>{' '}
+                {t.label}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="side-foot">

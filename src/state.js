@@ -62,17 +62,18 @@ export const migrateState = (raw) => {
   };
 };
 
+// Os ícones de cada aba ficam na Sidebar (react-icons), mapeados por id.
 export const TABS = [
-  { id: 'plan', label: 'Planejamento', ico: '◷' },
-  { id: 'rendaextra', label: 'Renda extra', ico: '⊕' },
-  { id: 'despesas', label: 'Despesas fixas', ico: '⊟' },
-  { id: 'assinaturas', label: 'Assinaturas', ico: '↻' },
-  { id: 'cartao', label: 'Cartão de crédito', ico: '▣' },
-  { id: 'parcelamentos', label: 'Parcelamentos', ico: '≣' },
-  { id: 'economias', label: 'Economias', ico: '◎' },
-  { id: 'historico', label: 'Histórico', ico: '◴' },
-  { id: 'contato', label: 'Fale conosco', ico: '✉' },
-  { id: 'config', label: 'Configurações', ico: '⚙' },
+  { id: 'plan', label: 'Planejamento' },
+  { id: 'rendaextra', label: 'Renda extra' },
+  { id: 'despesas', label: 'Despesas fixas' },
+  { id: 'assinaturas', label: 'Assinaturas' },
+  { id: 'cartao', label: 'Cartão de crédito' },
+  { id: 'parcelamentos', label: 'Parcelamentos' },
+  { id: 'economias', label: 'Economias' },
+  { id: 'historico', label: 'Histórico' },
+  { id: 'contato', label: 'Fale conosco' },
+  { id: 'config', label: 'Configurações' },
 ];
 
 // Categorias/etiquetas para as compras no cartão.
