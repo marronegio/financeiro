@@ -5,6 +5,8 @@ import { BRL } from '../money.js';
 // Cores do tema (iguais às vars --positive / --negative).
 const GREEN = '#0e9f6e';
 const RED = '#e0564c';
+const BLUE = '#3b82f6'; // sobrou no mês
+const LIGHT_GREEN = '#86cfa6'; // renda extra do mês
 
 // Rótulo curto pro eixo Y: R$ 1,2k / R$ 350 / -R$ 1k
 function compact(n) {
@@ -33,6 +35,15 @@ export default function HistoryChart({ historico }) {
   const labels = data.map((h) => shortLabel(h.periodo));
   const guardado = data.map((h) => Number(h.guardado) || 0);
   const cartao = data.map((h) => Number(h.cartao) || 0);
+  const rendaExtra = data.map((h) => Number(h.rendaExtra) || 0);
+  // Sobrou = o que ficou livre depois de pagar tudo e guardar (renda − gasto − guardado).
+  const sobrou = data.map(
+    (h) =>
+      (Number(h.salario) || 0) +
+      (Number(h.rendaExtra) || 0) -
+      (Number(h.gasto) || 0) -
+      (Number(h.guardado) || 0)
+  );
 
   return (
     <div className="card">
@@ -58,6 +69,12 @@ export default function HistoryChart({ historico }) {
         <span className="ci">
           <span className="dot" style={{ background: RED }} /> Gasto no cartão
         </span>
+        <span className="ci">
+          <span className="dot" style={{ background: BLUE }} /> Sobrou
+        </span>
+        <span className="ci">
+          <span className="dot" style={{ background: LIGHT_GREEN }} /> Renda extra
+        </span>
       </div>
 
       {n === 0 ? (
@@ -82,6 +99,20 @@ export default function HistoryChart({ historico }) {
               data: cartao,
               label: 'Gasto no cartão',
               color: RED,
+              curve: 'linear',
+              valueFormatter: (v) => (v == null ? '' : BRL(v)),
+            },
+            {
+              data: sobrou,
+              label: 'Sobrou',
+              color: BLUE,
+              curve: 'linear',
+              valueFormatter: (v) => (v == null ? '' : BRL(v)),
+            },
+            {
+              data: rendaExtra,
+              label: 'Renda extra',
+              color: LIGHT_GREEN,
               curve: 'linear',
               valueFormatter: (v) => (v == null ? '' : BRL(v)),
             },
