@@ -20,6 +20,8 @@ import ConfiguracoesPanel from './components/ConfiguracoesPanel.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import ProfileGate from './components/ProfileGate.jsx';
 import DespesaAlerts from './components/DespesaAlerts.jsx';
+import AiAssistant from './components/AiAssistant.jsx';
+import { applyAiAction, describeAction } from './lib/aiActions.js';
 
 // Marca, por sessão do navegador, que o usuário Duo já escolheu um perfil. Some
 // ao fechar a aba (sessionStorage) — então cada nova sessão volta a perguntar.
@@ -217,6 +219,14 @@ export default function Dashboard({ plan, trialing }) {
     setState((s) => ({ ...createDefaultState(), tab: s.tab, onboarded: s.onboarded }));
   };
 
+  // Executa uma ação pedida pela IA (lançar gasto/receita, navegar) via setState
+  // funcional — assim várias ações numa mesma resposta se acumulam corretamente.
+  // Devolve a confirmação em texto que volta para a IA como resultado da tool.
+  const runAiAction = (name, args) => {
+    setState((s) => applyAiAction(s, name, args));
+    return describeAction(name, args);
+  };
+
   const fecharMes = (guardadoReal) => {
     setState((s) => manualClose(s, new Date(), guardadoReal));
   };
@@ -359,6 +369,7 @@ export default function Dashboard({ plan, trialing }) {
       {!showOnboarding && (
         <DespesaAlerts despesas={state.despesas} onPaid={marcarDespesaPaga} />
       )}
+      {!showOnboarding && <AiAssistant state={state} c={c} onAction={runAiAction} />}
     </div>
   );
 }

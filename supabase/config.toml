@@ -22,3 +22,7 @@ verify_jwt = true
 
 [functions.delete-account]
 verify_jwt = true
+
+# Assistente de IA: só usuários logados podem gastar tokens da OpenAI.
+[functions.ai-assistant]
+verify_jwt = true
