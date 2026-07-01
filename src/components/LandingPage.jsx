@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../landing.css';
-import LandingDemo, { PlanMock } from './LandingDemo.jsx';
+import LandingDemo, { PlanMock, AiChatMock } from './LandingDemo.jsx';
 import { PLANS, planKey, planPerks } from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
@@ -71,6 +71,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </div>
         <div className="lp-nav-links">
           <button className="lp-nav-link" onClick={() => scrollTo('recursos')}>Recursos</button>
+          <button className="lp-nav-link" onClick={() => scrollTo('ia')}>Assistente IA</button>
           <button className="lp-nav-link" onClick={() => scrollTo('como-funciona')}>Como funciona</button>
           <button className="lp-nav-link" onClick={() => scrollTo('preco')}>Preço</button>
         </div>
@@ -98,9 +99,10 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </h1>
 
           <p className="lp-hero-sub">
-            O DinPrev distribui seu salário antes de você gastar.
-            Quando o cartão fecha, não tem mais surpresa —
-            porque você já sabia o número desde o início do mês.
+            O DinPrev distribui seu salário antes de você gastar e ainda tem um
+            assistente com IA que lança seus gastos por texto, áudio ou foto.
+            Quando o cartão fecha, não tem mais surpresa — você já sabia o número
+            desde o começo do mês.
           </p>
 
           <div className="lp-hero-ctas">
@@ -128,9 +130,9 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── strip ── */}
       <div className="lp-strip">
         <span className="lp-strip-item lp-strip-trial">✦ 7 dias grátis</span>
+        <span className="lp-strip-item">🤖 Assistente com IA</span>
         <span className="lp-strip-item">☁ Dados na nuvem</span>
         <span className="lp-strip-item">📱 Celular e desktop</span>
-        <span className="lp-strip-item">🔒 Só você acessa</span>
         <span className="lp-strip-item">⚡ Sem planilhas</span>
       </div>
 
@@ -143,7 +145,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </h2>
           <p className="reveal reveal-delay-2">
             São os painéis reais do app. Passe pelas abas e veja os números se ajustando — do
-            planejamento ao histórico, tudo conversa entre si.
+            planejamento ao histórico, e o assistente de IA que lança tudo por você. Tudo
+            conversa entre si.
           </p>
         </div>
         <LandingDemo />
@@ -207,7 +210,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               Seis painéis.<br />Um <em>panorama completo</em>.
             </h2>
             <p className="reveal reveal-delay-2">
-              Cada painel resolve uma parte do quebra-cabeça. Juntos, eles mostram exatamente onde está cada real do seu salário.
+              Cada painel resolve uma parte do quebra-cabeça. Juntos, mostram exatamente onde
+              está cada real do seu salário — e o assistente de IA preenche tudo pra você.
             </p>
           </div>
           <div className="lp-feats">
@@ -229,6 +233,117 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </div>
       </section>
 
+      {/* ── AI assistant ── */}
+      <section className="lp-ai-section" id="ia">
+        <div className="lp-ai-inner">
+          <div className="lp-ai-text">
+            <div className="lp-tag reveal">Assistente com IA</div>
+            <h2 className="reveal reveal-delay-1">
+              Converse com o seu dinheiro.<br /><em>Ele lança por você.</em>
+            </h2>
+            <p className="reveal reveal-delay-2">
+              Esqueça formulários. Fale, escreva ou mande uma foto — o assistente entende,
+              lança no painel certo e ainda te dá o retrato do mês na hora. É como ter um
+              parceiro financeiro no bolso, 24 horas por dia.
+            </p>
+            <ul className="lp-ai-caps reveal reveal-delay-3">
+              <li>
+                <span className="lp-ai-cap-ico">💬</span>
+                <span><b>Texto</b> — "gastei 45 no mercado" e pronto, já entrou na fatura.</span>
+              </li>
+              <li>
+                <span className="lp-ai-cap-ico">🎙️</span>
+                <span><b>Áudio</b> — mande um recado de voz, tipo no WhatsApp, e ele transcreve e lança.</span>
+              </li>
+              <li>
+                <span className="lp-ai-cap-ico">📷</span>
+                <span><b>Imagem</b> — fotografe um comprovante, boleto ou nota fiscal e ele registra sozinho.</span>
+              </li>
+            </ul>
+            <button className="lp-cta-main reveal reveal-delay-4" onClick={() => scrollTo('preco')}>
+              Experimentar grátis
+            </button>
+          </div>
+          <div className="lp-ai-demo reveal reveal-delay-2">
+            <AiChatMock />
+          </div>
+        </div>
+      </section>
+
+      {/* ── reminders ── */}
+      <section className="lp-remind" id="lembretes">
+        <div className="lp-remind-inner">
+          <div className="lp-remind-visual reveal">
+            <div className="lp-remind-stack">
+              <div className="lp-toast reveal reveal-delay-1">
+                <span className="lp-toast-ico">🔔</span>
+                <div className="lp-toast-body">
+                  <div className="lp-toast-title">“Energia” vence amanhã</div>
+                  <div className="lp-toast-sub">R$ 189,90 · vencimento dia 10</div>
+                </div>
+                <span className="lp-toast-btn">Já paguei</span>
+              </div>
+
+              <div className="lp-toast reveal reveal-delay-2">
+                <span className="lp-toast-ico">🔔</span>
+                <div className="lp-toast-body">
+                  <div className="lp-toast-title">“Internet” vence em 3 dias</div>
+                  <div className="lp-toast-sub">R$ 119,90 · vencimento dia 15</div>
+                </div>
+                <span className="lp-toast-btn">Já paguei</span>
+              </div>
+
+              <div className="lp-email reveal reveal-delay-3">
+                <div className="lp-email-head">
+                  <span className="lp-email-avatar">D</span>
+                  <div>
+                    <div className="lp-email-from">DinPrev</div>
+                    <div className="lp-email-meta">para você · agora</div>
+                  </div>
+                  <span className="lp-email-tag">✉ E-mail</span>
+                </div>
+                <div className="lp-email-body">
+                  <div className="lp-email-subject">🔔 Sua despesa “Aluguel” vence amanhã</div>
+                  <p className="lp-email-text">
+                    Oi! Passando pra lembrar: <b>Aluguel</b> (R$ 1.450,00) vence amanhã, dia 05.
+                    Deixe pago em dia e evite juros. 👋
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-remind-text">
+            <div className="lp-tag reveal">Lembretes</div>
+            <h2 className="reveal reveal-delay-1">
+              As contas não te pegam<br /><em>de surpresa</em>.
+            </h2>
+            <p className="reveal reveal-delay-2">
+              O DinPrev acompanha o vencimento de cada despesa fixa e te avisa antes — dentro do
+              app e por e-mail. Você marca como paga num toque e nunca mais perde uma data (nem
+              paga juros à toa).
+            </p>
+            <ul className="lp-remind-list reveal reveal-delay-3">
+              <li>
+                <span className="lp-remind-ico">🔔</span>
+                <span><b>Avisos dentro do app</b> — um alerta aparece assim que a data se aproxima.</span>
+              </li>
+              <li>
+                <span className="lp-remind-ico">📧</span>
+                <span><b>E-mail um dia antes</b> — o clássico “vence amanhã” chega na sua caixa de entrada.</span>
+              </li>
+              <li>
+                <span className="lp-remind-ico">✅</span>
+                <span><b>Marque como paga</b> — um toque e o lembrete some até o próximo mês.</span>
+              </li>
+            </ul>
+            <button className="lp-cta-main reveal reveal-delay-4" onClick={() => scrollTo('preco')}>
+              Começar 7 dias grátis
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ── how it works ── */}
       <section className="lp-how" id="como-funciona">
         <div className="lp-how-inner">
@@ -244,7 +359,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <div className="lp-steps">
             {[
               { n: '01', title: 'Configure o mês', desc: 'Insira salário, despesas fixas, assinaturas e o limite que quer gastar no cartão. Leva menos de cinco minutos.' },
-              { n: '02', title: 'Veja quanto sobra', desc: 'O painel mostra em tempo real o saldo disponível. Quando você adiciona uma compra, o número atualiza na hora.' },
+              { n: '02', title: 'Veja quanto sobra', desc: 'O painel mostra em tempo real o saldo disponível. Adicione um gasto — digitando ou pedindo pro assistente — e o número atualiza na hora.' },
               { n: '03', title: 'Feche o mês e repita', desc: 'No encerramento, registre quanto conseguiu guardar. O histórico vai mostrar sua evolução ao longo do tempo.' },
             ].map((s, i) => (
               <div key={s.n} className={`lp-step reveal reveal-delay-${i + 1}`}>

@@ -126,9 +126,47 @@ function AssinaturasMock() {
   );
 }
 
+/* ── Despesas fixas ── */
+const DESP = [
+  ['Aluguel', '1.450,00', '05'],
+  ['Energia', '189,90', '10'],
+  ['Internet', '119,90', '15'],
+  ['Escola', '680,00', '08'],
+];
+function DespesasMock() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <span className="card-title">Despesas fixas</span>
+        <span className="card-total">R$ 2.439,80</span>
+      </div>
+      {DESP.map(([nome, val, dia], i) => (
+        <div className="row has-venc lp-rowin" key={nome} style={{ animationDelay: `${i * 70}ms` }}>
+          <div className="name-wrap">
+            <input className="name-input" type="text" value={nome} readOnly />
+          </div>
+          <div className="venc-wrap">
+            <span className="prefix">dia</span>
+            <input type="text" value={dia} readOnly />
+          </div>
+          <div className="val-wrap">
+            <span className="prefix">R$</span>
+            <input type="text" value={val} readOnly />
+          </div>
+          <button className="del-btn" tabIndex={-1}>×</button>
+        </div>
+      ))}
+      <button className="add-btn" tabIndex={-1}>＋ Adicionar despesa</button>
+      <p className="hint">
+        Tudo que sai todo mês. O DinPrev te avisa por e-mail um dia antes de cada vencimento.
+      </p>
+    </div>
+  );
+}
+
 /* ── Cartão: resumo da fatura ── */
 function CartaoMock() {
-  const fatura = useCountUp(2151.29, true);
+  const fatura = useCountUp(2269.29, true);
   return (
     <div className="card">
       <div className="card-head">
@@ -152,6 +190,12 @@ function CartaoMock() {
           <span className="lbl"><strong>Total da fatura</strong></span>
           <span className="amt">{BRL(2269.29)}</span>
         </div>
+      </div>
+      <div className="lp-cat-chips">
+        <span className="lp-cat-chip"><Dot c="#e0564c" /> Alimentação · R$ 486</span>
+        <span className="lp-cat-chip"><Dot c="#3a6ea5" /> Transporte · R$ 312</span>
+        <span className="lp-cat-chip"><Dot c="#9b6bff" /> Lazer · R$ 259</span>
+        <span className="lp-cat-chip"><Dot c="#635bff" /> Compras · R$ 120</span>
       </div>
     </div>
   );
@@ -247,12 +291,69 @@ function HistoricoMock() {
   );
 }
 
+/* ── Assistente com IA: mock de conversa (texto, voz e imagem) ── */
+const WAVE = [0.4, 0.7, 0.5, 0.9, 0.6, 0.85, 0.45, 0.7, 0.55, 0.85, 0.5, 0.75, 0.6, 0.4, 0.8, 0.5, 0.65, 0.9, 0.55, 0.7];
+export function AiChatMock() {
+  return (
+    <div className="lp-ai-chat">
+      <div className="lp-ai-head">
+        <span className="lp-ai-head-title">✦ Assistente</span>
+      </div>
+      <div className="lp-ai-msgs">
+        <div className="lp-ai-msg user lp-rowin">
+          <div className="lp-ai-voice">
+            <span className="lp-ai-voice-btn">▶</span>
+            <span className="lp-ai-wave">
+              {WAVE.map((h, i) => (
+                <i key={i} style={{ height: `${h * 100}%`, opacity: i < 8 ? 1 : 0.45 }} />
+              ))}
+            </span>
+            <span className="lp-ai-time">0:06</span>
+          </div>
+          <span className="lp-ai-cap">"Gastei 60 no cinema e 40 na americanas"</span>
+        </div>
+
+        <div className="lp-ai-msg bot lp-rowin" style={{ animationDelay: '.15s' }}>
+          Lancei <b>R$60</b> no cartão em <b>Lazer</b> 🎬 e <b>R$40</b> em <b>Compras</b> 🛍️. Sua
+          fatura foi pra <b>R$2.369,29</b>.
+        </div>
+
+        <div className="lp-ai-msg user lp-rowin" style={{ animationDelay: '.3s' }}>
+          <span className="lp-ai-receipt" aria-hidden="true">
+            <i /><i /><i /><i />
+          </span>
+          <span className="lp-ai-cap">📷 Boleto da academia</span>
+        </div>
+
+        <div className="lp-ai-msg bot lp-rowin" style={{ animationDelay: '.45s' }}>
+          Boleto de <b>R$129,90</b> da academia adicionado nas <b>assinaturas</b> ✅
+        </div>
+
+        <div className="lp-ai-msg user lp-rowin" style={{ animationDelay: '.6s' }}>
+          quanto posso gastar esse mês?
+        </div>
+
+        <div className="lp-ai-msg bot lp-rowin" style={{ animationDelay: '.75s' }}>
+          Sua sobra tá em <b>R$821,41</b>. Dá pra usar até <b>R$410</b> no crédito sem apertar 😉
+        </div>
+      </div>
+      <div className="lp-ai-inputbar">
+        <span className="lp-ai-input">Pergunte ou lance um gasto…</span>
+        <span className="lp-ai-btn lp-ai-mic">🎙</span>
+        <span className="lp-ai-btn lp-ai-send">➤</span>
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { id: 'plan', label: 'Planejamento', ico: '◷', render: () => <PlanMock /> },
+  { id: 'desp', label: 'Despesas', ico: '⊟', render: () => <DespesasMock /> },
   { id: 'assin', label: 'Assinaturas', ico: '↻', render: () => <AssinaturasMock /> },
   { id: 'cartao', label: 'Cartão', ico: '▣', render: () => <CartaoMock /> },
   { id: 'parc', label: 'Parcelamentos', ico: '≣', render: () => <ParcelamentosMock /> },
   { id: 'hist', label: 'Histórico', ico: '◴', render: () => <HistoricoMock /> },
+  { id: 'ia', label: 'Assistente IA', ico: '✦', render: () => <AiChatMock /> },
 ];
 
 export default function LandingDemo() {

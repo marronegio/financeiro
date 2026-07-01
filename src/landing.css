@@ -1543,6 +1543,480 @@
   animation: lpDraw 1.2s ease .25s both;
 }
 
+/* ── chips extras dos mocks (categorias do cartão) ─────────── */
+.lp-cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.lp-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+  background: var(--bg-slate);
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+/* ── assistente com IA: seção + chat mock ──────────────────── */
+.lp-ai-section {
+  background:
+    radial-gradient(620px 420px at 12% -5%, rgba(99, 91, 255, 0.09), transparent 60%),
+    radial-gradient(520px 360px at 100% 110%, rgba(245, 147, 218, 0.10), transparent 62%),
+    linear-gradient(180deg, #f7f6ff 0%, #ffffff 100%);
+  padding: 112px var(--lp-px);
+}
+
+.lp-ai-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+}
+
+.lp-ai-text h2 {
+  font-size: clamp(30px, 3.8vw, 48px);
+  font-weight: 800;
+  line-height: 1.12;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+.lp-ai-text h2 em {
+  color: var(--accent);
+}
+
+.lp-ai-text > p {
+  font-size: 18px;
+  color: var(--slate);
+  line-height: 1.62;
+  max-width: 480px;
+  margin-bottom: 28px;
+}
+
+.lp-ai-caps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.lp-ai-caps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--slate);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.lp-ai-caps li:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 91, 255, 0.3);
+}
+
+.lp-ai-caps li b {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.lp-ai-cap-ico {
+  font-size: 20px;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.lp-ai-demo {
+  display: flex;
+  justify-content: center;
+}
+
+.lp-ai-chat {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-ai-head {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfe;
+}
+
+.lp-ai-head-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.lp-ai-msgs {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-slate);
+}
+
+.lp-ai-msg {
+  max-width: 84%;
+  padding: 10px 13px;
+  border-radius: 15px;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.lp-ai-msg b {
+  font-weight: 700;
+}
+
+.lp-ai-msg.bot {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--navy);
+  border-bottom-left-radius: 5px;
+}
+
+.lp-ai-msg.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.lp-ai-cap {
+  font-size: 11.5px;
+  font-style: italic;
+  opacity: 0.88;
+}
+
+.lp-ai-voice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 190px;
+}
+
+.lp-ai-voice-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.lp-ai-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  flex: 1;
+}
+
+.lp-ai-wave i {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 2px;
+  background: #fff;
+  display: block;
+}
+
+.lp-ai-time {
+  font-size: 11px;
+  opacity: 0.9;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-ai-receipt {
+  width: 120px;
+  height: 82px;
+  border-radius: 10px;
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+
+.lp-ai-receipt i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(99, 91, 255, 0.25);
+}
+
+.lp-ai-receipt i:nth-child(1) { width: 65%; }
+.lp-ai-receipt i:nth-child(2) { width: 100%; }
+.lp-ai-receipt i:nth-child(3) { width: 82%; }
+.lp-ai-receipt i:nth-child(4) { width: 48%; background: rgba(99, 91, 255, 0.55); }
+
+.lp-ai-inputbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+}
+
+.lp-ai-input {
+  flex: 1;
+  font-size: 13px;
+  color: var(--faint);
+  background: var(--bg-slate);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 14px;
+}
+
+.lp-ai-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.lp-ai-mic {
+  background: var(--bg-slate);
+  color: var(--muted);
+}
+
+.lp-ai-send {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── lembretes de vencimento (dobra) ───────────────────────── */
+.lp-remind {
+  background: var(--bg-slate);
+  padding: 112px var(--lp-px);
+}
+
+.lp-remind-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+}
+
+.lp-remind-text h2 {
+  font-size: clamp(30px, 3.8vw, 48px);
+  font-weight: 800;
+  line-height: 1.12;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+.lp-remind-text h2 em {
+  color: var(--accent);
+}
+
+.lp-remind-text > p {
+  font-size: 18px;
+  color: var(--slate);
+  line-height: 1.62;
+  max-width: 480px;
+  margin-bottom: 28px;
+}
+
+.lp-remind-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.lp-remind-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--slate);
+}
+
+.lp-remind-list li b {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.lp-remind-ico {
+  font-size: 19px;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.lp-remind-visual {
+  display: flex;
+  justify-content: center;
+}
+
+.lp-remind-stack {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* toast (aviso dentro do app) */
+.lp-toast {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 13px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.lp-toast-ico {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  animation: pulseDot 2.4s ease infinite;
+  border-radius: 50%;
+}
+
+.lp-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-toast-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.lp-toast-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.lp-toast-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(99, 91, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+/* preview de e-mail */
+.lp-email {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.lp-email-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfe;
+}
+
+.lp-email-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #635bff, #9b6bff);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.lp-email-from {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.lp-email-meta {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+.lp-email-tag {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--bg-slate);
+  border: 1px solid var(--line);
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.lp-email-body {
+  padding: 15px 16px 17px;
+}
+
+.lp-email-subject {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 7px;
+}
+
+.lp-email-text {
+  font-size: 13px;
+  color: var(--slate);
+  line-height: 1.55;
+}
+
+.lp-email-text b {
+  color: var(--navy);
+  font-weight: 700;
+}
+
 @media (max-width: 600px) {
   .lp-showcase {
     padding-top: 80px;
@@ -1589,14 +2063,22 @@
   }
 
   .lp-problem-grid,
-  .lp-how-inner {
+  .lp-how-inner,
+  .lp-ai-inner,
+  .lp-remind-inner {
     grid-template-columns: 1fr;
     gap: 48px;
   }
 
   .lp-problem,
-  .lp-how {
+  .lp-how,
+  .lp-ai-section,
+  .lp-remind {
     padding: 80px 36px;
+  }
+
+  .lp-ai-demo {
+    order: -1;
   }
 
   .lp-features {
