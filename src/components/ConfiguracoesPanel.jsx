@@ -35,11 +35,14 @@ function PasswordField({ label, value, onChange }) {
 }
 
 export default function ConfiguracoesPanel({
-  user, avatar, onAvatar, trialing = false,
+  user, avatar, onAvatar, trialing = false, provider = 'stripe',
   isDuo = false, profiles = [], activeProfile, canAddPartner = false,
   onAddPartner, onRenameProfile, onRemovePartner, onVerifyPin, onSetPin,
   emailVencimentos = true, onToggleEmailVencimentos,
 }) {
+  // ASAAS não tem portal de autoatendimento como o Stripe; usuários ASAAS só veem
+  // a opção de cancelar. O portal fica só para o legado do Stripe.
+  const isAsaas = provider === 'asaas';
   const fileRef = useRef(null);
   const [cropSrc, setCropSrc] = useState(null);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -140,8 +143,10 @@ export default function ConfiguracoesPanel({
     setCancelErr('');
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      // Cada gateway tem sua função de cancelamento; roteamos pelo provider.
+      const cancelFn = isAsaas ? 'asaas-cancel' : 'cancel-subscription';
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-subscription`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${cancelFn}`,
         {
           method: 'POST',
           headers: {
@@ -159,8 +164,8 @@ export default function ConfiguracoesPanel({
             : null;
           setCanceledMsg(
             until
-              ? `Cancelamento agendado. Você mantém o acesso até ${until}, quando o teste grátis termina — sem nenhuma cobrança.`
-              : 'Cancelamento agendado para o fim do teste grátis. Você mantém o acesso até lá, sem cobrança.'
+              ? `Cancelamento confirmado. Você mantém o acesso até ${until} — depois disso, sem novas cobranças.`
+              : 'Cancelamento confirmado. Você mantém o acesso até o fim do período já pago — sem novas cobranças.'
           );
           setConfirming(false);
           setCanceling(false);
@@ -434,19 +439,30 @@ export default function ConfiguracoesPanel({
         <div className="card-head">
           <span className="card-title">Assinatura</span>
         </div>
-        <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
-          Atualize a forma de pagamento, baixe faturas ou gerencie seu plano no portal seguro do
-          Stripe.
-        </p>
-        {portalErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{portalErr}</p>}
-        <button type="button" className="cfg-submit" onClick={handlePortal} disabled={portalLoading}>
-          {portalLoading ? 'Abrindo…' : 'Gerenciar assinatura'}
-        </button>
+        {isAsaas ? (
+          <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+            Sua assinatura é cobrada via ASAAS. No cartão, a renovação é automática; no PIX, você
+            paga a cada ciclo. Prefere encerrar? É só cancelar abaixo.
+          </p>
+        ) : (
+          <>
+            <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+              Atualize a forma de pagamento, baixe faturas ou gerencie seu plano no portal seguro do
+              Stripe.
+            </p>
+            {portalErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{portalErr}</p>}
+            <button type="button" className="cfg-submit" onClick={handlePortal} disabled={portalLoading}>
+              {portalLoading ? 'Abrindo…' : 'Gerenciar assinatura'}
+            </button>
+          </>
+        )}
 
         <p className="hint" style={{ marginTop: 16, marginBottom: 12 }}>
           {trialing
             ? 'Prefere encerrar? Como você está no teste grátis, o cancelamento vale só no fim do período — você mantém o acesso até lá e não é cobrado. Seus dados ficam salvos.'
-            : 'Prefere encerrar agora? Cancelar remove o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar.'}
+            : isAsaas
+              ? 'Prefere encerrar? Você mantém o acesso até o fim do período já pago e não haverá novas cobranças. Seus dados ficam salvos.'
+              : 'Prefere encerrar agora? Cancelar remove o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar.'}
         </p>
         {cancelErr && <p className="cfg-msg cfg-err" style={{ marginTop: 0, marginBottom: 12 }}>{cancelErr}</p>}
         {canceledMsg ? (
@@ -501,7 +517,9 @@ export default function ConfiguracoesPanel({
           message={
             trialing
               ? 'Você mantém o acesso até o fim do teste grátis e não será cobrado. Quando o teste terminar, o acesso ao painel é removido. Seus dados ficam salvos.'
-              : 'Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar depois.'
+              : isAsaas
+                ? 'Você mantém o acesso até o fim do período já pago; depois disso, o acesso é removido e não há novas cobranças. Seus dados ficam salvos.'
+                : 'Você vai perder o acesso ao painel imediatamente. Seus dados ficam salvos caso queira voltar depois.'
           }
           confirmLabel="Sim, cancelar"
           cancelLabel="Voltar"

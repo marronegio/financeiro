@@ -124,7 +124,7 @@ const HEADERS = {
   },
 };
 
-export default function Dashboard({ plan, trialing }) {
+export default function Dashboard({ plan, trialing, provider = 'stripe' }) {
   const { user, signOut } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const {
@@ -344,6 +344,7 @@ export default function Dashboard({ plan, trialing }) {
               avatar={state.avatar}
               onAvatar={(dataUrl) => setField('avatar', dataUrl)}
               trialing={trialing}
+              provider={provider}
               isDuo={isDuo}
               profiles={profileList}
               activeProfile={active}

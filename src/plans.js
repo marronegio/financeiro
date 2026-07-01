@@ -10,7 +10,7 @@ export const PLANS = {
     amount: '27', cents: '',
     period: 'por mês · cancele quando quiser',
     economy: '',
-    note: 'Sem cobrança hoje · depois R$27/mês',
+    note: 'R$27/mês · cartão ou PIX · cancele quando quiser',
     short: 'R$27/mês',
     // Valor cobrado por ciclo (BRL) — usado no evento Purchase do Meta Pixel.
     value: 27,
@@ -20,7 +20,7 @@ export const PLANS = {
     amount: '19', cents: ',90',
     period: 'por mês · cobrado R$238,80 por ano',
     economy: 'Economize R$85,20 por ano',
-    note: 'Sem cobrança hoje · depois R$238,80/ano',
+    note: 'R$238,80/ano · cartão ou PIX · cancele quando quiser',
     short: 'R$238,80/ano (R$19,90/mês)',
     value: 238.8,
   },
@@ -29,7 +29,7 @@ export const PLANS = {
     amount: '44', cents: ',90',
     period: 'por mês · 2 perfis · cancele quando quiser',
     economy: '',
-    note: 'Sem cobrança hoje · depois R$44,90/mês',
+    note: 'R$44,90/mês · cartão ou PIX · cancele quando quiser',
     short: 'R$44,90/mês',
     value: 44.9,
   },
@@ -38,7 +38,7 @@ export const PLANS = {
     amount: '39', cents: ',90',
     period: 'por mês · 2 perfis · cobrado R$478,80 por ano',
     economy: 'Economize R$60 por ano',
-    note: 'Sem cobrança hoje · depois R$478,80/ano',
+    note: 'R$478,80/ano · cartão ou PIX · cancele quando quiser',
     short: 'R$478,80/ano (R$39,90/mês)',
     value: 478.8,
   },
@@ -48,8 +48,9 @@ export const PLANS = {
 export const ANNUAL_SAVE = { solo: '−26%', duo: '−11%' };
 
 const PERKS_BASE = [
-  '7 dias grátis, sem cobrança hoje',
+  'Assistente com IA (texto, áudio e imagem)',
   'Todos os painéis desbloqueados',
+  'Pague no cartão de crédito ou PIX',
   'Dados salvos na nuvem',
   'Funciona no celular e no desktop',
   'Histórico mensal ilimitado',

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import '../landing.css';
 import LandingDemo, { PlanMock, AiChatMock } from './LandingDemo.jsx';
-import { PLANS, planKey, planPerks } from '../plans.js';
+import PaywallModal from './PaywallModal.jsx';
+import AuthModal from './AuthModal.jsx';
+import { useAuth } from '../auth/AuthContext.jsx';
+import { PLANS, planKey, planPerks, normalizePlanKey } from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
 // Card de preço de um plano (Solo ou Duo) para o ciclo selecionado.
@@ -10,7 +13,7 @@ function PriceCard({ planId, onStart }) {
   const isDuo = plan.tier === 'duo';
   return (
     <div className={'lp-price-card' + (isDuo ? ' lp-price-card-duo' : '')}>
-      <div className="lp-price-badge">{isDuo ? 'Ideal para casais' : '7 dias grátis'}</div>
+      <div className="lp-price-badge">{isDuo ? 'Ideal para casais' : 'Mais popular'}</div>
       <div className="lp-price-label">{isDuo ? 'Duo · 2 perfis' : 'Solo'}</div>
       <div className="lp-price-value">
         <span className="lp-price-currency">R$</span>
@@ -25,7 +28,7 @@ function PriceCard({ planId, onStart }) {
         ))}
       </ul>
       <button className="lp-cta-price" onClick={() => onStart(planId)}>
-        Começar 7 dias grátis
+        Assinar agora
       </button>
       <p className="lp-price-note">{plan.note}</p>
     </div>
@@ -44,17 +47,35 @@ function useReveal() {
   }, []);
 }
 
-export default function LandingPage({ onGetStarted, onLogin }) {
+export default function LandingPage({ authed = false, paywall = false, paymentResult = null }) {
   useReveal();
+  const { signOut } = useAuth();
   const [billing, setBilling] = useState('annual');
   const annual = billing === 'annual';
 
-  // Guarda o plano escolhido para a edge function de checkout ler depois do cadastro.
+  // Popup de pagamento: aberto automaticamente quando o usuário já está logado mas
+  // sem assinatura ativa (ou voltando do checkout do cartão).
+  const [paywallOpen, setPaywallOpen] = useState(paywall || paymentResult === 'success');
+  const [selectedPlan, setSelectedPlan] = useState(
+    normalizePlanKey(localStorage.getItem('dinprev_plan'))
+  );
+  // Popup de login/cadastro (só para visitantes não logados).
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+
+  const openAuth = (mode) => {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  };
+
+  // Escolher um plano: guarda a escolha. Se já logado, abre o popup de pagamento;
+  // senão, abre o cadastro (o plano fica salvo pra depois do login).
   const start = (planId) => {
     localStorage.setItem('dinprev_plan', planId);
-    // Interesse demonstrado (clicou em "começar") antes do cadastro completo.
+    setSelectedPlan(planId);
     trackMetaEvent('Lead');
-    onGetStarted();
+    if (authed) setPaywallOpen(true);
+    else openAuth('signup');
   };
 
   const scrollTo = (id) =>
@@ -76,8 +97,17 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <button className="lp-nav-link" onClick={() => scrollTo('preco')}>Preço</button>
         </div>
         <div className="lp-nav-actions">
-          <button className="lp-btn-ghost" onClick={onLogin}>Entrar</button>
-          <button className="lp-btn-primary" onClick={() => scrollTo('preco')}>Começar</button>
+          {authed ? (
+            <>
+              <button className="lp-btn-ghost" onClick={signOut}>Sair</button>
+              <button className="lp-btn-primary" onClick={() => setPaywallOpen(true)}>Concluir assinatura</button>
+            </>
+          ) : (
+            <>
+              <button className="lp-btn-ghost" onClick={() => openAuth('login')}>Entrar</button>
+              <button className="lp-btn-primary" onClick={() => scrollTo('preco')}>Começar</button>
+            </>
+          )}
         </div>
       </nav>
 
@@ -107,7 +137,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
           <div className="lp-hero-ctas">
             <button className="lp-cta-main" onClick={() => scrollTo('preco')}>
-              Começar 7 dias grátis
+              Começar agora
             </button>
             <button className="lp-cta-sec" onClick={() => scrollTo('como-funciona')}>
               Ver como funciona ↓
@@ -115,8 +145,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           </div>
 
           <p className="lp-hero-footnote">
-            <strong className="lp-trial-pill">7 dias grátis</strong>
-            depois a partir de R$19,90/mês · cancele quando quiser
+            <strong className="lp-trial-pill">A partir de R$19,90/mês</strong>
+            cartão de crédito ou PIX · cancele quando quiser
           </p>
         </div>
 
@@ -129,7 +159,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
       {/* ── strip ── */}
       <div className="lp-strip">
-        <span className="lp-strip-item lp-strip-trial">✦ 7 dias grátis</span>
+        <span className="lp-strip-item lp-strip-trial">✦ Cartão ou PIX</span>
         <span className="lp-strip-item">🤖 Assistente com IA</span>
         <span className="lp-strip-item">☁ Dados na nuvem</span>
         <span className="lp-strip-item">📱 Celular e desktop</span>
@@ -261,7 +291,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               </li>
             </ul>
             <button className="lp-cta-main reveal reveal-delay-4" onClick={() => scrollTo('preco')}>
-              Experimentar grátis
+              Começar agora
             </button>
           </div>
           <div className="lp-ai-demo reveal reveal-delay-2">
@@ -338,7 +368,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               </li>
             </ul>
             <button className="lp-cta-main reveal reveal-delay-4" onClick={() => scrollTo('preco')}>
-              Começar 7 dias grátis
+              Começar agora
             </button>
           </div>
         </div>
@@ -377,11 +407,11 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* ── pricing ── */}
       <section className="lp-pricing" id="preco">
         <h2 className="reveal reveal-delay-1">
-          Experimente <em>7 dias grátis</em>.<br />
-          Depois, menos que um jantar.
+          Menos que um jantar.<br />
+          <em>Todo mês no controle.</em>
         </h2>
         <p className="lp-pricing-sub reveal reveal-delay-2">
-          Teste tudo sem pagar nada. Passados os 7 dias, escolha o plano ideal — sozinho ou a dois. Cancele quando quiser.
+          Escolha o plano ideal — sozinho ou a dois. Pague no cartão de crédito ou PIX. Cancele quando quiser.
         </p>
 
         <div className="lp-billing-toggle reveal reveal-delay-2" role="tablist" aria-label="Período de cobrança">
@@ -419,12 +449,12 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </h2>
         <p className="reveal reveal-delay-1">
           Em menos de cinco minutos você já tem o panorama completo.
-          Experimente 7 dias grátis — sem cobrança hoje.
+          Comece agora — a partir de R$19,90/mês.
         </p>
         <button className="lp-cta-final reveal reveal-delay-2" onClick={() => scrollTo('preco')}>
-          Começar 7 dias grátis
+          Começar agora
         </button>
-        <p className="lp-final-note reveal reveal-delay-3">Depois a partir de R$19,90/mês · cancele quando quiser</p>
+        <p className="lp-final-note reveal reveal-delay-3">A partir de R$19,90/mês · cartão ou PIX · cancele quando quiser</p>
       </section>
 
       {/* ── footer ── */}
@@ -435,6 +465,20 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </div>
         <span className="lp-footer-copy">© {new Date().getFullYear()} DinPrev. Todos os direitos reservados.</span>
       </footer>
+
+      <AuthModal
+        open={authOpen}
+        initialMode={authMode}
+        onClose={() => setAuthOpen(false)}
+      />
+
+      <PaywallModal
+        open={paywallOpen}
+        planId={selectedPlan}
+        paymentResult={paymentResult}
+        onClose={() => setPaywallOpen(false)}
+        onChangePlan={() => { setPaywallOpen(false); scrollTo('preco'); }}
+      />
 
     </div>
   );

@@ -30,3 +30,16 @@ verify_jwt = true
 # Transcrição de áudio (nota de voz do assistente): idem, só usuário logado.
 [functions.ai-transcribe]
 verify_jwt = true
+
+# ASAAS — gateway de pagamento (substitui o Stripe para novos assinantes).
+# Criar assinatura e cancelar exigem usuário logado (JWT).
+[functions.asaas-create-subscription]
+verify_jwt = true
+
+[functions.asaas-cancel]
+verify_jwt = true
+
+# O webhook do ASAAS não envia JWT do Supabase — a segurança é o token conferido
+# no header `asaas-access-token` (ASAAS_WEBHOOK_TOKEN). Igual ao stripe-webhook.
+[functions.asaas-webhook]
+verify_jwt = false

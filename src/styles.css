@@ -2989,6 +2989,66 @@ input[type="range"]::-moz-range-thumb {
   padding: 24px;
 }
 
+/* Popup de pagamento sobre a landing: desfoca e escurece o fundo. */
+.pay-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 16, 24, 0.55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  overflow-y: auto;
+  animation: fade 0.2s ease;
+}
+
+.pay-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  animation: pay-pop 0.25s cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+
+@keyframes pay-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pay-modal-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: color 0.15s, transform 0.15s;
+}
+
+.pay-modal-close:hover {
+  color: var(--ink);
+  transform: scale(1.05);
+}
+
 .auth-card {
   width: 100%;
   max-width: 380px;

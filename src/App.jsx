@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useSubscription } from './hooks/useSubscription.js';
-import AuthScreen from './components/AuthScreen.jsx';
 import Dashboard from './Dashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
-import PaywallPage from './components/PaywallPage.jsx';
 import ResetPasswordScreen from './components/ResetPasswordScreen.jsx';
 
 function Spinner({ label = 'Carregando…' }) {
@@ -20,10 +18,9 @@ function Spinner({ label = 'Carregando…' }) {
 
 export default function App() {
   const { user, loading, recovery } = useAuth();
-  const { status: subStatus, plan, trialing } = useSubscription(user);
-  const [showAuth, setShowAuth] = useState(false);
+  const { status: subStatus, plan, trialing, provider } = useSubscription(user);
 
-  // Lê resultado do redirect do Stripe (?payment=success|cancel)
+  // Lê resultado do redirect do gateway (?payment=success|cancel)
   const params = new URLSearchParams(window.location.search);
   const paymentResult = params.get('payment'); // 'success' | 'cancel' | null
 
@@ -32,20 +29,20 @@ export default function App() {
   // Recuperação de senha (link do e-mail) tem prioridade sobre tudo.
   if (recovery) return <ResetPasswordScreen />;
 
-  // Não logado
+  // Não logado: a landing gerencia o popup de login/cadastro internamente.
   if (!user) {
-    if (showAuth) return <AuthScreen onBack={() => setShowAuth(false)} />;
-    return <LandingPage onGetStarted={() => setShowAuth(true)} onLogin={() => setShowAuth(true)} />;
+    return <LandingPage />;
   }
 
   // Logado — aguarda verificação de assinatura
   if (subStatus === 'loading') return <Spinner label="Verificando assinatura…" />;
 
-  // Logado — sem assinatura ativa (ou voltando do Stripe)
+  // Logado — sem assinatura ativa: mostra a landing com o popup de pagamento por cima
+  // (a landing fica desfocada/escurecida atrás). O plano vem escolhido da landing.
   if (subStatus !== 'active') {
-    return <PaywallPage paymentResult={paymentResult} />;
+    return <LandingPage authed paywall paymentResult={paymentResult} />;
   }
 
   // Logado + assinatura ativa
-  return <Dashboard plan={plan} trialing={trialing} />;
+  return <Dashboard plan={plan} trialing={trialing} provider={provider} />;
 }
