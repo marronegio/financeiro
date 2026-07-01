@@ -2003,6 +2003,21 @@ input[type="range"]::-moz-range-thumb {
   border-bottom-color: var(--surface);
 }
 
+.ob-arrow-bottom::before {
+  bottom: -14px;
+  right: 22px;
+  border-top-color: var(--line);
+}
+
+.ob-arrow-bottom::after {
+  content: '';
+  position: absolute;
+  border: 6px solid transparent;
+  bottom: -11px;
+  right: 23px;
+  border-top-color: var(--surface);
+}
+
 /* Card centralizado: boas-vindas ou fallback mobile */
 .ob-backdrop {
   position: fixed;
@@ -3358,6 +3373,17 @@ input[type="range"]::-moz-range-thumb {
 .ai-fab:hover {
   transform: translateY(-2px);
   filter: brightness(1.05);
+}
+
+/* Durante o onboarding o FAB fica abaixo do overlay (z 99/100), então é
+   escurecido como o resto — o recorte do spotlight o revela na vez da IA. */
+.ai-fab-tour {
+  z-index: 98;
+  cursor: default;
+}
+.ai-fab-tour:hover {
+  transform: none;
+  filter: none;
 }
 
 .ai-panel {

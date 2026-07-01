@@ -369,7 +369,7 @@ export default function Dashboard({ plan, trialing }) {
       {!showOnboarding && (
         <DespesaAlerts despesas={state.despesas} onPaid={marcarDespesaPaga} />
       )}
-      {!showOnboarding && <AiAssistant state={state} c={c} onAction={runAiAction} />}
+      <AiAssistant state={state} c={c} onAction={runAiAction} tourActive={showOnboarding} />
     </div>
   );
 }

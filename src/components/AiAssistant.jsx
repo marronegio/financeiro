@@ -358,7 +358,7 @@ function Markdown({ text }) {
   );
 }
 
-export default function AiAssistant({ state, c, onAction }) {
+export default function AiAssistant({ state, c, onAction, tourActive = false }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -563,8 +563,10 @@ export default function AiAssistant({ state, c, onAction }) {
   return (
     <>
       <button
-        className="ai-fab"
+        className={`ai-fab${tourActive ? ' ai-fab-tour' : ''}`}
+        data-tour="ai-fab"
         onClick={() => setOpen((v) => !v)}
+        disabled={tourActive}
         aria-label="Abrir assistente de IA"
         title="Assistente de IA"
       >

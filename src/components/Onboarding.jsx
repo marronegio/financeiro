@@ -77,6 +77,14 @@ const STEPS = [
     description:
       'Quando chegar o dia do salário, feche o mês aqui. O cartão é zerado, as parcelas avançam e um resumo fica salvo.',
   },
+  {
+    tab: null,
+    target: '[data-tour="ai-fab"]',
+    icon: '✦',
+    title: 'Assistente com IA',
+    description:
+      'Este é o seu assistente. Ele analisa seus gastos, dá dicas e lança despesas e receitas por você — é só conversar. Também entende áudio (mande um recado de voz, tipo no WhatsApp) e imagens (fotografe um comprovante, boleto ou nota fiscal e ele lança sozinho).',
+  },
 ];
 
 function measureTarget(selector) {
@@ -92,16 +100,25 @@ function measureTarget(selector) {
 function tooltipPosition(rect) {
   if (!rect) return null;
   const spaceRight = window.innerWidth - rect.right - MARGIN;
+  const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
   const cy = rect.top + rect.height / 2;
+  const clampLeft = (l) =>
+    Math.max(MARGIN, Math.min(window.innerWidth - TOOLTIP_W - MARGIN, l));
 
   if (spaceRight >= TOOLTIP_W + MARGIN) {
     // Tooltip à direita do spotlight
     const top = Math.max(MARGIN, Math.min(window.innerHeight - 260, cy - 120));
     return { top, left: rect.right + MARGIN, arrowDir: 'left' };
   }
-  // Fallback: tooltip abaixo
-  const left = Math.max(MARGIN, Math.min(window.innerWidth - TOOLTIP_W - MARGIN, rect.left + rect.width / 2 - TOOLTIP_W / 2));
-  return { top: rect.bottom + MARGIN, left, arrowDir: 'top' };
+  if (spaceBelow >= 200) {
+    // Tooltip abaixo do spotlight
+    const left = clampLeft(rect.left + rect.width / 2 - TOOLTIP_W / 2);
+    return { top: rect.bottom + MARGIN, left, arrowDir: 'top' };
+  }
+  // Sem espaço à direita nem abaixo (ex: botão flutuante no canto inferior):
+  // tooltip acima do elemento. Usa `bottom` pra não depender da altura dele.
+  const left = clampLeft(rect.right - TOOLTIP_W);
+  return { bottom: window.innerHeight - rect.top + MARGIN, left, arrowDir: 'bottom' };
 }
 
 export default function Onboarding({ onFinish, onSkip, onStepChange }) {
@@ -168,15 +185,15 @@ export default function Onboarding({ onFinish, onSkip, onStepChange }) {
   };
 
   const tip = tooltipPosition(rect);
+  const tipStyle = { left: tip.left, width: TOOLTIP_W };
+  if (tip.top != null) tipStyle.top = tip.top;
+  if (tip.bottom != null) tipStyle.bottom = tip.bottom;
 
   return (
     <>
       <div className="ob-clickblock" />
       <div className="ob-spotlight" style={spotlight} />
-      <div
-        className={`ob-tooltip ob-arrow-${tip.arrowDir}`}
-        style={{ top: tip.top, left: tip.left, width: TOOLTIP_W }}
-      >
+      <div className={`ob-tooltip ob-arrow-${tip.arrowDir}`} style={tipStyle}>
         {body}
       </div>
     </>
