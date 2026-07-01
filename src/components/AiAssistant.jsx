@@ -1,9 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   RiSparkling2Line,
   RiCloseLine,
   RiSendPlaneFill,
   RiImageAddLine,
+  RiMicLine,
+  RiStopFill,
+  RiPlayFill,
+  RiPauseFill,
 } from 'react-icons/ri';
 import { supabase } from '../lib/supabase.js';
 import { BRL, toNumber, computeParcela } from '../money.js';
@@ -43,6 +47,138 @@ function fileToCompressedDataUrl(file, maxSize = MAX_IMG_SIZE, quality = 0.8) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+// Escolhe um formato de gravação suportado pelo navegador (Chrome/Firefox usam
+// webm/opus; Safari/iOS caem no mp4).
+function pickAudioMime() {
+  if (typeof MediaRecorder === 'undefined') return '';
+  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+  return candidates.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+}
+
+// Converte um Blob de áudio em base64 puro (sem o prefixo data:).
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Falha ao ler o áudio.'));
+    reader.onload = () => {
+      const url = reader.result;
+      resolve(url.slice(url.indexOf(',') + 1));
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Remove campos só de exibição (ex: audioUrl) antes de mandar pra API da OpenAI,
+// que rejeita propriedades desconhecidas nas mensagens.
+function toApiMessage(m) {
+  const out = { role: m.role, content: m.content };
+  if (m.tool_calls) out.tool_calls = m.tool_calls;
+  if (m.tool_call_id) out.tool_call_id = m.tool_call_id;
+  if (m.name) out.name = m.name;
+  return out;
+}
+
+const fmtTime = (s) => {
+  if (!isFinite(s) || s < 0) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2, '0')}`;
+};
+
+// Player de áudio estilo WhatsApp: botão play/pause, waveform clicável e tempo.
+function VoiceMessage({ src }) {
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+  // Alturas fixas das barrinhas da waveform (visual, não é o áudio real).
+  const bars = useMemo(
+    () => Array.from({ length: 34 }, () => 0.3 + Math.random() * 0.7),
+    []
+  );
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => {
+      const t = audio.currentTime || 0;
+      if (t < 1e100) setCurrent(t); // ignora o valor gigante do hack de duração
+    };
+    const onEnd = () => {
+      setPlaying(false);
+      setCurrent(0);
+    };
+    // Blobs do MediaRecorder às vezes vêm com duration = Infinity; forçar o
+    // currentTime obriga o navegador a calcular a duração real.
+    const onLoaded = () => {
+      if (audio.duration === Infinity || Number.isNaN(audio.duration)) {
+        audio.currentTime = 1e101;
+      } else {
+        setDuration(audio.duration);
+      }
+    };
+    const onDurationChange = () => {
+      if (audio.duration !== Infinity && !Number.isNaN(audio.duration)) {
+        setDuration(audio.duration);
+        if (audio.currentTime > 1e100) audio.currentTime = 0;
+      }
+    };
+    audio.addEventListener('timeupdate', onTime);
+    audio.addEventListener('ended', onEnd);
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.addEventListener('durationchange', onDurationChange);
+    return () => {
+      audio.removeEventListener('timeupdate', onTime);
+      audio.removeEventListener('ended', onEnd);
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      audio.removeEventListener('durationchange', onDurationChange);
+    };
+  }, []);
+
+  const toggle = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      audio.play();
+      setPlaying(true);
+    }
+  };
+
+  const seek = (e) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = ratio * duration;
+    setCurrent(ratio * duration);
+  };
+
+  const progress = duration ? current / duration : 0;
+  const shown = playing || current > 0 ? current : duration;
+
+  return (
+    <div className="ai-voice">
+      <audio ref={audioRef} src={src} preload="metadata" />
+      <button className="ai-voice-btn" onClick={toggle} aria-label={playing ? 'Pausar' : 'Tocar'}>
+        {playing ? <RiPauseFill /> : <RiPlayFill />}
+      </button>
+      <div className="ai-voice-wave" onClick={seek}>
+        {bars.map((h, i) => (
+          <span
+            key={i}
+            className={`ai-voice-bar${(i + 0.5) / bars.length <= progress ? ' on' : ''}`}
+            style={{ height: `${Math.round(h * 100)}%` }}
+          />
+        ))}
+      </div>
+      <span className="ai-voice-time">{fmtTime(shown)}</span>
+    </div>
+  );
 }
 
 // Renderiza o conteúdo de uma mensagem do usuário, que pode ser texto puro ou um
@@ -230,11 +366,17 @@ export default function AiAssistant({ state, c, onAction }) {
   // Imagem anexada aguardando envio (data URL) e flag de processamento do arquivo.
   const [image, setImage] = useState('');
   const [imgLoading, setImgLoading] = useState(false);
+  // Gravação de voz: `recording` enquanto captura, `transcribing` durante a
+  // transcrição na OpenAI.
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   // `history` é a lista completa enviada à IA (inclui mensagens de tool). A UI só
   // renderiza as de user/assistant com texto — ver `visible`.
   const [history, setHistory] = useState([]);
   const scrollRef = useRef(null);
   const fileRef = useRef(null);
+  const recorderRef = useRef(null);
+  const chunksRef = useRef([]);
 
   useEffect(() => {
     if (open && scrollRef.current) {
@@ -248,7 +390,7 @@ export default function AiAssistant({ state, c, onAction }) {
     let convo = messages;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       const { data, error: fnError } = await supabase.functions.invoke('ai-assistant', {
-        body: { messages: convo, context: buildContext(state, c) },
+        body: { messages: convo.map(toApiMessage), context: buildContext(state, c) },
       });
       if (fnError || data?.error) throw new Error(data?.error || fnError.message);
 
@@ -325,6 +467,87 @@ export default function AiAssistant({ state, c, onAction }) {
     }
   }
 
+  // Envia o áudio como mensagem de voz (tipo WhatsApp): mostra o player no chat e
+  // transcreve nos bastidores pra IA entender o conteúdo e já responder.
+  async function sendAudio(blob, mime) {
+    if (busy) return;
+    setTranscribing(true);
+    setError('');
+    let text = '';
+    let audioB64 = '';
+    try {
+      audioB64 = await blobToBase64(blob);
+      const { data, error: fnError } = await supabase.functions.invoke('ai-transcribe', {
+        body: { audio: audioB64, mime },
+      });
+      if (fnError || data?.error) throw new Error(data?.error || fnError.message);
+      text = (data.text || '').trim();
+    } catch (err) {
+      console.error(err);
+      setError('Não consegui processar o áudio. Tente de novo.');
+      setTranscribing(false);
+      return;
+    }
+    setTranscribing(false);
+    if (!text) {
+      setError('Não entendi o áudio. Tente falar de novo.');
+      return;
+    }
+
+    // A mensagem guarda o áudio (só pra exibir) e o texto transcrito (o que a IA
+    // realmente lê). O `audioUrl` é removido antes de ir pra API — ver `converse`.
+    const audioUrl = `data:${mime};base64,${audioB64}`;
+    setBusy(true);
+    const next = [...history, { role: 'user', content: text, audioUrl }];
+    setHistory(next);
+    try {
+      await converse(next);
+    } catch (err) {
+      console.error(err);
+      setError('Não consegui responder agora. Tente de novo em instantes.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startRecording() {
+    if (busy || transcribing) return;
+    const mime = pickAudioMime();
+    if (!navigator.mediaDevices?.getUserMedia || !mime) {
+      setError('Seu navegador não suporta gravação de áudio.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mime });
+        if (blob.size > 0) sendAudio(blob, mime);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setError('');
+      setRecording(true);
+    } catch (err) {
+      console.error(err);
+      setError('Não consegui acessar o microfone. Verifique a permissão.');
+    }
+  }
+
+  function stopRecording() {
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+    recorderRef.current = null;
+    setRecording(false);
+  }
+
+  const toggleRecording = () => (recording ? stopRecording() : startRecording());
+
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -364,7 +587,16 @@ export default function AiAssistant({ state, c, onAction }) {
             {visible.map((m, i) =>
               m.role === 'user' ? (
                 <div key={i} className="ai-msg user">
-                  <UserContent content={m.content} />
+                  {m.audioUrl ? (
+                    <div className="ai-msg-audio">
+                      <VoiceMessage src={m.audioUrl} />
+                      {typeof m.content === 'string' && m.content && (
+                        <span className="ai-audio-caption">{m.content}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <UserContent content={m.content} />
+                  )}
                 </div>
               ) : (
                 <div key={i} className="ai-msg bot ai-md">
@@ -413,25 +645,40 @@ export default function AiAssistant({ state, c, onAction }) {
             <button
               className="ai-attach"
               onClick={() => fileRef.current?.click()}
-              disabled={busy || imgLoading}
+              disabled={busy || imgLoading || recording}
               aria-label="Anexar imagem"
               title="Anexar imagem"
             >
               <RiImageAddLine />
             </button>
+            <button
+              className={`ai-attach ai-mic${recording ? ' recording' : ''}`}
+              onClick={toggleRecording}
+              disabled={busy || transcribing}
+              aria-label={recording ? 'Parar gravação' : 'Gravar áudio'}
+              title={recording ? 'Parar gravação' : 'Gravar áudio'}
+            >
+              {recording ? <RiStopFill /> : <RiMicLine />}
+            </button>
             <textarea
               className="ai-input"
               rows={1}
-              placeholder="Ex: gastei 45 no mercado no cartão"
+              placeholder={
+                recording
+                  ? 'Gravando… toque para parar'
+                  : transcribing
+                    ? 'Transcrevendo áudio…'
+                    : 'Ex: gastei 45 no mercado no cartão'
+              }
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              disabled={busy}
+              disabled={busy || recording || transcribing}
             />
             <button
               className="ai-send"
               onClick={send}
-              disabled={busy || imgLoading || (!input.trim() && !image)}
+              disabled={busy || imgLoading || recording || transcribing || (!input.trim() && !image)}
               aria-label="Enviar"
             >
               <RiSendPlaneFill />

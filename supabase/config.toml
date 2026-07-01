@@ -26,3 +26,7 @@ verify_jwt = true
 # Assistente de IA: só usuários logados podem gastar tokens da OpenAI.
 [functions.ai-assistant]
 verify_jwt = true
+
+# Transcrição de áudio (nota de voz do assistente): idem, só usuário logado.
+[functions.ai-transcribe]
+verify_jwt = true

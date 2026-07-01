@@ -3589,6 +3589,23 @@ input[type="range"]::-moz-range-thumb {
   cursor: not-allowed;
 }
 
+/* Botão de microfone: pulsa em vermelho enquanto grava */
+.ai-mic.recording {
+  color: #fff;
+  background: var(--negative);
+  border-color: var(--negative);
+  animation: ai-mic-pulse 1.3s infinite ease-in-out;
+}
+@keyframes ai-mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(224, 86, 76, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(224, 86, 76, 0);
+  }
+}
+
 /* Prévia da imagem anexada, acima do campo de texto */
 .ai-attach-preview {
   display: flex;
@@ -3621,6 +3638,66 @@ input[type="range"]::-moz-range-thumb {
 .ai-attach-loading {
   font-size: 13px;
   color: var(--faint);
+}
+
+/* Mensagem de voz (player + legenda transcrita) */
+.ai-msg-audio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ai-audio-caption {
+  font-size: 12px;
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* Player de voz estilo WhatsApp (dentro do balão roxo do usuário) */
+.ai-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+}
+.ai-voice-btn {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  color: var(--accent);
+  background: #fff;
+}
+.ai-voice-btn:hover {
+  filter: brightness(0.95);
+}
+.ai-voice-wave {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  cursor: pointer;
+}
+.ai-voice-bar {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.4);
+  transition: background 0.1s;
+}
+.ai-voice-bar.on {
+  background: #fff;
+}
+.ai-voice-time {
+  flex: none;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
 }
 
 /* Imagem exibida dentro de uma mensagem enviada */
