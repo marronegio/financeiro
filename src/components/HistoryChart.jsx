@@ -32,6 +32,9 @@ export default function HistoryChart({ historico }) {
 
   const data = (historico || []).slice(-range);
   const n = data.length;
+  // Um único ponto não desenha linha; mostra o marcador só no primeiro mês
+  // fechado para o dado não sumir. A partir daí, visualização normal (sem bolinhas).
+  const showMark = n === 1;
   const labels = data.map((h) => shortLabel(h.periodo));
   const guardado = data.map((h) => Number(h.guardado) || 0);
   const cartao = data.map((h) => Number(h.cartao) || 0);
@@ -46,7 +49,7 @@ export default function HistoryChart({ historico }) {
   );
 
   return (
-    <div className="card">
+    <div className="card history-card">
       <div className="card-head">
         <span className="card-title">Evolução</span>
         <div className="seg">
@@ -93,6 +96,7 @@ export default function HistoryChart({ historico }) {
               label: 'Guardado',
               color: GREEN,
               curve: 'linear',
+              showMark,
               valueFormatter: (v) => (v == null ? '' : BRL(v)),
             },
             {
@@ -100,6 +104,7 @@ export default function HistoryChart({ historico }) {
               label: 'Gasto no cartão',
               color: RED,
               curve: 'linear',
+              showMark,
               valueFormatter: (v) => (v == null ? '' : BRL(v)),
             },
             {
@@ -107,6 +112,7 @@ export default function HistoryChart({ historico }) {
               label: 'Sobrou',
               color: BLUE,
               curve: 'linear',
+              showMark,
               valueFormatter: (v) => (v == null ? '' : BRL(v)),
             },
             {
@@ -114,6 +120,7 @@ export default function HistoryChart({ historico }) {
               label: 'Renda extra',
               color: LIGHT_GREEN,
               curve: 'linear',
+              showMark,
               valueFormatter: (v) => (v == null ? '' : BRL(v)),
             },
           ]}

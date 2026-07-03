@@ -2735,6 +2735,21 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 2px;
 }
 
+/* Marcas (pontos) do gráfico: por padrão o MUI as desenha com miolo branco e só
+   um anel fino da cor da série — quase invisíveis no fundo claro, ainda mais no
+   1º mês, em que não há linha ligando pontos. Deixamos o ponto sólido na cor da
+   série (o stroke largo preenche o círculo) para ficarem sempre visíveis. */
+.history-card .MuiMarkElement-root {
+  r: 3;
+  stroke-width: 6;
+}
+
+/* No hover o MUI realça a marca — mantém um leve destaque. */
+.history-card .MuiMarkElement-highlighted {
+  r: 4;
+  stroke-width: 8;
+}
+
 /* ---------- loading ---------- */
 .loading-screen {
   flex: 1;
