@@ -154,6 +154,21 @@ describe('manualClose', () => {
     expect(s.rendaExtra[0].valor).toBe('300,00');
   });
 
+  it('desmarca as despesas fixas pagas no fechamento', () => {
+    const s = baseState({
+      despesas: [
+        { nome: 'Aluguel', valor: '200,00', venc: '10', pago: '2026-06' },
+        { nome: 'Luz', valor: '80,00', venc: '5' },
+      ],
+    });
+    const r = manualClose(s, TODAY);
+    expect(r.despesas[0].pago).toBe('');
+    expect(r.despesas[1].pago).toBeUndefined();
+    // preserva os demais campos e não muta o estado original
+    expect(r.despesas[0].valor).toBe('200,00');
+    expect(s.despesas[0].pago).toBe('2026-06');
+  });
+
   it('usa o "guardado real" informado quando passado', () => {
     const s = baseState();
     const r = manualClose(s, TODAY, 999);

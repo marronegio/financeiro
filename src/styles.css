@@ -651,6 +651,10 @@ h1 em {
     grid-template-columns: 1fr 60px 104px 30px;
   }
 
+  .row.has-venc.has-pago {
+    grid-template-columns: 30px 1fr 60px 104px 30px;
+  }
+
   .pcard-fields {
     grid-template-columns: 1fr 1fr;
   }
@@ -1134,6 +1138,44 @@ input::placeholder {
 /* linha de despesa fixa: nome [dia venc.] valor remover */
 .row.has-venc {
   grid-template-columns: 1fr 78px 134px 34px;
+}
+
+/* despesa fixa com check de pago: [✓] nome [dia venc.] valor remover */
+.row.has-venc.has-pago {
+  grid-template-columns: 34px 1fr 78px 134px 34px;
+}
+
+/* botão de check "já paguei" da despesa fixa */
+.pago-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: transparent;
+  cursor: pointer;
+  height: 34px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pago-btn:hover {
+  border-color: var(--positive);
+}
+
+.pago-btn.on {
+  background: rgba(14, 159, 110, 0.12);
+  border-color: var(--positive);
+  color: var(--positive);
+}
+
+/* despesa marcada como paga: nome esmaecido e riscado */
+.row.is-paid .name-input {
+  text-decoration: line-through;
+  color: var(--faint);
 }
 
 .row .venc-wrap {

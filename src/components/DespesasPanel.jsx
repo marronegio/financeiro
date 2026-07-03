@@ -17,13 +17,15 @@ export default function DespesasPanel({ state, c, updateItem, addItem, removeIte
             namePlaceholder="Nome"
             addLabel="Adicionar despesa"
             showVenc
+            showPago
             updateItem={updateItem}
             addItem={addItem}
             removeItem={removeItem}
           />
           <p className="hint">
             Contas que se repetem todo mês — aluguel, luz, água, internet. Elas entram no total de
-            gastos do Planejamento.
+            gastos do Planejamento. Use o ✓ à esquerda para marcar as que já pagou; ele é
+            desmarcado sozinho quando o mês é fechado.
           </p>
         </div>
       </div>

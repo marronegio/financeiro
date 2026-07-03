@@ -38,6 +38,14 @@ export function nextDueDate(venc, today = new Date()) {
   return new Date(ny, nmo, Math.min(v, lastDay(ny, nmo)));
 }
 
+// Período 'YYYY-MM' de referência para marcar uma despesa como paga. Usa o próximo
+// vencimento quando há dia definido; senão, o mês corrente. É o valor guardado em
+// `pago` quando o usuário marca o botão de check — bate com o `duePeriod` do alerta.
+export function duePeriodFor(despesa, today = new Date()) {
+  const due = nextDueDate(despesa?.venc, today);
+  return periodKey(due || atMidnight(today));
+}
+
 // Lista de alertas ativos para as despesas fixas. Cada alerta:
 //   { key, idx, nome, daysUntil, duePeriod }
 // `key` identifica a ocorrência (índice + período + dias) para o "Ignorar" da sessão.

@@ -102,13 +102,15 @@ function performClose(state, periodo, historico, guardadoReal) {
   const cartao = [{ nome: '', valor: '' }];
   // A renda extra é avulsa do mês — zera no fechamento, como o cartão.
   const rendaExtra = [{ nome: '', valor: '' }];
+  // Desmarca o "pago" das despesas fixas: começam o novo mês como não pagas.
+  const despesas = (state.despesas || []).map((d) => (d.pago ? { ...d, pago: '' } : d));
   const parcelamentos = state.parcelamentos.map((it) => {
     const p = computeParcela(it);
     if (!(p.parc > 0) || p.done) return it;
     return { ...it, pagas: String(Math.min(p.parc, p.pagas + 1)) };
   });
 
-  return { ...state, cartao, rendaExtra, parcelamentos };
+  return { ...state, cartao, rendaExtra, despesas, parcelamentos };
 }
 
 // Roda no carregamento: fecha automaticamente os meses pendentes desde o último

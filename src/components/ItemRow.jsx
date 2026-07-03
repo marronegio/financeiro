@@ -1,5 +1,6 @@
 import React from 'react';
 import { maskMoney } from '../money.js';
+import { duePeriodFor } from '../despesaAlerts.js';
 
 // Mantém só dígitos e limita o dia de vencimento ao intervalo 1–31.
 const maskDia = (raw) => {
@@ -9,9 +10,9 @@ const maskDia = (raw) => {
   return String(n);
 };
 
-// Linha: [categoria opcional] + nome + [vencimento opcional] + valor (R$) + remover.
+// Linha: [pago opcional] + [categoria opcional] + nome + [vencimento opcional] + valor (R$) + remover.
 // Usada em despesas, assinaturas e cartão. `categories` só é passado no cartão;
-// `showVenc` só é passado nas despesas fixas.
+// `showVenc` e `showPago` só são passados nas despesas fixas.
 export default function ItemRow({
   item,
   namePlaceholder = 'Nome',
@@ -19,10 +20,34 @@ export default function ItemRow({
   onRemove,
   categories,
   showVenc = false,
+  showPago = false,
 }) {
   const hasCat = Array.isArray(categories) && categories.length > 0;
+  // `pago` guarda o período pago ('YYYY-MM'); qualquer valor = marcado como pago.
+  // Zera no fechamento do mês (history.performClose), desmarcando o check.
+  const paid = !!item.pago;
   return (
-    <div className={'row' + (hasCat ? ' has-cat' : '') + (showVenc ? ' has-venc' : '')}>
+    <div
+      className={
+        'row' +
+        (hasCat ? ' has-cat' : '') +
+        (showVenc ? ' has-venc' : '') +
+        (showPago ? ' has-pago' : '') +
+        (showPago && paid ? ' is-paid' : '')
+      }
+    >
+      {showPago && (
+        <button
+          type="button"
+          className={'pago-btn' + (paid ? ' on' : '')}
+          onClick={() => onChange({ ...item, pago: paid ? '' : duePeriodFor(item) })}
+          title={paid ? 'Paga — clique para desmarcar' : 'Marcar como paga'}
+          aria-pressed={paid}
+          aria-label={paid ? 'Despesa paga' : 'Marcar despesa como paga'}
+        >
+          {paid ? '✓' : ''}
+        </button>
+      )}
       {hasCat && (
         <select
           className="cat-select"
