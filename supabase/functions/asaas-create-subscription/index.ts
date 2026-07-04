@@ -39,9 +39,9 @@ function isValidCPF(value: string): boolean {
 // Fonte da verdade dos preços fica NO SERVIDOR — o frontend só manda a chave do
 // plano. Espelha o plans.js. Valor em reais; ciclo no formato do ASAAS.
 const PLAN_CONFIG: Record<string, { tier: 'solo' | 'duo'; value: number; cycle: 'MONTHLY' | 'YEARLY'; label: string }> = {
-  'solo-monthly': { tier: 'solo', value: 27, cycle: 'MONTHLY', label: 'DinPrev Solo (Mensal)' },
+  'solo-monthly': { tier: 'solo', value: 37.9, cycle: 'MONTHLY', label: 'DinPrev Solo (Mensal)' },
   'solo-annual': { tier: 'solo', value: 238.8, cycle: 'YEARLY', label: 'DinPrev Solo (Anual)' },
-  'duo-monthly': { tier: 'duo', value: 44.9, cycle: 'MONTHLY', label: 'DinPrev Duo (Mensal)' },
+  'duo-monthly': { tier: 'duo', value: 67.9, cycle: 'MONTHLY', label: 'DinPrev Duo (Mensal)' },
   'duo-annual': { tier: 'duo', value: 478.8, cycle: 'YEARLY', label: 'DinPrev Duo (Anual)' },
 }
 
@@ -192,6 +192,8 @@ Deno.serve(async (req) => {
         asaas_customer_id: customerId,
         asaas_subscription_id: subscription.id,
         plan: config.tier,
+        // Ciclo do plano — define o limite mensal de créditos de IA (250/900).
+        plan_cycle: config.cycle === 'YEARLY' ? 'annual' : 'monthly',
         subscription_status: 'pending',
         access_until: null, // nova assinatura zera qualquer expiração de cancelamento anterior
         updated_at: new Date().toISOString(),

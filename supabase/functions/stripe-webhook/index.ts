@@ -12,6 +12,13 @@ function planFromSubscription(sub: Stripe.Subscription): 'solo' | 'duo' {
   return priceId && DUO_PRICE_IDS.has(priceId) ? 'duo' : 'solo'
 }
 
+// Ciclo do plano (define o limite mensal de créditos de IA: 250/900). O próprio
+// price do Stripe informa o intervalo de cobrança — não depende de env vars.
+function cycleFromSubscription(sub: Stripe.Subscription): 'monthly' | 'annual' {
+  const interval = sub.items?.data?.[0]?.price?.recurring?.interval
+  return interval === 'year' ? 'annual' : 'monthly'
+}
+
 Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
@@ -76,6 +83,7 @@ Deno.serve(async (req) => {
         subscription_status: sub.status,
         subscription_id: sub.id,
         plan: planFromSubscription(sub),
+        plan_cycle: cycleFromSubscription(sub),
       })
       // Marca o CPF como tendo usado o teste grátis — não pode repetir, mesmo
       // que a pessoa crie outro e-mail. O CPF vem de profiles (gravado no checkout).
@@ -104,6 +112,7 @@ Deno.serve(async (req) => {
       await updateByCustomer(sub.customer as string, {
         subscription_status: sub.status,
         plan: planFromSubscription(sub),
+        plan_cycle: cycleFromSubscription(sub),
       })
       break
     }

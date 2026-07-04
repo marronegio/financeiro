@@ -35,6 +35,27 @@ função — evita que estranhos gastem seus tokens.
 - Quando o modelo pede uma ferramenta, o **frontend** a executa em
   `src/lib/aiActions.js` via `setState` — o `useCloudState` salva no Supabase.
 
+## Créditos de IA por mês
+
+Cada chamada à OpenAI (mensagem, rodada de ferramenta ou transcrição de áudio)
+consome **1 crédito** do mês do usuário (`_shared/aiCredits.ts` + tabela
+`ai_usage`, migration `ai_credits`). O limite depende do ciclo do plano
+(`profiles.plan_cycle`, gravado pelos fluxos de pagamento):
+
+| Plano                       | Créditos/mês |
+| --------------------------- | ------------ |
+| Mensal (solo ou duo)        | 250          |
+| Anual (solo ou duo)         | 900          |
+| `plan_cycle` desconhecido   | 250          |
+
+Estourou o limite → a função responde **429** com `error: 'limit_reached'` e o
+chat mostra a mensagem amigável. O reset é automático na virada do mês (a chave
+da tabela é `user_id + 'YYYY-MM'`). Para ajustar os limites sem deploy:
+
+```bash
+supabase secrets set AI_CREDITS_MONTHLY=300 AI_CREDITS_ANNUAL=1000
+```
+
 ## Teste local
 
 ```bash

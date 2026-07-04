@@ -10,6 +10,11 @@
 //
 // verify_jwt = true (config.toml): a plataforma já rejeita chamadas sem um JWT
 // válido de usuário logado antes de o código rodar.
+//
+// Créditos de IA: cada chamada consome 1 crédito do mês do usuário (limite por
+// plano — ver _shared/aiCredits.ts). Estourou, devolve 429 sem tocar na OpenAI.
+
+import { consumeAiCredit } from '../_shared/aiCredits.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -252,6 +257,10 @@ Deno.serve(async (req) => {
     }
 
     const { messages = [], context = {} } = await req.json()
+
+    // Consome 1 crédito de IA do mês; se o limite do plano acabou, para aqui.
+    const limited = await consumeAiCredit(req, corsHeaders)
+    if (limited) return limited
 
     // Limite defensivo: evita conversas gigantes e prompts abusivos.
     const trimmed = Array.isArray(messages) ? messages.slice(-20) : []

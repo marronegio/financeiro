@@ -7,14 +7,14 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { PLANS, planKey, planPerks, normalizePlanKey } from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
-// Card de preço de um plano (Solo ou Duo) para o ciclo selecionado.
+// Card de preço de um plano (Solo/Duo × Mensal/Anual).
 function PriceCard({ planId, onStart }) {
   const plan = PLANS[planId];
   const isDuo = plan.tier === 'duo';
   return (
     <div className={'lp-price-card' + (isDuo ? ' lp-price-card-duo' : '')}>
-      <div className="lp-price-badge">{isDuo ? 'Ideal para casais' : 'Mais popular'}</div>
-      <div className="lp-price-label">{isDuo ? 'Duo · 2 perfis' : 'Solo'}</div>
+      {plan.badge && <div className="lp-price-badge">{plan.badge}</div>}
+      <div className="lp-price-label">{plan.label}</div>
       <div className="lp-price-value">
         <span className="lp-price-currency">R$</span>
         <span className="lp-price-amount">{plan.amount}</span>
@@ -23,8 +23,10 @@ function PriceCard({ planId, onStart }) {
       <div className="lp-price-period">{plan.period}</div>
       {plan.economy && <div className="lp-price-economy">{plan.economy}</div>}
       <ul className="lp-price-perks">
-        {planPerks(plan.tier).map((perk) => (
-          <li key={perk}>{perk}</li>
+        {planPerks(plan.tier, plan.cycle).map((perk) => (
+          <li key={perk.text} className={perk.special ? 'lp-perk-special' : ''}>
+            {perk.text}
+          </li>
         ))}
       </ul>
       <button className="lp-cta-price" onClick={() => onStart(planId)}>
@@ -50,8 +52,9 @@ function useReveal() {
 export default function LandingPage({ authed = false, paywall = false, paymentResult = null }) {
   useReveal();
   const { signOut } = useAuth();
-  const [billing, setBilling] = useState('annual');
-  const annual = billing === 'annual';
+  // Aba da seção de preços: sozinho (Solo) ou a dois (Duo). Cada aba mostra o
+  // par Mensal + Anual do tier.
+  const [tier, setTier] = useState('solo');
 
   // Popup de pagamento: aberto automaticamente quando o usuário já está logado mas
   // sem assinatura ativa (ou voltando do checkout do cartão).
@@ -414,30 +417,30 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
           Escolha o plano ideal — sozinho ou a dois. Pague no cartão de crédito ou PIX. Cancele quando quiser.
         </p>
 
-        <div className="lp-billing-toggle reveal reveal-delay-2" role="tablist" aria-label="Período de cobrança">
+        <div className="lp-tier-toggle reveal reveal-delay-2" role="tablist" aria-label="Tipo de plano">
           <button
             type="button"
             role="tab"
-            aria-selected={!annual}
-            className={!annual ? 'active' : ''}
-            onClick={() => setBilling('monthly')}
+            aria-selected={tier === 'solo'}
+            className={tier === 'solo' ? 'active' : ''}
+            onClick={() => setTier('solo')}
           >
-            Mensal
+            Solo
           </button>
           <button
             type="button"
             role="tab"
-            aria-selected={annual}
-            className={annual ? 'active' : ''}
-            onClick={() => setBilling('annual')}
+            aria-selected={tier === 'duo'}
+            className={tier === 'duo' ? 'active' : ''}
+            onClick={() => setTier('duo')}
           >
-            Anual <span className="lp-billing-save">economize</span>
+            Duo <span className="lp-tier-pill">2 perfis</span>
           </button>
         </div>
 
         <div className="lp-price-cards reveal reveal-delay-3">
-          <PriceCard planId={planKey('solo', billing)} onStart={start} />
-          <PriceCard planId={planKey('duo', billing)} onStart={start} />
+          <PriceCard planId={planKey(tier, 'monthly')} onStart={start} />
+          <PriceCard planId={planKey(tier, 'annual')} onStart={start} />
         </div>
       </section>
 

@@ -8,6 +8,11 @@
 // A chave da OpenAI NUNCA vai para o frontend; fica como secret desta função:
 //   supabase secrets set OPENAI_API_KEY=sk-...
 // verify_jwt = true (config.toml): só usuário logado pode transcrever.
+//
+// Créditos de IA: transcrever também consome 1 crédito do mês do usuário
+// (limite por plano — ver _shared/aiCredits.ts). Estourou, devolve 429.
+
+import { consumeAiCredit } from '../_shared/aiCredits.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,6 +63,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    // Payload válido: consome 1 crédito de IA antes de chamar a OpenAI.
+    const limited = await consumeAiCredit(req, corsHeaders)
+    if (limited) return limited
 
     // Extensão coerente com o mime pra OpenAI reconhecer o formato.
     const ext = mime.includes('mp4') || mime.includes('mpeg') || mime.includes('m4a')

@@ -16,6 +16,27 @@ import { getCardCategories, TABS } from '../state.js';
 // Segurança contra loop infinito de ferramentas numa mesma pergunta.
 const MAX_TOOL_ROUNDS = 5;
 
+// Invoca uma Edge Function de IA e normaliza os erros. Quando o backend responde
+// não-2xx (ex.: 429 de créditos de IA esgotados), o supabase-js devolve um
+// FunctionsHttpError com o corpo em `context` — lemos o JSON de lá pra saber o
+// código (`err.code`) e a mensagem amigável a exibir.
+async function invokeAi(name, body) {
+  const { data, error: fnError } = await supabase.functions.invoke(name, { body });
+  if (fnError) {
+    let detail = null;
+    try {
+      detail = await fnError.context?.json();
+    } catch {
+      /* corpo não-JSON (erro de rede/relay): segue com a mensagem genérica */
+    }
+    const err = new Error(detail?.message || detail?.error || fnError.message);
+    err.code = detail?.error || '';
+    throw err;
+  }
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
 // Tamanho máximo (px) do lado maior da imagem enviada à IA. Redimensionar antes
 // de mandar reduz muito o payload em base64 sem perder legibilidade de comprovantes.
 const MAX_IMG_SIZE = 1024;
@@ -389,10 +410,10 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
   async function converse(messages) {
     let convo = messages;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const { data, error: fnError } = await supabase.functions.invoke('ai-assistant', {
-        body: { messages: convo.map(toApiMessage), context: buildContext(state, c) },
+      const data = await invokeAi('ai-assistant', {
+        messages: convo.map(toApiMessage),
+        context: buildContext(state, c),
       });
-      if (fnError || data?.error) throw new Error(data?.error || fnError.message);
 
       const message = data.message;
       convo = [...convo, message];
@@ -461,7 +482,11 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
       await converse(next);
     } catch (err) {
       console.error(err);
-      setError('Não consegui responder agora. Tente de novo em instantes.');
+      setError(
+        err.code === 'limit_reached'
+          ? err.message
+          : 'Não consegui responder agora. Tente de novo em instantes.'
+      );
     } finally {
       setBusy(false);
     }
@@ -477,14 +502,15 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
     let audioB64 = '';
     try {
       audioB64 = await blobToBase64(blob);
-      const { data, error: fnError } = await supabase.functions.invoke('ai-transcribe', {
-        body: { audio: audioB64, mime },
-      });
-      if (fnError || data?.error) throw new Error(data?.error || fnError.message);
+      const data = await invokeAi('ai-transcribe', { audio: audioB64, mime });
       text = (data.text || '').trim();
     } catch (err) {
       console.error(err);
-      setError('Não consegui processar o áudio. Tente de novo.');
+      setError(
+        err.code === 'limit_reached'
+          ? err.message
+          : 'Não consegui processar o áudio. Tente de novo.'
+      );
       setTranscribing(false);
       return;
     }
@@ -504,7 +530,11 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
       await converse(next);
     } catch (err) {
       console.error(err);
-      setError('Não consegui responder agora. Tente de novo em instantes.');
+      setError(
+        err.code === 'limit_reached'
+          ? err.message
+          : 'Não consegui responder agora. Tente de novo em instantes.'
+      );
     } finally {
       setBusy(false);
     }
