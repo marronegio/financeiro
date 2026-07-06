@@ -693,6 +693,25 @@ h1 em {
   opacity: 0.62;
 }
 
+.pcard.last {
+  border-color: var(--positive);
+  box-shadow: 0 0 0 1px var(--positive) inset;
+}
+
+.last-badge {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 40%, transparent);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .pcard input {
   padding: 7px 0;
   font-size: 0.86rem;
@@ -1784,6 +1803,20 @@ input[type="range"]::-moz-range-thumb {
   font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.pill-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 40%, transparent);
+  padding: 2px 6px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
 }
 
 .summary-line.minus .amt {

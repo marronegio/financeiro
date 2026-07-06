@@ -48,11 +48,18 @@ export function compute(state) {
   let parcelaMensal = 0;
   let parcelaRestante = 0;
   let parcelaAtivas = 0;
+  let parcelaUltimasCount = 0;
+  let parcelaUltimasValor = 0;
   state.parcelamentos.forEach((it) => {
     const p = computeParcela(it);
     if (p.parc > 0 && !p.done) {
       parcelaMensal += p.mensal;
       parcelaAtivas += 1;
+      // Parcelamentos com apenas uma parcela restante — estão acabando este mês.
+      if (p.restantes === 1) {
+        parcelaUltimasCount += 1;
+        parcelaUltimasValor += p.mensal;
+      }
     }
     parcelaRestante += p.falta;
   });
@@ -71,7 +78,8 @@ export function compute(state) {
   return {
     salario, guardar, totDesp, totAss, totCartao, totAbates,
     totRendaExtra, somarRendaExtra, rendaExtraNoPlano,
-    parcelaMensal, parcelaRestante, parcelaAtivas, faturaCartao,
+    parcelaMensal, parcelaRestante, parcelaAtivas,
+    parcelaUltimasCount, parcelaUltimasValor, faturaCartao,
     gastos, sobra, pctC, pctD, credito, debito,
   };
 }

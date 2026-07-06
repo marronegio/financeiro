@@ -3,6 +3,7 @@ import { BRL, maskMoney, onlyDigits, computeParcela } from '../money.js';
 
 function ParcelaCard({ item, onChange, onRemove }) {
   const p = computeParcela(item);
+  const last = p.parc > 0 && !p.done && p.restantes === 1;
 
   let meta;
   if (!(p.parc > 0)) {
@@ -18,7 +19,7 @@ function ParcelaCard({ item, onChange, onRemove }) {
   }
 
   return (
-    <div className={'pcard' + (p.done ? ' done' : '')}>
+    <div className={'pcard' + (p.done ? ' done' : '') + (last ? ' last' : '')}>
       <div className="pcard-top">
         <div className="name-wrap">
           <input
@@ -30,6 +31,7 @@ function ParcelaCard({ item, onChange, onRemove }) {
             autoComplete="off"
           />
         </div>
+        {last && <span className="last-badge">Última parcela</span>}
         <button className="del-btn" title="Remover" onClick={onRemove}>
           ×
         </button>
@@ -141,6 +143,18 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
                 </span>
                 <span className="amt">{BRL(c.parcelaMensal)}</span>
               </div>
+              {c.parcelaUltimasCount > 0 && (
+                <div className="summary-line">
+                  <span className="lbl">
+                    <span className="dot" style={{ background: 'var(--positive)' }} />
+                    Últimas parcelas
+                    <span className="pill-count">{c.parcelaUltimasCount}</span>
+                  </span>
+                  <span className="amt" style={{ color: 'var(--positive)' }}>
+                    {BRL(c.parcelaUltimasValor)}
+                  </span>
+                </div>
+              )}
               <div className="summary-line total">
                 <span className="lbl">
                   <strong>Falta pagar</strong>
