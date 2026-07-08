@@ -1,6 +1,11 @@
 node_modules
 dist
 dist-ssr
+
+# Assinatura do app Android — NUNCA commitar (o repo é público!)
+*.keystore
+*.jks
+android/key.properties
 *.local
 .env
 .env.*

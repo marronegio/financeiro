@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <title>Política de Privacidade — DinPrev</title>
+  <style>
+    :root {
+      --navy: #0a2540;
+      --slate: #425466;
+      --accent: #635bff;
+      --line: #e6ebf1;
+      --bg: #f6f9fc;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--slate);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+    .brand img { width: 36px; height: 36px; }
+    .brand span { font-size: 18px; font-weight: 700; color: var(--navy); }
+    h1 { color: var(--navy); font-size: 30px; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .updated { font-size: 13px; color: #8898aa; margin-bottom: 36px; }
+    h2 { color: var(--navy); font-size: 19px; letter-spacing: -0.01em; margin: 36px 0 10px; }
+    p, li { font-size: 15.5px; margin-bottom: 10px; }
+    ul { padding-left: 22px; margin-bottom: 12px; }
+    a { color: var(--accent); }
+    .card {
+      background: #fff; border: 1px solid var(--line); border-radius: 14px;
+      padding: 36px 40px; box-shadow: 0 2px 5px rgba(50,50,93,0.06);
+    }
+    @media (max-width: 600px) { .card { padding: 26px 22px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <img src="/logo.png" alt="DinPrev" />
+      <span>DinPrev</span>
+    </div>
+
+    <div class="card">
+      <h1>Política de Privacidade</h1>
+      <p class="updated">Última atualização: 8 de julho de 2026</p>
+
+      <p>
+        Esta política descreve como o <strong>DinPrev</strong> ("nós") coleta, usa e protege os
+        seus dados pessoais quando você usa o nosso site e os nossos aplicativos para Android e
+        iOS ("Serviço"), em conformidade com a Lei Geral de Proteção de Dados
+        (LGPD — Lei nº 13.709/2018).
+      </p>
+
+      <h2>1. Dados que coletamos</h2>
+      <ul>
+        <li><strong>Dados de cadastro:</strong> e-mail, CPF e senha (armazenada apenas de forma criptografada — nunca temos acesso à senha em texto).</li>
+        <li><strong>Dados financeiros informados por você:</strong> salário, despesas, assinaturas, gastos de cartão, parcelamentos, metas e demais valores que você registra no app. Esses dados existem para o app funcionar e são visíveis somente para você.</li>
+        <li><strong>Dados de pagamento da assinatura:</strong> o pagamento é processado por parceiros (ASAAS e Stripe). Nós não armazenamos números de cartão — recebemos apenas a confirmação de pagamento e o status da assinatura.</li>
+        <li><strong>Conteúdo enviado ao assistente de IA:</strong> mensagens de texto, áudios e imagens que você envia ao assistente são processados para executar o que você pediu (por exemplo, lançar um gasto).</li>
+        <li><strong>Dados de uso do site:</strong> utilizamos o Meta Pixel na página inicial para medir a eficácia de anúncios. Esse recurso usa cookies e pode coletar identificadores de navegação.</li>
+      </ul>
+
+      <h2>2. Para que usamos os dados</h2>
+      <ul>
+        <li>Autenticar o seu acesso e manter os seus dados sincronizados na nuvem;</li>
+        <li>Exibir os seus painéis financeiros e enviar lembretes de vencimento (no app e por e-mail);</li>
+        <li>Processar e gerenciar a sua assinatura;</li>
+        <li>Operar o assistente de IA;</li>
+        <li>Medir campanhas de marketing (apenas no site, via Meta Pixel);</li>
+        <li>Cumprir obrigações legais.</li>
+      </ul>
+
+      <h2>3. Com quem compartilhamos</h2>
+      <p>Não vendemos os seus dados. Compartilhamos apenas com operadores necessários ao funcionamento do Serviço:</p>
+      <ul>
+        <li><strong>Supabase</strong> — hospedagem do banco de dados e autenticação;</li>
+        <li><strong>ASAAS</strong> e <strong>Stripe</strong> — processamento de pagamentos (recebem CPF e e-mail para emissão de cobrança);</li>
+        <li><strong>OpenAI</strong> — processamento das mensagens enviadas ao assistente de IA;</li>
+        <li><strong>Meta</strong> — métricas de anúncios do site (Pixel).</li>
+      </ul>
+      <p>Esses parceiros podem operar servidores fora do Brasil; a transferência internacional segue as salvaguardas da LGPD.</p>
+
+      <h2>4. Por quanto tempo guardamos</h2>
+      <p>
+        Os seus dados são mantidos enquanto a sua conta existir. Ao excluir a conta (em
+        Configurações, dentro do app), os seus dados pessoais e financeiros são removidos dos
+        nossos sistemas, exceto registros que precisemos manter por obrigação legal (por exemplo,
+        registros fiscais de pagamento).
+      </p>
+
+      <h2>5. Segurança</h2>
+      <p>
+        Todo o tráfego é criptografado (HTTPS/TLS). O acesso ao banco de dados é protegido por
+        políticas de segurança em nível de linha (RLS), de modo que cada usuário só consegue
+        acessar os próprios dados. Senhas são armazenadas com hash seguro.
+      </p>
+
+      <h2>6. Seus direitos (LGPD)</h2>
+      <p>Você pode, a qualquer momento, solicitar:</p>
+      <ul>
+        <li>Confirmação de que tratamos seus dados e acesso a eles;</li>
+        <li>Correção de dados incompletos ou desatualizados;</li>
+        <li>Exclusão dos dados e da conta;</li>
+        <li>Portabilidade e informações sobre compartilhamento;</li>
+        <li>Revogação de consentimento.</li>
+      </ul>
+      <p>
+        Para exercer qualquer direito, escreva para
+        <a href="mailto:contato@dinprev.com.br">contato@dinprev.com.br</a> ou use a página de
+        contato dentro do app. Respondemos no prazo previsto em lei.
+      </p>
+
+      <h2>7. Crianças e adolescentes</h2>
+      <p>O DinPrev destina-se a maiores de 18 anos e não coleta intencionalmente dados de menores.</p>
+
+      <h2>8. Alterações desta política</h2>
+      <p>
+        Podemos atualizar esta política para refletir mudanças no Serviço ou na legislação.
+        Alterações relevantes serão comunicadas no app ou por e-mail. A data no topo indica a
+        versão vigente.
+      </p>
+
+      <h2>9. Contato</h2>
+      <p>
+        Controlador: DinPrev<br />
+        E-mail: <a href="mailto:contato@dinprev.com.br">contato@dinprev.com.br</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
