@@ -2160,3 +2160,19 @@
     transform: none;
   }
 }
+/* ── safe areas (app nativo / telas com notch) ─────────────────
+   env() vale 0 em navegadores comuns; só age com viewport-fit=cover. */
+.lp-nav {
+  height: calc(66px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.lp-hero {
+  padding-top: calc(150px + env(safe-area-inset-top, 0px));
+}
+
+@media (max-width: 900px) {
+  .lp-hero {
+    padding-top: calc(120px + env(safe-area-inset-top, 0px));
+  }
+}
