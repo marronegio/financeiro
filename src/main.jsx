@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { AuthProvider } from './auth/AuthContext.jsx';
 import { isSupabaseConfigured } from './lib/supabase.js';
+import { initNativeApp } from './lib/native.js';
 import './styles.css';
+
+initNativeApp();
 
 // Sem chaves no .env não dá pra inicializar a auth — mostra instruções em vez de quebrar.
 function ConfigWarning() {

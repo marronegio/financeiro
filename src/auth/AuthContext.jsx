@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
+import { siteUrl } from '../lib/native.js';
 
 const AuthContext = createContext(null);
 
@@ -46,12 +47,12 @@ export function AuthProvider({ children }) {
         // CPF guardado no metadata; vira a chave do controle de teste grátis
         // (persistido em profiles.cpf no primeiro checkout). Link de confirmação
         // volta para a origem do cadastro (precisa estar na allowlist do Supabase).
-        options: { data: { cpf: cpf || null }, emailRedirectTo: window.location.origin },
+        options: { data: { cpf: cpf || null }, emailRedirectTo: siteUrl },
       }),
     signIn: (email, password) =>
       supabase.auth.signInWithPassword({ email, password }),
     resetPassword: (email) =>
-      supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }),
+      supabase.auth.resetPasswordForEmail(email, { redirectTo: siteUrl }),
     signOut: () => supabase.auth.signOut(),
   };
 

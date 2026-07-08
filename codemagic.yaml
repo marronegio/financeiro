@@ -1,0 +1,83 @@
+# Builds de iOS na nuvem (Codemagic — codemagic.io, plano gratuito: 500 min/mês em macOS).
+#
+# Setup (uma vez):
+#   1. Entre em codemagic.io com a conta do GitHub e adicione o repo marronegio/financeiro.
+#   2. Em Teams → Environment variables, crie o grupo "dinprev" com:
+#        VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_SITE_URL
+#      (mesmos valores do seu .env — são públicos no bundle, mas ficam fora do git).
+#   3. Rode o workflow "ios-verificacao" para validar que o app compila.
+#
+# Para publicar no TestFlight/App Store (workflow "ios-testflight") é preciso:
+#   - Conta Apple Developer (US$ 99/ano)
+#   - Chave da API do App Store Connect cadastrada no Codemagic
+#     (Teams → Integrations → App Store Connect, nomeada "dinprev-asc")
+#   - App criado no App Store Connect com o bundle id com.dinprev.app
+
+workflows:
+  ios-verificacao:
+    name: iOS — build de verificação (sem assinatura, não precisa de conta Apple)
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      xcode: latest
+      node: 22.14.0
+      groups:
+        - dinprev
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+    scripts:
+      - name: Instalar dependências e buildar o web
+        script: |
+          npm ci
+          npm run build
+      - name: Sincronizar Capacitor
+        script: npx cap sync ios
+      - name: Compilar app iOS (sem assinatura)
+        script: |
+          xcodebuild build \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - ios/DerivedData/Build/Products/Release-iphoneos/App.app
+
+  ios-testflight:
+    name: iOS — TestFlight (requer conta Apple Developer)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    integrations:
+      app_store_connect: dinprev-asc
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.dinprev.app
+      xcode: latest
+      node: 22.14.0
+      groups:
+        - dinprev
+    scripts:
+      - name: Instalar dependências e buildar o web
+        script: |
+          npm ci
+          npm run build
+      - name: Sincronizar Capacitor
+        script: npx cap sync ios
+      - name: Aplicar perfis de assinatura
+        script: xcode-project use-profiles
+      - name: Gerar IPA assinado
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

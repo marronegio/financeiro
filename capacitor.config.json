@@ -1,0 +1,12 @@
+{
+  "appId": "com.dinprev.app",
+  "appName": "DinPrev",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

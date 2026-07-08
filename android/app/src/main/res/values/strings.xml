@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DinPrev</string>
+    <string name="title_activity_main">DinPrev</string>
+    <string name="package_name">com.dinprev.app</string>
+    <string name="custom_url_scheme">com.dinprev.app</string>
+</resources>
