@@ -3240,6 +3240,10 @@ input[type="range"]::-moz-range-thumb {
   margin-bottom: 12px;
 }
 
+/* `input.auth-input` empata a especificidade com a regra global
+   input[type="text"] (linha ~897) e vence por vir depois — sem isso o campo
+   CPF (type="text") perdia a caixa/borda. */
+input.auth-input,
 .auth-input {
   width: 100%;
   background: var(--surface-2);
@@ -3253,6 +3257,7 @@ input[type="range"]::-moz-range-thumb {
   transition: border-color .15s, box-shadow .15s, background .15s;
 }
 
+input.auth-input:focus,
 .auth-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);

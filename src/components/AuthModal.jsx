@@ -5,8 +5,9 @@ import { trackMetaEvent } from '../lib/metaPixel.js';
 import PasswordInput from './PasswordInput.jsx';
 
 // Login/cadastro como popup sobre a landing (mesmo backdrop desfocado do pagamento).
-// `initialMode` define se abre em 'login' ou 'signup'.
-export default function AuthModal({ open, onClose, initialMode = 'login' }) {
+// `initialMode` define se abre em 'login' ou 'signup'. Com `dismissible: false`
+// vira tela obrigatória (app nativo): sem × e sem fechar clicando fora.
+export default function AuthModal({ open, onClose, initialMode = 'login', dismissible = true }) {
   const { signIn, signUp, resetPassword } = useAuth();
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
@@ -78,9 +79,11 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
   if (!open) return null;
 
   return (
-    <div className="pay-modal-backdrop" onClick={onClose}>
+    <div className="pay-modal-backdrop" onClick={dismissible ? onClose : undefined}>
       <div className="pay-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="pay-modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        {dismissible && (
+          <button type="button" className="pay-modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        )}
         <div className="auth-card" style={{ maxWidth: '100%' }}>
           <div className="auth-brand">
             <span className="logo"><img src="/logo.png" alt="DinPrev" /></span>

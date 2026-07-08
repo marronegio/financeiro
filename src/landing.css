@@ -2176,3 +2176,30 @@
     padding-top: calc(120px + env(safe-area-inset-top, 0px));
   }
 }
+
+/* ── mobile gate (app nativo: escolha de plano sem landing) ──── */
+.mg {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-slate);
+  display: flex;
+  flex-direction: column;
+}
+
+.mg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+.mg .mg-pricing {
+  flex: 1;
+  padding: 40px 20px calc(48px + env(safe-area-inset-bottom, 0px));
+}
+
+.mg .mg-pricing h2 {
+  font-size: clamp(26px, 6vw, 40px);
+}

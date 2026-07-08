@@ -3,7 +3,9 @@ import { useAuth } from './auth/AuthContext.jsx';
 import { useSubscription } from './hooks/useSubscription.js';
 import Dashboard from './Dashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
+import MobileGate from './components/MobileGate.jsx';
 import ResetPasswordScreen from './components/ResetPasswordScreen.jsx';
+import { isNativeApp } from './lib/native.js';
 
 function Spinner({ label = 'Carregando…' }) {
   return (
@@ -29,17 +31,20 @@ export default function App() {
   // Recuperação de senha (link do e-mail) tem prioridade sobre tudo.
   if (recovery) return <ResetPasswordScreen />;
 
-  // Não logado: a landing gerencia o popup de login/cadastro internamente.
+  // Não logado. No site, a landing gerencia o popup de login/cadastro; no app
+  // nativo não há landing — cadastro/login é a primeira tela.
   if (!user) {
+    if (isNativeApp) return <MobileGate stage="auth" />;
     return <LandingPage />;
   }
 
   // Logado — aguarda verificação de assinatura
   if (subStatus === 'loading') return <Spinner label="Verificando assinatura…" />;
 
-  // Logado — sem assinatura ativa: mostra a landing com o popup de pagamento por cima
-  // (a landing fica desfocada/escurecida atrás). O plano vem escolhido da landing.
+  // Logado — sem assinatura ativa. No site, landing com o popup de pagamento
+  // por cima; no app nativo, tela de escolha de plano + pagamento.
   if (subStatus !== 'active') {
+    if (isNativeApp) return <MobileGate stage="plans" paymentResult={paymentResult} />;
     return <LandingPage authed paywall paymentResult={paymentResult} />;
   }
 

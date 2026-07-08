@@ -8,7 +8,8 @@ import { PLANS, planKey, planPerks, normalizePlanKey } from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
 // Card de preço de um plano (Solo/Duo × Mensal/Anual).
-function PriceCard({ planId, onStart }) {
+// Exportado para o MobileGate (seleção de plano no app nativo).
+export function PriceCard({ planId, onStart }) {
   const plan = PLANS[planId];
   const isDuo = plan.tier === 'duo';
   return (

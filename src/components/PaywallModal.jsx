@@ -7,7 +7,7 @@ import { trackMetaEvent } from '../lib/metaPixel.js';
 // Popup de pagamento exibido SOBRE a landing (fundo desfocado/escurecido).
 // O plano já vem escolhido da landing (planId) — aqui o usuário só escolhe o
 // método (cartão ou PIX) e paga. Sem período de teste.
-export default function PaywallModal({ open, planId, paymentResult, onClose, onChangePlan }) {
+export default function PaywallModal({ open, planId, paymentResult, onClose, onChangePlan, dismissible = true }) {
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -236,9 +236,11 @@ export default function PaywallModal({ open, planId, paymentResult, onClose, onC
   }
 
   return (
-    <div className="pay-modal-backdrop" onClick={onClose}>
+    <div className="pay-modal-backdrop" onClick={dismissible ? onClose : undefined}>
       <div className="pay-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="pay-modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        {dismissible && (
+          <button type="button" className="pay-modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        )}
         <div className="auth-card" style={{ maxWidth: '100%' }}>
           <div className="auth-brand">
             <span className="logo"><img src="/logo.png" alt="DinPrev" /></span>
