@@ -16,6 +16,45 @@ const fmtDate = (iso) => {
   }
 };
 
+// Agrupa o status cru do gateway (subscription_status) em 4 baldes para o filtro.
+// Etiqueta e "tone" (cor) acompanham cada balde.
+const BUCKETS = {
+  active:   { label: 'Ativa',     tone: 'ok' },
+  inactive: { label: 'Inativa',   tone: 'muted' },
+  past_due: { label: 'Atrasado',  tone: 'warn' },
+  canceled: { label: 'Cancelado', tone: 'bad' },
+};
+
+const bucketOf = (status) => {
+  switch (status) {
+    case 'active':
+    case 'trialing':
+      return 'active';
+    case 'past_due':
+    case 'unpaid':
+      return 'past_due';
+    case 'canceled':
+    case 'cancelled':
+      return 'canceled';
+    default: // inactive, pending, incomplete, etc.
+      return 'inactive';
+  }
+};
+
+// Rótulo em PT do status cru, para a etiqueta do cartão.
+const STATUS_LABEL = {
+  active: 'Ativa', trialing: 'Em teste', inactive: 'Inativa',
+  pending: 'Pendente', past_due: 'Atrasado', canceled: 'Cancelado',
+};
+
+const FILTERS = [
+  { key: 'all', label: 'Todos' },
+  { key: 'active', label: 'Ativa' },
+  { key: 'inactive', label: 'Inativa' },
+  { key: 'past_due', label: 'Atrasado' },
+  { key: 'canceled', label: 'Cancelado' },
+];
+
 // Controle segmentado (ex.: Ativa / Inativa / Auto). Um clique = uma escolha.
 function Seg({ value, options, onPick, disabled }) {
   return (
@@ -42,6 +81,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all'); // balde de status selecionado
   const [busyId, setBusyId] = useState(''); // id+ação em andamento
   const [confirmDel, setConfirmDel] = useState(null); // usuário a excluir | null
 
@@ -103,7 +143,21 @@ export default function AdminPanel() {
   };
 
   const q = query.trim().toLowerCase();
-  const shown = q ? users.filter((u) => (u.email || '').toLowerCase().includes(q)) : users;
+  // Contagem por balde (sobre a busca por e-mail, para os números baterem com o
+  // que está sendo listado). 'all' = total.
+  const bySearch = q ? users.filter((u) => (u.email || '').toLowerCase().includes(q)) : users;
+  const counts = bySearch.reduce(
+    (acc, u) => {
+      const b = bucketOf(u.subscriptionStatus);
+      acc[b] = (acc[b] || 0) + 1;
+      acc.all += 1;
+      return acc;
+    },
+    { all: 0 },
+  );
+  const shown = filter === 'all'
+    ? bySearch
+    : bySearch.filter((u) => bucketOf(u.subscriptionStatus) === filter);
 
   return (
     <div className="adm">
@@ -125,6 +179,24 @@ export default function AdminPanel() {
         </button>
       </div>
 
+      {!loading && (
+        <div className="adm-filters" role="group" aria-label="Filtrar por status de assinatura">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              className="adm-filter"
+              data-active={filter === f.key}
+              data-tone={f.key === 'all' ? '' : BUCKETS[f.key].tone}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+              <span className="adm-filter-count">{counts[f.key] || 0}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {error && <div className="adm-error">{error}</div>}
 
       {loading ? (
@@ -139,9 +211,17 @@ export default function AdminPanel() {
               <div className="card adm-user" key={u.id}>
                 <div className="adm-user-head">
                   <div className="adm-user-id">
-                    <div className="adm-email">{u.email || '(sem e-mail)'}</div>
+                    <div className="adm-email">
+                      {u.email || '(sem e-mail)'}
+                      <span
+                        className="adm-badge"
+                        data-tone={BUCKETS[bucketOf(u.subscriptionStatus)].tone}
+                      >
+                        {STATUS_LABEL[u.subscriptionStatus] || u.subscriptionStatus}
+                      </span>
+                    </div>
                     <div className="adm-meta">
-                      Criado em {fmtDate(u.createdAt)} · gateway: <b>{u.subscriptionStatus}</b>
+                      Criado em {fmtDate(u.createdAt)}
                       {u.provider ? ` · ${u.provider}` : ''}
                     </div>
                   </div>
