@@ -31,18 +31,21 @@ Esse domínio precisa estar na allowlist de redirect do Supabase
 
 ## iOS (na nuvem, sem Mac)
 
-O build roda no [Codemagic](https://codemagic.io) — plano gratuito com
-500 min/mês de macOS. Configuração em [codemagic.yaml](codemagic.yaml):
+O build de verificação roda no **GitHub Actions**
+([.github/workflows/ios-build.yml](.github/workflows/ios-build.yml)) a cada
+push na `main` — máquinas macOS são gratuitas e ilimitadas porque o repo é
+público. Usa os secrets já cadastrados no repo (`VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY`, `VITE_SITE_URL`). Não precisa de conta Apple; o
+`.app` sem assinatura fica disponível como artifact da run.
 
-1. Entre no codemagic.io com o GitHub e adicione o repo `marronegio/financeiro`.
-2. Crie o grupo de variáveis `dinprev` (Teams → Environment variables) com
-   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_SITE_URL`.
-3. Workflow **ios-verificacao**: compila o app sem assinatura a cada push na
-   `main` — serve para garantir que o iOS builda. Não precisa de conta Apple.
-4. Workflow **ios-testflight**: gera o IPA assinado e envia ao TestFlight.
-   Requer conta Apple Developer (US$ 99/ano), a chave da API do App Store
-   Connect cadastrada no Codemagic com o nome `dinprev-asc` e o app criado no
-   App Store Connect com bundle id `com.dinprev.app`.
+Para publicar no **TestFlight/App Store** (exige conta Apple Developer,
+US$ 99/ano), o caminho mais simples é o workflow `ios-testflight` do
+[codemagic.yaml](codemagic.yaml) — o Codemagic (plano gratuito: 500 min/mês)
+cuida da assinatura: cadastre a chave da API do App Store Connect lá
+(Integrations → App Store Connect, nome `dinprev-asc`), crie o grupo de
+variáveis `dinprev` com as mesmas três acima e crie o app no App Store
+Connect com bundle id `com.dinprev.app`. Importante: o Codemagic **não lê os
+secrets do GitHub** — as variáveis precisam ser cadastradas na interface dele.
 
 ## Ícones e splash screen
 

@@ -1,0 +1,38 @@
+name: iOS Build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build-ios:
+    # macOS é de graça e sem limite de minutos em repositórios públicos
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SITE_URL: ${{ secrets.VITE_SITE_URL }}
+      - run: npx cap sync ios
+      - name: Compilar app iOS (sem assinatura)
+        run: |
+          xcodebuild build \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Compactar o .app gerado
+        run: |
+          cd DerivedData/Build/Products/Release-iphoneos
+          zip -ry DinPrev-iOS.zip App.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DinPrev-iOS
+          path: DerivedData/Build/Products/Release-iphoneos/DinPrev-iOS.zip
