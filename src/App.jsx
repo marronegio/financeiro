@@ -18,7 +18,7 @@ function Spinner({ label = 'Carregando…' }) {
 
 export default function App() {
   const { user, loading, recovery } = useAuth();
-  const { status: subStatus, plan, trialing, provider } = useSubscription(user);
+  const { status: subStatus, plan, trialing, provider, aiEnabled } = useSubscription(user);
 
   // Lê resultado do redirect do gateway (?payment=success|cancel)
   const params = new URLSearchParams(window.location.search);
@@ -44,5 +44,5 @@ export default function App() {
   }
 
   // Logado + assinatura ativa
-  return <Dashboard plan={plan} trialing={trialing} provider={provider} />;
+  return <Dashboard plan={plan} trialing={trialing} provider={provider} aiEnabled={aiEnabled} />;
 }

@@ -53,12 +53,24 @@ export async function consumeAiCredit(
 
   const { data: profile, error: profileError } = await admin
     .from('profiles')
-    .select('plan_cycle')
+    .select('plan_cycle, ai_enabled')
     .eq('id', userId)
     .maybeSingle()
   if (profileError) {
     console.error('Créditos de IA: falha ao ler o plano (seguindo):', profileError.message)
     return null
+  }
+
+  // Liga/desliga da IA pelo painel admin. false = bloqueia mesmo com créditos.
+  // (null/ausente = habilitado, para não quebrar bases anteriores à coluna.)
+  if (profile?.ai_enabled === false) {
+    return new Response(
+      JSON.stringify({
+        error: 'ai_disabled',
+        message: 'O assistente de IA está indisponível para a sua conta.',
+      }),
+      { status: 403, headers: jsonHeaders },
+    )
   }
 
   const limit = profile?.plan_cycle === 'annual' ? LIMIT_ANNUAL : LIMIT_MONTHLY

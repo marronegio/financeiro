@@ -21,6 +21,8 @@ import Onboarding from './components/Onboarding.jsx';
 import ProfileGate from './components/ProfileGate.jsx';
 import DespesaAlerts from './components/DespesaAlerts.jsx';
 import AiAssistant from './components/AiAssistant.jsx';
+import AdminPanel from './components/AdminPanel.jsx';
+import { isAdmin } from './lib/admin.js';
 import { applyAiAction, describeAction } from './lib/aiActions.js';
 
 // Marca, por sessão do navegador, que o usuário Duo já escolheu um perfil. Some
@@ -122,9 +124,17 @@ const HEADERS = {
     ),
     sub: 'Gerencie as configurações de segurança da sua conta.',
   },
+  admin: {
+    title: (
+      <>
+        Painel <em>administrativo</em>.
+      </>
+    ),
+    sub: 'Gerencie assinaturas, IA, planos e créditos de todos os usuários do DinPrev.',
+  },
 };
 
-export default function Dashboard({ plan, trialing, provider = 'stripe' }) {
+export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabled = true }) {
   const { user, signOut } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const {
@@ -358,6 +368,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe' }) {
               onToggleEmailVencimentos={(v) => setField('emailVencimentos', v)}
             />
           )}
+          {state.tab === 'admin' && isAdmin(user) && <AdminPanel />}
         </div>
       </main>
       {showOnboarding && (
@@ -370,7 +381,9 @@ export default function Dashboard({ plan, trialing, provider = 'stripe' }) {
       {!showOnboarding && (
         <DespesaAlerts despesas={state.despesas} onPaid={marcarDespesaPaga} />
       )}
-      <AiAssistant state={state} c={c} onAction={runAiAction} tourActive={showOnboarding} />
+      {aiEnabled && (
+        <AiAssistant state={state} c={c} onAction={runAiAction} tourActive={showOnboarding} />
+      )}
     </div>
   );
 }

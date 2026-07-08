@@ -43,3 +43,8 @@ verify_jwt = true
 # no header `asaas-access-token` (ASAAS_WEBHOOK_TOKEN). Igual ao stripe-webhook.
 [functions.asaas-webhook]
 verify_jwt = false
+
+# Painel administrativo: exige JWT (usuário logado) e, dentro da função, confere
+# que o e-mail está em ADMIN_EMAIL antes de usar o service_role.
+[functions.admin]
+verify_jwt = true
