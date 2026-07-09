@@ -117,10 +117,11 @@ Deno.serve(async (req) => {
       case 'set_subscription': {
         if (!userId) return json({ error: 'userId obrigatório.' }, 400)
         const ov = value === 'active' || value === 'inactive' ? value : null
+        // Upsert: contas que nunca pagaram ainda não têm linha em profiles —
+        // um UPDATE alteraria 0 linhas e falharia em silêncio.
         const { error } = await admin
           .from('profiles')
-          .update({ admin_override: ov, updated_at: new Date().toISOString() })
-          .eq('id', userId)
+          .upsert({ id: userId, admin_override: ov, updated_at: new Date().toISOString() })
         if (error) throw error
         return json({ ok: true })
       }
