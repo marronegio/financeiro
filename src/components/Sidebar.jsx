@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   FiPieChart,
   FiTrendingUp,
@@ -35,10 +35,12 @@ const TAB_ICONS = {
 export default function Sidebar({
   tab, onTab, user, onSignOut, avatar,
   isDuo = false, activeProfile, onOpenProfiles,
+  // Drawer controlado pelo Dashboard (o botão voltar do Android precisa saber
+  // se o menu está aberto para fechá-lo em vez de navegar).
+  open = false, setOpen = () => {},
 }) {
   const email = user?.email || '';
   const initials = (email.slice(0, 2) || 'EU').toUpperCase();
-  const [open, setOpen] = useState(false);
 
   // A aba "Admin" só existe para o admin (ver src/lib/admin.js). A autoridade real
   // fica no backend; aqui é só a visibilidade do item de menu.

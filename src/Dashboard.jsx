@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createDefaultState, CARD_CATEGORIES } from './state.js';
 import { supabase } from './lib/supabase.js';
 import { useAuth } from './auth/AuthContext.jsx';
@@ -145,6 +145,15 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
   } = useProfiles(user.id, plan);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Drawer do menu (mobile). Vive aqui — e não no Sidebar — para o botão
+  // voltar do Android poder fechá-lo.
+  const [navOpen, setNavOpen] = useState(false);
+  const navOpenRef = useRef(navOpen);
+  navOpenRef.current = navOpen;
+
+  // Pilha de abas visitadas: o botão voltar do Android navega para trás.
+  const tabHistRef = useRef([]);
+
   // Gate de seleção de perfil (estilo Netflix) — só no Duo, uma vez por sessão.
   const [profileChosen, setProfileChosen] = useState(
     () => !isDuo || sessionStorage.getItem(GATE_KEY) === '1'
@@ -182,7 +191,33 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
   }
 
   const setField = (key, value) => setState((s) => ({ ...s, [key]: value }));
-  const setTab = (tab) => setState((s) => ({ ...s, tab }));
+
+  const setTab = (tab) => {
+    if (state && state.tab !== tab) {
+      tabHistRef.current.push(state.tab);
+      if (tabHistRef.current.length > 50) tabHistRef.current.shift();
+    }
+    setState((s) => ({ ...s, tab }));
+  };
+
+  // Botão físico de voltar (Android): fecha o drawer se aberto; senão volta
+  // para a aba anterior. Sem nada a fazer, o handler nativo minimiza o app.
+  useEffect(() => {
+    const onBack = (e) => {
+      if (navOpenRef.current) {
+        e.preventDefault();
+        setNavOpen(false);
+        return;
+      }
+      const prev = tabHistRef.current.pop();
+      if (prev) {
+        e.preventDefault();
+        setState((s) => ({ ...s, tab: prev }));
+      }
+    };
+    window.addEventListener('dinprev-back', onBack);
+    return () => window.removeEventListener('dinprev-back', onBack);
+  }, [setState]);
 
   const updateItem = (kind, i, item) =>
     setState((s) => ({ ...s, [kind]: (s[kind] || []).map((it, idx) => (idx === i ? item : it)) }));
@@ -294,6 +329,8 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
         isDuo={isDuo}
         activeProfile={profileList.find((p) => p.id === active)}
         onOpenProfiles={openProfiles}
+        open={navOpen}
+        setOpen={setNavOpen}
       />
       <main className="main">
         <div className="wrap">

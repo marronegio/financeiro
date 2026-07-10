@@ -13,11 +13,17 @@ export const siteUrl =
     ? import.meta.env.VITE_SITE_URL
     : window.location.origin;
 
-// Botão físico de voltar do Android: volta no histórico do webview quando dá,
-// senão minimiza o app (comportamento padrão de apps nativos).
+// Botão físico de voltar do Android. Primeiro oferece o evento ao app
+// (o Dashboard fecha o drawer ou volta para a aba anterior e chama
+// preventDefault); sem ninguém tratando, volta no histórico do webview ou
+// minimiza o app (comportamento padrão de apps nativos).
 export function initNativeApp() {
   if (!isNativeApp) return;
   CapApp.addListener('backButton', ({ canGoBack }) => {
+    const unhandled = window.dispatchEvent(
+      new CustomEvent('dinprev-back', { cancelable: true })
+    );
+    if (!unhandled) return; // alguém deu preventDefault — já tratado
     if (canGoBack) window.history.back();
     else CapApp.minimizeApp();
   });
