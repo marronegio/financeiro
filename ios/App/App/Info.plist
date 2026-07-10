@@ -24,6 +24,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O DinPrev usa o microfone para você enviar mensagens de voz ao assistente de IA.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>O DinPrev usa a câmera para você fotografar comprovantes e notas para o assistente de IA.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
