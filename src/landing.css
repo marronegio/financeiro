@@ -2161,19 +2161,20 @@
   }
 }
 /* ── safe areas (app nativo / telas com notch) ─────────────────
-   env() vale 0 em navegadores comuns; só age com viewport-fit=cover. */
+   --sat/--sab definidas em styles.css: cobrem o env() (iOS) e as vars
+   injetadas pelo Capacitor no Android. Valem 0 em navegador comum. */
 .lp-nav {
-  height: calc(66px + env(safe-area-inset-top, 0px));
-  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(66px + var(--sat, 0px));
+  padding-top: var(--sat, 0px);
 }
 
 .lp-hero {
-  padding-top: calc(150px + env(safe-area-inset-top, 0px));
+  padding-top: calc(150px + var(--sat, 0px));
 }
 
 @media (max-width: 900px) {
   .lp-hero {
-    padding-top: calc(120px + env(safe-area-inset-top, 0px));
+    padding-top: calc(120px + var(--sat, 0px));
   }
 }
 
@@ -2190,14 +2191,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px;
+  padding: calc(14px + var(--sat, 0px)) 20px 14px;
   background: #fff;
   border-bottom: 1px solid var(--line);
 }
 
 .mg .mg-pricing {
   flex: 1;
-  padding: 40px 20px calc(48px + env(safe-area-inset-bottom, 0px));
+  padding: 40px 20px calc(48px + var(--sab, 0px));
 }
 
 .mg .mg-pricing h2 {
