@@ -13,10 +13,25 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Barras do sistema em navy com ícones claros (relógio/bateria legíveis).
+             No Android 15+ statusBarColor é ignorado (edge-to-edge): a faixa mostra
+             o windowBackground, por isso ele também é navy. -->
+        <item name="android:windowBackground">@color/dinprevNavy</item>
+        <item name="android:statusBarColor">@color/dinprevNavy</item>
+        <item name="android:navigationBarColor">@color/dinprevNavy</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- A activity permanece neste tema depois do splash, então as barras
+             do sistema precisam ser configuradas aqui também. -->
+        <item name="android:windowBackground">@color/dinprevNavy</item>
+        <item name="android:statusBarColor">@color/dinprevNavy</item>
+        <item name="android:navigationBarColor">@color/dinprevNavy</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

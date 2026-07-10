@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navy da marca (a var side-bg do CSS): fundo das barras do sistema -->
+    <color name="dinprevNavy">#0a2540</color>
+</resources>
