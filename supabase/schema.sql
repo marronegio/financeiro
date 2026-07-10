@@ -27,3 +27,21 @@ create policy "atualizar proprios dados"
 create policy "apagar proprios dados"
   on public.finances for delete
   using (auth.uid() = user_id);
+
+-- ── Gravação por perfil (plano Duo, edição simultânea) ────────────────────
+-- Grava apenas UM perfil dentro do blob, de forma atômica no servidor: cada
+-- dispositivo salva só o próprio perfil e nunca sobrescreve o do parceiro.
+-- pdata = null remove o perfil (usado ao excluir o perfil do parceiro).
+create or replace function public.save_profile(pid text, pdata jsonb)
+returns void
+language sql
+security invoker
+as $$
+  update public.finances
+     set state = case
+           when pdata is null then state #- array['profiles', pid]
+           else jsonb_set(state, array['profiles', pid], pdata, true)
+         end,
+         updated_at = now()
+   where user_id = auth.uid();
+$$;

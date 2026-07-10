@@ -17,6 +17,7 @@ export default function CartaoPanel({
   addItem,
   removeItem,
   addCategory,
+  
   updateCategory,
   removeCategory,
 }) {
