@@ -39,6 +39,8 @@ export default function ConfiguracoesPanel({
   isDuo = false, profiles = [], activeProfile, canAddPartner = false,
   onAddPartner, onRenameProfile, onRemovePartner, onVerifyPin, onSetPin,
   emailVencimentos = true, onToggleEmailVencimentos,
+  pushVencimentos = true, onTogglePushVencimentos,
+  compartilharCasal = true, onToggleCompartilharCasal,
 }) {
   // ASAAS não tem portal de autoatendimento como o Stripe; usuários ASAAS só veem
   // a opção de cancelar. O portal fica só para o legado do Stripe.
@@ -401,7 +403,60 @@ export default function ConfiguracoesPanel({
             </button>
           </div>
         </div>
+        <p className="hint" style={{ borderTop: 'none', marginTop: 14, paddingTop: 0, marginBottom: 14 }}>
+          No aplicativo do celular, você também recebe uma notificação às 9h quando uma
+          despesa fixa vence amanhã ou vence hoje. Despesa já marcada como paga não gera aviso.
+        </p>
+        <div className="cfg-appearance">
+          <span className="field-label" style={{ margin: 0 }}>Notificações no celular</span>
+          <div className="seg">
+            <button
+              className={pushVencimentos ? 'active' : ''}
+              onClick={() => onTogglePushVencimentos?.(true)}
+            >
+              Ativado
+            </button>
+            <button
+              className={!pushVencimentos ? 'active' : ''}
+              onClick={() => onTogglePushVencimentos?.(false)}
+            >
+              Desativado
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Visão do casal (Duo): aceite de compartilhamento deste perfil. Fica
+          dentro do perfil de propósito — quem tem PIN protege também esta
+          escolha, e o parceiro não consegue reativá-la pelo outro. */}
+      {isDuo && (
+        <div className="card">
+          <div className="card-head">
+            <span className="card-title">Visão do casal</span>
+          </div>
+          <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+            A aba “Visão do casal” soma renda, gastos e economia dos dois perfis. Pausar o
+            compartilhamento desativa a visão para os dois até você reativar.
+          </p>
+          <div className="cfg-appearance">
+            <span className="field-label" style={{ margin: 0 }}>Compartilhar meus dados</span>
+            <div className="seg">
+              <button
+                className={compartilharCasal ? 'active' : ''}
+                onClick={() => onToggleCompartilharCasal?.(true)}
+              >
+                Ativado
+              </button>
+              <button
+                className={!compartilharCasal ? 'active' : ''}
+                onClick={() => onToggleCompartilharCasal?.(false)}
+              >
+                Pausado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Alterar senha */}
       <div className="card">

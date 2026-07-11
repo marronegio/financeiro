@@ -11,6 +11,7 @@ import {
   FiMail,
   FiSettings,
   FiShield,
+  FiUsers,
 } from 'react-icons/fi';
 import { TABS } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
@@ -20,6 +21,7 @@ const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
 // Ícone (react-icons) de cada aba. Mantém a escolha visual junto da renderização.
 const TAB_ICONS = {
   plan: FiPieChart,
+  casal: FiUsers,
   rendaextra: FiTrendingUp,
   despesas: FiFileText,
   assinaturas: FiRepeat,
@@ -42,11 +44,13 @@ export default function Sidebar({
   const email = user?.email || '';
   const initials = (email.slice(0, 2) || 'EU').toUpperCase();
 
-  // A aba "Admin" só existe para o admin (ver src/lib/admin.js). A autoridade real
-  // fica no backend; aqui é só a visibilidade do item de menu.
+  // Abas duoOnly (Visão do casal) só aparecem no plano Duo. A aba "Admin" só
+  // existe para o admin (ver src/lib/admin.js). A autoridade real fica no
+  // backend; aqui é só a visibilidade do item de menu.
+  const planTabs = TABS.filter((t) => !t.duoOnly || isDuo);
   const navTabs = isAdmin(user)
-    ? [...TABS, { id: 'admin', label: 'Admin' }]
-    : TABS;
+    ? [...planTabs, { id: 'admin', label: 'Admin' }]
+    : planTabs;
 
   // No plano Duo, a troca de perfil não é mais direta: um botão leva de volta à
   // tela de perfis (onde o PIN, se houver, é exigido). No Solo a barra fica igual.

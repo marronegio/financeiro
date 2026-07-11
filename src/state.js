@@ -23,6 +23,8 @@ export const createDefaultState = () => ({
   avatar: '', // foto de perfil opcional (data URL); vazio = mostra as iniciais
   onboarded: false, // true depois que o usuário viu/pulou o tour de introdução
   emailVencimentos: true, // receber por e-mail o aviso de "vence amanhã" das despesas fixas
+  pushVencimentos: true, // app: notificações de "vence amanhã" e "vence hoje" das despesas fixas
+  compartilharCasal: true, // Duo: este perfil aceita somar seus dados na "Visão do casal" (opt-out)
   // Histórico / ciclo mensal.
   recebimentoDia: '', // dia do mês em que recebe o salário (1–31)
   faturaDia: '', // dia do mês em que paga a fatura (1–31)
@@ -63,8 +65,10 @@ export const migrateState = (raw) => {
 };
 
 // Os ícones de cada aba ficam na Sidebar (react-icons), mapeados por id.
+// `duoOnly` esconde a aba fora do plano Duo (a Sidebar filtra).
 export const TABS = [
   { id: 'plan', label: 'Planejamento' },
+  { id: 'casal', label: 'Visão do casal', duoOnly: true },
   { id: 'rendaextra', label: 'Renda extra' },
   { id: 'despesas', label: 'Despesas fixas' },
   { id: 'assinaturas', label: 'Assinaturas' },

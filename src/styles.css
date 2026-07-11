@@ -4249,3 +4249,209 @@ input.auth-input:focus,
     bottom: calc(84px + var(--sab));
   }
 }
+
+/* ---------- visão do casal (aba do plano Duo) ---------- */
+.casal-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 900px) {
+  .casal-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.casal-stat .cs-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.casal-stat .cs-value {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.casal-stat .cs-desc {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* tabela lado a lado: rótulo + ele + ela + juntos */
+.casal-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.casal-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1.2fr) 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 0.86rem;
+}
+
+.casal-row:last-child {
+  border-bottom: none;
+}
+
+.casal-row.head {
+  border-bottom: 1px solid var(--line-strong);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.casal-row.total {
+  font-weight: 700;
+}
+
+.casal-row-lbl {
+  color: var(--muted);
+}
+
+.casal-row.total .casal-row-lbl {
+  color: var(--ink);
+}
+
+.casal-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.casal-cell.juntos {
+  font-weight: 700;
+}
+
+.casal-row.head .casal-cell {
+  font-size: 0.8rem;
+}
+
+/* Mobile: 4 colunas ficam apertadas — o rótulo vira uma linha própria acima
+   dos 3 valores, que ganham a largura toda do card. */
+@media (max-width: 640px) {
+  .casal-row {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 3px;
+    padding: 9px 0;
+  }
+
+  .casal-row-lbl {
+    grid-column: 1 / -1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  /* No cabeçalho não há rótulo — some a célula vazia para alinhar os nomes. */
+  .casal-row.head .casal-row-lbl {
+    display: none;
+  }
+
+  .casal-cell {
+    font-size: 0.84rem;
+  }
+}
+
+/* avatar pequeno + nome (cabeçalho da tabela e comprometimento) */
+.casal-who {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.casal-av {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.casal-av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* barras de comprometimento da renda */
+.casal-comp {
+  margin-bottom: 14px;
+}
+
+.casal-comp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.86rem;
+}
+
+.casal-comp-head .casal-who {
+  justify-content: flex-start;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.casal-comp-pct {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.casal-seg {
+  margin: 4px 0 14px;
+  width: 100%;
+}
+
+.casal-seg button {
+  flex: 1;
+}
+
+.casal-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
+.casal-foot {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.casal-empty {
+  text-align: center;
+  padding: 34px 22px;
+}
+
+.casal-empty p {
+  color: var(--muted);
+  max-width: 46ch;
+  margin: 0 auto 16px;
+}

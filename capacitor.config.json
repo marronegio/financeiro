@@ -12,6 +12,9 @@
   "plugins": {
     "SystemBars": {
       "style": "DARK"
+    },
+    "LocalNotifications": {
+      "iconColor": "#635BFF"
     }
   }
 }

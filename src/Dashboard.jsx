@@ -8,6 +8,7 @@ import { applyRollover, manualClose } from './history.js';
 import { useTheme } from './theme.js';
 import Sidebar from './components/Sidebar.jsx';
 import PlanejamentoPanel from './components/PlanejamentoPanel.jsx';
+import CasalPanel from './components/CasalPanel.jsx';
 import DespesasPanel from './components/DespesasPanel.jsx';
 import AssinaturasPanel from './components/AssinaturasPanel.jsx';
 import RendaExtraPanel from './components/RendaExtraPanel.jsx';
@@ -24,6 +25,10 @@ import AiAssistant from './components/AiAssistant.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import { isAdmin } from './lib/admin.js';
 import { applyAiAction, describeAction } from './lib/aiActions.js';
+import {
+  syncVencimentoNotifications,
+  onVencimentoNotificationTap,
+} from './lib/despesaNotifications.js';
 
 // Marca, por sessão do navegador, que o usuário Duo já escolheu um perfil. Some
 // ao fechar a aba (sessionStorage) — então cada nova sessão volta a perguntar.
@@ -51,6 +56,14 @@ const HEADERS = {
       </>
     ),
     sub: 'Planeje a renda e os gastos, defina quanto guardar, e acompanhe as compras do cartão contra o limite que sobra pra você.',
+  },
+  casal: {
+    title: (
+      <>
+        A visão do <em>casal</em>.
+      </>
+    ),
+    sub: 'Renda, gastos e economia de vocês dois, somados e lado a lado. Cada perfil pode pausar o compartilhamento nas Configurações.',
   },
   rendaextra: {
     title: (
@@ -142,6 +155,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
     active, profileList, isDuo, canAddPartner,
     switchProfile, addPartner, renameProfile, removePartner,
     mainNeedsPinSetup, verifyPin, setProfilePin,
+    allProfiles, reload,
   } = useProfiles(user.id, plan);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -283,6 +297,18 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
     // Reage à definição do dia e ao avanço do último fechamento; converge sozinho.
   }, [state?.recebimentoDia, state?.ultimoFechamento, setState]);
 
+  // Notificações locais de vencimento (app nativo): reagenda sempre que as
+  // despesas mudam — inclusive o "já paguei", que remove o aviso daquele ciclo.
+  useEffect(() => {
+    if (!state) return;
+    syncVencimentoNotifications(state.despesas, state.pushVencimentos !== false);
+  }, [state?.despesas, state?.pushVencimentos]);
+
+  // Tocar na notificação leva direto às despesas fixas.
+  useEffect(() => {
+    onVencimentoNotificationTap(() => setState((s) => ({ ...s, tab: 'despesas' })));
+  }, [setState]);
+
   // Enquanto os dados do usuário carregam da nuvem.
   if (!state) {
     return (
@@ -316,12 +342,14 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
 
   const c = compute(state);
   const listProps = { updateItem, addItem, removeItem };
-  const head = HEADERS[state.tab] ?? HEADERS.plan;
+  // Aba salva pode não existir mais no plano atual (ex.: 'casal' após sair do Duo).
+  const tab = state.tab === 'casal' && !isDuo ? 'plan' : state.tab;
+  const head = HEADERS[tab] ?? HEADERS.plan;
 
   return (
     <div className="app">
       <Sidebar
-        tab={state.tab}
+        tab={tab}
         onTab={setTab}
         user={user}
         onSignOut={signOut}
@@ -359,15 +387,23 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
             </div>
           </header>
 
-          {state.tab === 'plan' && (
+          {tab === 'plan' && (
             <PlanejamentoPanel state={state} c={c} setField={setField} reset={reset} onTab={setTab} />
           )}
-          {state.tab === 'rendaextra' && (
+          {tab === 'casal' && isDuo && (
+            <CasalPanel
+              profiles={allProfiles}
+              active={active}
+              onOpenProfiles={openProfiles}
+              onReload={reload}
+            />
+          )}
+          {tab === 'rendaextra' && (
             <RendaExtraPanel state={state} c={c} setField={setField} {...listProps} />
           )}
-          {state.tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
-          {state.tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
-          {state.tab === 'cartao' && (
+          {tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
+          {tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
+          {tab === 'cartao' && (
             <CartaoPanel
               state={state}
               c={c}
@@ -377,15 +413,15 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
               removeCategory={removeCategory}
             />
           )}
-          {state.tab === 'parcelamentos' && (
+          {tab === 'parcelamentos' && (
             <ParcelamentosPanel state={state} c={c} {...listProps} />
           )}
-          {state.tab === 'economias' && <EconomiasPanel state={state} {...listProps} />}
-          {state.tab === 'historico' && (
+          {tab === 'economias' && <EconomiasPanel state={state} {...listProps} />}
+          {tab === 'historico' && (
             <HistoricoPanel state={state} setField={setField} onClose={fecharMes} />
           )}
-          {state.tab === 'contato' && <ContatoPanel user={user} />}
-          {state.tab === 'config' && (
+          {tab === 'contato' && <ContatoPanel user={user} />}
+          {tab === 'config' && (
             <ConfiguracoesPanel
               user={user}
               avatar={state.avatar}
@@ -403,9 +439,13 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
               onSetPin={setProfilePin}
               emailVencimentos={state.emailVencimentos !== false}
               onToggleEmailVencimentos={(v) => setField('emailVencimentos', v)}
+              pushVencimentos={state.pushVencimentos !== false}
+              onTogglePushVencimentos={(v) => setField('pushVencimentos', v)}
+              compartilharCasal={state.compartilharCasal !== false}
+              onToggleCompartilharCasal={(v) => setField('compartilharCasal', v)}
             />
           )}
-          {state.tab === 'admin' && isAdmin(user) && <AdminPanel />}
+          {tab === 'admin' && isAdmin(user) && <AdminPanel />}
         </div>
       </main>
       {showOnboarding && (

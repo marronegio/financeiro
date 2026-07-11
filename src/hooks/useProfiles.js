@@ -228,6 +228,10 @@ export function useProfiles(userId, planTier) {
   const hasPartner = !!raw?.profiles?.partner;
   const state = raw ? raw.profiles[active].data : null;
 
+  // Leitura dos DOIS perfis para a "Visão do casal" (Duo). Só leitura: toda
+  // escrita continua passando por setState (que grava apenas o perfil ativo).
+  const allProfiles = isDuo ? raw?.profiles ?? null : null;
+
   // Lista para o seletor. O parceiro só aparece dentro do plano Duo. `hasPin`
   // diz ao gate quais perfis pedem PIN antes de entrar (sem expor o PIN).
   const profileList = raw
@@ -247,6 +251,8 @@ export function useProfiles(userId, planTier) {
     setState,
     status,
     active,
+    allProfiles,
+    reload,
     profileList,
     isDuo,
     hasPartner,
