@@ -52,12 +52,20 @@ Deno.serve(async (req) => {
   async function updateByCustomer(customerId: string, fields: Record<string, unknown>) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, payment_provider')
       .eq('stripe_customer_id', customerId)
       .single()
 
     if (!profile) {
       console.warn('Nenhum perfil encontrado para customer:', customerId)
+      return
+    }
+
+    // Perfil já gerenciado pelo ASAAS: eventos tardios do Stripe (ex.: o
+    // cancelamento da assinatura antiga de quem migrou) não podem mexer no
+    // status — senão derrubariam o acesso de um assinante ASAAS ativo.
+    if (profile.payment_provider === 'asaas') {
+      console.log('Perfil migrado para ASAAS; evento Stripe ignorado:', customerId)
       return
     }
 
