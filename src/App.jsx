@@ -26,6 +26,10 @@ export default function App() {
   const params = new URLSearchParams(window.location.search);
   const paymentResult = params.get('payment'); // 'success' | 'cancel' | null
 
+  // Link de indicação (?ref=CODIGO): guarda para o cadastro preencher sozinho.
+  const refCode = params.get('ref');
+  if (refCode) localStorage.setItem('dinprev_ref', refCode.toUpperCase());
+
   if (loading) return <Spinner />;
 
   // Recuperação de senha (link do e-mail) tem prioridade sobre tudo.

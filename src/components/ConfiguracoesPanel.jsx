@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase.js';
+import { siteUrl } from '../lib/native.js';
 import { useTheme } from '../theme.js';
 import CropEditor from './CropEditor.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
@@ -31,6 +32,116 @@ function PasswordField({ label, value, onChange }) {
         </button>
       </div>
     </label>
+  );
+}
+
+// Card "Indique e ganhe": mostra o link de indicação do usuário e o saldo de
+// créditos. Cada indicação confirmada (1º pagamento do indicado) vale 10% de
+// desconto na próxima mensalidade; os créditos acumulam (10 = mês grátis).
+function ReferralCard() {
+  const [info, setInfo] = useState(null); // { code, total, credits, discountNextPct }
+  const [err, setErr] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/referral`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (ignore) return;
+        if (res.ok && data.code) setInfo(data);
+        else setErr(data.error || 'Não foi possível carregar seu código.');
+      } catch {
+        if (!ignore) setErr('Erro de conexão. Tente novamente.');
+      }
+    })();
+    return () => { ignore = true; };
+  }, []);
+
+  const link = info ? `${siteUrl}/?ref=${info.code}` : '';
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard indisponível: usuário copia manualmente do campo */
+    }
+  };
+
+  const share = async () => {
+    try {
+      await navigator.share({
+        title: 'DinPrev',
+        text: `Organize suas finanças com o DinPrev. Assine pelo meu link e ganhe 10% de desconto na primeira mensalidade: ${link}`,
+      });
+    } catch {
+      /* usuário cancelou o compartilhamento */
+    }
+  };
+
+  return (
+    <div className="card">
+      <div className="card-head">
+        <span className="card-title">Indique e ganhe</span>
+      </div>
+      <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+        Cada pessoa que assinar pelo seu link te dá <b style={{ color: 'var(--ink)' }}>10% de
+        desconto</b> na sua próxima mensalidade — e ela ganha 10% na primeira dela. Os descontos
+        acumulam: 2 indicações = 20%, e com 10 o seu mês sai <b style={{ color: 'var(--ink)' }}>grátis</b>.
+        O que passar disso fica guardado para os meses seguintes.
+      </p>
+
+      {err && <p className="cfg-msg cfg-err" style={{ marginTop: 0 }}>{err}</p>}
+
+      {info && (
+        <>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <input
+              className="cfg-input"
+              readOnly
+              value={link}
+              style={{ flex: 1, fontSize: 12.5, fontFamily: 'IBM Plex Mono, monospace' }}
+              onFocus={(e) => e.target.select()}
+            />
+            <button type="button" className="cfg-submit cfg-submit-sm" style={{ width: 'auto' }} onClick={copy}>
+              {copied ? 'Copiado!' : 'Copiar'}
+            </button>
+          </div>
+
+          {typeof navigator.share === 'function' && (
+            <button type="button" className="cfg-submit" onClick={share} style={{ marginBottom: 12 }}>
+              Compartilhar link
+            </button>
+          )}
+
+          <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 0 }}>
+            Indicações confirmadas: <b style={{ color: 'var(--ink)' }}>{info.total}</b>
+            {' · '}Créditos disponíveis: <b style={{ color: 'var(--ink)' }}>{info.credits}</b>
+            {info.discountNextPct > 0 && (
+              <>
+                {' · '}Próxima mensalidade:{' '}
+                <b style={{ color: 'var(--positive)' }}>
+                  {info.discountNextPct >= 100 ? 'grátis' : `${info.discountNextPct}% de desconto`}
+                </b>
+              </>
+            )}
+          </p>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -488,6 +599,9 @@ export default function ConfiguracoesPanel({
           </button>
         </form>
       </div>
+
+      {/* Indique e ganhe */}
+      <ReferralCard />
 
       {/* Assinatura */}
       <div className="card">

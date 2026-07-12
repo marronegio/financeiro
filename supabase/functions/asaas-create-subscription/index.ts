@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('asaas_customer_id, asaas_subscription_id, subscription_status, cpf, access_until')
+      .select('asaas_customer_id, asaas_subscription_id, subscription_status, cpf, access_until, referred_by, referral_counted')
       .eq('id', user.id)
       .single()
 
@@ -140,6 +140,34 @@ Deno.serve(async (req) => {
     if (!cpf || !isValidCPF(cpf)) {
       return json({ error: 'CPF inválido ou ausente. Refaça o cadastro com um CPF válido.' }, 400)
     }
+
+    // Programa de indicação — vincula quem indicou (uma vez só). O código usado
+    // no cadastro fica no metadata (`ref`); resolvemos aqui porque este é o
+    // primeiro ponto do fluxo com service role. Auto-indicação não vale: nem a
+    // própria conta, nem outra conta com o mesmo CPF.
+    let referredBy = (profile?.referred_by as string | null) || null
+    const referralCounted = profile?.referral_counted === true
+    if (!referredBy && !referralCounted) {
+      const refCode = String((meta.ref as string) || '').trim().toUpperCase()
+      if (refCode) {
+        const { data: referrer } = await supabaseAdmin
+          .from('profiles')
+          .select('id, cpf')
+          .eq('referral_code', refCode)
+          .maybeSingle()
+        if (referrer && referrer.id !== user.id && onlyDigits(referrer.cpf || '') !== cpf) {
+          referredBy = referrer.id
+          await supabaseAdmin.from('profiles').upsert({ id: user.id, referred_by: referredBy })
+        }
+      }
+    }
+
+    // Bônus do indicado: 10% na PRIMEIRA mensalidade (só plano mensal; o crédito
+    // de quem indicou é consumido nas renovações, pelo webhook). Sem estado a
+    // consumir aqui: a elegibilidade expira sozinha quando o 1º pagamento
+    // confirmar (referral_counted vira true no credit_referral).
+    const referredDiscountPct =
+      config.cycle === 'MONTHLY' && referredBy && !referralCounted ? 10 : 0
 
     // Customer no ASAAS: reutiliza o salvo; senão cria e persiste.
     let customerId = profile?.asaas_customer_id
@@ -205,16 +233,39 @@ Deno.serve(async (req) => {
     const firstPayment = payments?.data?.[0]
     if (!firstPayment) return json({ error: 'Cobrança não gerada. Tente novamente.' }, 502)
 
+    // Aplica o bônus de indicação SÓ na primeira cobrança (a assinatura mantém o
+    // valor cheio — as renovações não têm desconto por aqui). Best-effort: se a
+    // atualização falhar, o checkout segue no valor cheio.
+    let discountPct = 0
+    if (referredDiscountPct > 0) {
+      const discounted = Math.round(config.value * (1 - referredDiscountPct / 100) * 100) / 100
+      try {
+        await asaas(`/payments/${firstPayment.id}`, apiKey, {
+          method: 'PUT',
+          body: JSON.stringify({
+            billingType: method,
+            value: discounted,
+            dueDate: firstPayment.dueDate,
+          }),
+        })
+        discountPct = referredDiscountPct
+      } catch (e) {
+        console.warn('Falha ao aplicar desconto de indicação (seguindo no valor cheio):', (e as Error).message)
+      }
+    }
+
     if (method === 'CREDIT_CARD') {
       // Checkout hospedado: o usuário informa o cartão na página do ASAAS.
-      return json({ method, redirectUrl: firstPayment.invoiceUrl })
+      return json({ method, redirectUrl: firstPayment.invoiceUrl, discountPct })
     }
 
     // PIX: devolve o QR (imagem base64) e o copia-e-cola pra exibir no app.
+    // O QR é gerado DEPOIS do desconto, então já sai no valor com abatimento.
     const pix = await asaas(`/payments/${firstPayment.id}/pixQrCode`, apiKey)
     return json({
       method,
       paymentId: firstPayment.id,
+      discountPct,
       pix: {
         encodedImage: pix.encodedImage,
         payload: pix.payload,

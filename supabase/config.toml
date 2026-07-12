@@ -48,3 +48,7 @@ verify_jwt = false
 # que o e-mail está em ADMIN_EMAIL antes de usar o service_role.
 [functions.admin]
 verify_jwt = true
+
+# Programa de indicação: código + estatísticas do usuário logado.
+[functions.referral]
+verify_jwt = true

@@ -13,6 +13,9 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
+  // Código de quem indicou: preenchido sozinho quando o cadastro veio de um
+  // link ?ref=CODIGO (guardado pelo App.jsx); no app instalado, digita à mão.
+  const [ref, setRef] = useState(() => localStorage.getItem('dinprev_ref') || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -46,7 +49,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
     }
     setBusy(true);
     const { data, error } = isSignup
-      ? await signUp(email, password, onlyDigits(cpf))
+      ? await signUp(email, password, onlyDigits(cpf), ref.trim().toUpperCase() || null)
       : await signIn(email, password);
     setBusy(false);
 
@@ -124,6 +127,21 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
                   placeholder="000.000.000-00"
                   autoComplete="off"
                   maxLength={14}
+                />
+              </label>
+            )}
+            {isSignup && (
+              <label className="auth-field">
+                <span className="field-label">Código de indicação (opcional)</span>
+                <input
+                  type="text"
+                  className="auth-input"
+                  value={ref}
+                  onChange={(e) => setRef(e.target.value.toUpperCase())}
+                  placeholder="Ex.: A7K2MP9Q"
+                  autoComplete="off"
+                  maxLength={12}
+                  style={{ textTransform: 'uppercase' }}
                 />
               </label>
             )}

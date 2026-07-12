@@ -13,6 +13,7 @@ export default function PaywallModal({ open, planId, paymentResult, onClose, onC
   const [error, setError] = useState('');
   const [method, setMethod] = useState('CREDIT_CARD'); // 'CREDIT_CARD' | 'PIX'
   const [pix, setPix] = useState(null); // { encodedImage, payload, expirationDate }
+  const [discountPct, setDiscountPct] = useState(0); // desconto de indicação na 1ª cobrança
   const [copied, setCopied] = useState(false);
   const pollRef = useRef(null);
 
@@ -88,6 +89,7 @@ export default function PaywallModal({ open, planId, paymentResult, onClose, onC
     }
     if (data.method === 'PIX' && data.pix) {
       setPix(data.pix);
+      setDiscountPct(data.discountPct || 0);
       setLoading(false);
       return;
     }
@@ -135,6 +137,11 @@ export default function PaywallModal({ open, planId, paymentResult, onClose, onC
           Escaneie o QR Code no app do seu banco ou use o copia-e-cola. Assim que o pagamento for
           confirmado, seu acesso é liberado automaticamente.
         </p>
+        {discountPct > 0 && (
+          <p className="auth-msg ok" style={{ marginBottom: 8 }}>
+            🎁 Indicação aplicada: {discountPct}% de desconto nesta primeira cobrança.
+          </p>
+        )}
         <div style={{ display: 'flex', justifyContent: 'center', margin: '8px 0 18px' }}>
           <img
             src={`data:image/png;base64,${pix.encodedImage}`}

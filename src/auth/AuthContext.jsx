@@ -40,14 +40,16 @@ export function AuthProvider({ children }) {
     loading,
     recovery,
     clearRecovery: () => setRecovery(false),
-    signUp: (email, password, cpf) =>
+    signUp: (email, password, cpf, ref) =>
       supabase.auth.signUp({
         email,
         password,
         // CPF guardado no metadata; vira a chave do controle de teste grátis
-        // (persistido em profiles.cpf no primeiro checkout). Link de confirmação
-        // volta para a origem do cadastro (precisa estar na allowlist do Supabase).
-        options: { data: { cpf: cpf || null }, emailRedirectTo: siteUrl },
+        // (persistido em profiles.cpf no primeiro checkout). `ref` é o código de
+        // indicação de quem convidou — resolvido no 1º checkout (referred_by).
+        // Link de confirmação volta para a origem do cadastro (precisa estar na
+        // allowlist do Supabase).
+        options: { data: { cpf: cpf || null, ref: ref || null }, emailRedirectTo: siteUrl },
       }),
     signIn: (email, password) =>
       supabase.auth.signInWithPassword({ email, password }),
