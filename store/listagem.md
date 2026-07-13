@@ -50,7 +50,7 @@ SEUS DADOS SEGUROS E NA NUVEM
 Acesse do celular ou do computador: tudo sincronizado. Tráfego criptografado
 e dados visíveis somente para você.
 
-Assinatura a partir de R$ 19,90/mês. Pague no cartão ou PIX. Cancele quando
+Assinatura a partir de R$ 37,90/mês. Pague no cartão ou PIX. Cancele quando
 quiser.
 ```
 

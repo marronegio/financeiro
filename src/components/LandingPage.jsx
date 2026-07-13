@@ -149,7 +149,7 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
           </div>
 
           <p className="lp-hero-footnote">
-            <strong className="lp-trial-pill">A partir de R$19,90/mês</strong>
+            <strong className="lp-trial-pill">A partir de R$37,90/mês</strong>
             cartão de crédito ou PIX · cancele quando quiser
           </p>
         </div>
@@ -453,12 +453,12 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
         </h2>
         <p className="reveal reveal-delay-1">
           Em menos de cinco minutos você já tem o panorama completo.
-          Comece agora — a partir de R$19,90/mês.
+          Comece agora — a partir de R$37,90/mês.
         </p>
         <button className="lp-cta-final reveal reveal-delay-2" onClick={() => scrollTo('preco')}>
           Começar agora
         </button>
-        <p className="lp-final-note reveal reveal-delay-3">A partir de R$19,90/mês · cartão ou PIX · cancele quando quiser</p>
+        <p className="lp-final-note reveal reveal-delay-3">A partir de R$37,90/mês · cartão ou PIX · cancele quando quiser</p>
       </section>
 
       {/* ── footer ── */}
