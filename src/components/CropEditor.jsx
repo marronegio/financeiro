@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 const D = 280;   // tamanho de exibição do canvas
-const OUT = 96;  // tamanho de saída (mesma que a sidebar)
+// Tamanho de saída: o maior uso é o card da seleção de perfil (108px CSS), que
+// em telas 3x precisa de ~324px físicos — 384 dá folga sem pesar (~40 KB).
+const OUT = 384;
 const MAX_Z = 4; // zoom máximo relativo ao minScale
 
 function clamp(x, y, s, img) {
@@ -139,7 +141,11 @@ export default function CropEditor({ src, onSave, onCancel }) {
     out.width  = OUT;
     out.height = OUT;
     const f = OUT / D;
-    out.getContext('2d').drawImage(
+    const ctx = out.getContext('2d');
+    // Fotos de câmera chegam com milhares de pixels; sem isso o downscale em um
+    // passo só sai serrilhado em alguns navegadores.
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(
       img,
       offset.x * f, offset.y * f,
       img.naturalWidth * scale * f, img.naturalHeight * scale * f
