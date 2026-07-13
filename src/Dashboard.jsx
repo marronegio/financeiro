@@ -38,7 +38,7 @@ const obKey = (id, profile) => `ob_done_${id}_${profile}`;
 
 const newItem = (kind) =>
   kind === 'parcelamentos'
-    ? { nome: '', total: '', parcelas: '', pagas: '' }
+    ? { nome: '', total: '', parcelas: '', pagas: '', pix: false }
     : kind === 'cartao'
     ? { nome: '', valor: '', cat: '' }
     : kind === 'metas'

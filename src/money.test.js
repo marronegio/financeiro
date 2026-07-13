@@ -134,6 +134,18 @@ describe('compute', () => {
     expect(c.debito).toBeCloseTo(366, 2); // 610 * 60%
   });
 
+  it('parcela via Pix entra nos gastos mas fica fora da fatura', () => {
+    const s = baseState();
+    s.parcelamentos.push({ nome: 'Passagem', total: '60,00', parcelas: '6', pagas: '0', pix: true });
+    const c = compute(s);
+    expect(c.parcelaMensal).toBeCloseTo(20, 2); // 10 cartão + 10 pix
+    expect(c.parcelaMensalCartao).toBeCloseTo(10, 2);
+    expect(c.parcelaMensalPix).toBeCloseTo(10, 2);
+    expect(c.faturaCartao).toBeCloseTo(90, 2); // pix não entra na fatura
+    expect(c.gastos).toBeCloseTo(300, 2); // 290 + 10 do pix
+    expect(c.parcelaAtivas).toBe(2);
+  });
+
   it('parcelamento quitado não entra na parcela do mês', () => {
     const s = baseState();
     s.parcelamentos = [{ nome: 'Quitado', total: '120,00', parcelas: '12', pagas: '12' }];

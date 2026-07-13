@@ -46,6 +46,10 @@ export function compute(state) {
   const rendaExtraNoPlano = somarRendaExtra ? totRendaExtra : 0;
 
   let parcelaMensal = 0;
+  // Parcelas pagas via Pix (ex.: reembolso a alguém que parcelou por você) não
+  // passam pela fatura do cartão, mas continuam sendo gasto do mês.
+  let parcelaMensalCartao = 0;
+  let parcelaMensalPix = 0;
   let parcelaRestante = 0;
   let parcelaAtivas = 0;
   let parcelaUltimasCount = 0;
@@ -54,6 +58,8 @@ export function compute(state) {
     const p = computeParcela(it);
     if (p.parc > 0 && !p.done) {
       parcelaMensal += p.mensal;
+      if (it.pix) parcelaMensalPix += p.mensal;
+      else parcelaMensalCartao += p.mensal;
       parcelaAtivas += 1;
       // Parcelamentos com apenas uma parcela restante — estão acabando este mês.
       if (p.restantes === 1) {
@@ -64,8 +70,9 @@ export function compute(state) {
     parcelaRestante += p.falta;
   });
 
-  // A fatura inclui compras, assinaturas e a parcela do mês; os abates reduzem.
-  const faturaCartao = totCartao + totAss + parcelaMensal - totAbates;
+  // A fatura inclui compras, assinaturas e só as parcelas do cartão (as via Pix
+  // ficam fora); os abates reduzem.
+  const faturaCartao = totCartao + totAss + parcelaMensalCartao - totAbates;
   // Gastos somam tudo (menos os abates, que diminuem o desembolso real).
   const gastos = totDesp + totAss + totCartao + parcelaMensal - totAbates;
   // A renda extra do mês soma à renda disponível (quando o usuário opta por somá-la).
@@ -78,7 +85,7 @@ export function compute(state) {
   return {
     salario, guardar, totDesp, totAss, totCartao, totAbates,
     totRendaExtra, somarRendaExtra, rendaExtraNoPlano,
-    parcelaMensal, parcelaRestante, parcelaAtivas,
+    parcelaMensal, parcelaMensalCartao, parcelaMensalPix, parcelaRestante, parcelaAtivas,
     parcelaUltimasCount, parcelaUltimasValor, faturaCartao,
     gastos, sobra, pctC, pctD, credito, debito,
   };

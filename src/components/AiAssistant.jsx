@@ -245,7 +245,9 @@ function buildContext(state, c) {
     `Despesas fixas: ${BRL(c.totDesp)}`,
     `Assinaturas: ${BRL(c.totAss)}`,
     `Compras no cartão: ${BRL(c.totCartao)}`,
-    `Parcela do mês: ${BRL(c.parcelaMensal)} (${c.parcelaAtivas} parcelamento(s) ativo(s))`,
+    `Parcela do mês: ${BRL(c.parcelaMensal)} (${c.parcelaAtivas} parcelamento(s) ativo(s)${
+      c.parcelaMensalPix > 0 ? `; ${BRL(c.parcelaMensalPix)} via Pix, fora da fatura` : ''
+    })`,
     `Fatura do cartão: ${BRL(c.faturaCartao)}`,
     `Meta de guardar: ${BRL(c.guardar)}`,
     `Total de gastos: ${BRL(c.gastos)}`,

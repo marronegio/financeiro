@@ -164,7 +164,7 @@ export default function CartaoPanel({
                   <span className="dot" style={{ background: 'var(--debit)' }} />
                   Parcelas do mês
                 </span>
-                <span className="amt">{BRL(c.parcelaMensal)}</span>
+                <span className="amt">{BRL(c.parcelaMensalCartao)}</span>
               </div>
               {c.totAbates > 0 && (
                 <div className="summary-line">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BRL, maskMoney, onlyDigits, computeParcela } from '../money.js';
+import ParcelasProjecaoChart from './ParcelasProjecaoChart.jsx';
 
 function ParcelaCard({ item, onChange, onRemove }) {
   const p = computeParcela(item);
@@ -13,7 +14,8 @@ function ParcelaCard({ item, onChange, onRemove }) {
   } else {
     meta = (
       <>
-        {p.pagas} de {p.parc} pagas · <b>{BRL(p.mensal)}</b>/mês · faltam {BRL(p.falta)}
+        {p.pagas} de {p.parc} pagas · <b>{BRL(p.mensal)}</b>/mês
+        {item.pix ? ' via Pix' : ''} · faltam {BRL(p.falta)}
       </>
     );
   }
@@ -32,6 +34,17 @@ function ParcelaCard({ item, onChange, onRemove }) {
           />
         </div>
         {last && <span className="last-badge">Última parcela</span>}
+        <button
+          className={'pix-btn' + (item.pix ? ' on' : '')}
+          title={
+            item.pix
+              ? 'Parcela paga via Pix — fora da fatura do cartão. Clique para voltar ao cartão.'
+              : 'Marcar como paga via Pix — sai da fatura do cartão, mas continua nos gastos.'
+          }
+          onClick={() => onChange({ ...item, pix: !item.pix })}
+        >
+          Pix
+        </button>
         <button className="del-btn" title="Remover" onClick={onRemove}>
           ×
         </button>
@@ -113,7 +126,8 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
             </button>
             <p className="hint">
               Compras que você dividiu no cartão. A parcela mensal entra na fatura e consome o limite
-              de crédito do mês.
+              de crédito do mês. Marque como <b>Pix</b> as parcelas que você paga por fora do cartão —
+              elas contam nos gastos, mas não na fatura.
             </p>
           </div>
         </div>
@@ -126,7 +140,7 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
             <div className="hero">
               <div className="lo-label">Parcela mensal total</div>
               <div className="lo-value">{BRL(c.parcelaMensal)}</div>
-              <div className="lo-note">compromisso fixo no cartão por mês</div>
+              <div className="lo-note">compromisso fixo por mês</div>
             </div>
             <div>
               <div className="summary-line">
@@ -139,10 +153,19 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
               <div className="summary-line">
                 <span className="lbl">
                   <span className="dot" style={{ background: 'var(--debit)' }} />
-                  Parcela do mês
+                  Na fatura do cartão
                 </span>
-                <span className="amt">{BRL(c.parcelaMensal)}</span>
+                <span className="amt">{BRL(c.parcelaMensalCartao)}</span>
               </div>
+              {c.parcelaMensalPix > 0 && (
+                <div className="summary-line">
+                  <span className="lbl">
+                    <span className="dot" style={{ background: '#32bcad' }} />
+                    Via Pix
+                  </span>
+                  <span className="amt">{BRL(c.parcelaMensalPix)}</span>
+                </div>
+              )}
               {c.parcelaUltimasCount > 0 && (
                 <div className="summary-line">
                   <span className="lbl">
@@ -163,6 +186,8 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
               </div>
             </div>
           </div>
+
+          <ParcelasProjecaoChart parcelamentos={state.parcelamentos} />
         </div>
       </div>
     </div>

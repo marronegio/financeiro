@@ -712,6 +712,34 @@ h1 em {
   white-space: nowrap;
 }
 
+/* Botão Pix: marca a parcela como paga por fora do cartão (não entra na fatura). */
+.pix-btn {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 11px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--faint);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.pix-btn:hover:not(.on) {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+
+.pix-btn.on {
+  color: #32bcad;
+  background: color-mix(in srgb, #32bcad 13%, transparent);
+  border-color: color-mix(in srgb, #32bcad 45%, transparent);
+}
+
 .pcard input {
   padding: 7px 0;
   font-size: 0.86rem;
