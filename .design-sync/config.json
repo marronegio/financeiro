@@ -1,0 +1,22 @@
+{
+  "projectId": "176f0b32-4587-4d83-9c85-795741442784",
+  "shape": "package",
+  "pkg": "dinprev",
+  "globalName": "DinPrev",
+  "entry": "src/__no_dist__.js",
+  "srcDir": "src/components",
+  "cssEntry": "src/styles.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "overrides": {
+    "ConfirmDialog": { "cardMode": "single", "primaryStory": "SairDaConta", "viewport": "560x400" },
+    "PinDialog": { "cardMode": "single", "primaryStory": "AdicionarPin", "viewport": "560x500" },
+    "DespesaAlerts": { "cardMode": "single", "primaryStory": "TresAvisos", "viewport": "520x400" },
+    "EditableList": { "cardMode": "column" },
+    "ItemRow": { "cardMode": "column" },
+    "Sidebar": { "cardMode": "column", "primaryStory": "PlanoSolo", "viewport": "1000x780" },
+    "LandingDemo": { "cardMode": "single", "primaryStory": "Demo", "viewport": "900x640" }
+  },
+  "libOverrides": {
+    "source-kit.mjs": "componentes são default exports; synth entry precisa de export { default as Name }"
+  }
+}

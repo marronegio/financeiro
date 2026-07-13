@@ -16,3 +16,10 @@ supabase/.temp/
 stripe-design/
 
 android/.idea/
+
+# design-sync: scripts staged + saída do build + estado de máquina (config/NOTES/previews SÃO commitados)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
