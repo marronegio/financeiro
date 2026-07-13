@@ -72,6 +72,20 @@
   border-color: rgba(241, 121, 107, 0.4);
 }
 
+/* Gráficos (MUI X Charts): eixos, números e linhas de guia seguem o tema.
+   O MUI pinta o SVG com preto do theme padrão dele e não lê nossas CSS vars,
+   então sobrescrevemos por CSS (!important vence os estilos emotion). */
+.MuiChartsAxis-tickLabel {
+  fill: var(--muted) !important;
+}
+.MuiChartsAxis-line,
+.MuiChartsAxis-tick {
+  stroke: var(--line-strong) !important;
+}
+.MuiChartsGrid-line {
+  stroke: var(--line) !important;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
