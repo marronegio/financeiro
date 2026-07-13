@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FiPieChart,
   FiTrendingUp,
@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fi';
 import { TABS } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
 const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
 
@@ -43,6 +44,9 @@ export default function Sidebar({
 }) {
   const email = user?.email || '';
   const initials = (email.slice(0, 2) || 'EU').toUpperCase();
+
+  // Confirmação antes de sair da conta (evita logout acidental).
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   // Abas duoOnly (Visão do casal) só aparecem no plano Duo. A aba "Admin" só
   // existe para o admin (ver src/lib/admin.js). A autoridade real fica no
@@ -164,12 +168,27 @@ export default function Sidebar({
             <span className="who-mail" title={email}>{email || 'Minha carteira'}</span>
           </div>
           {onSignOut && (
-            <button className="signout-btn" onClick={onSignOut}>
+            <button className="signout-btn" onClick={() => setConfirmSignOut(true)}>
               Sair
             </button>
           )}
         </div>
       </aside>
+
+      {confirmSignOut && (
+        <ConfirmDialog
+          title="Sair da conta?"
+          message="Você precisará entrar novamente para acessar seus dados."
+          confirmLabel="Sair"
+          cancelLabel="Cancelar"
+          danger
+          onConfirm={() => {
+            setConfirmSignOut(false);
+            onSignOut?.();
+          }}
+          onCancel={() => setConfirmSignOut(false)}
+        />
+      )}
     </>
   );
 }
