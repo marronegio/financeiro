@@ -3063,7 +3063,9 @@ input[type="range"]::-moz-range-thumb {
   color: var(--faint);
 }
 
-.pg-pin-input {
+/* input.pg-pin-input: especificidade igual à regra global input[type="text"]
+   (e vem depois) — sem isso o PIN visível (type=text) perde borda e fundo. */
+input.pg-pin-input {
   width: 168px;
   padding: 12px 0;
   border-radius: 12px;
@@ -3078,7 +3080,7 @@ input[type="range"]::-moz-range-thumb {
   text-indent: 0.5em;
 }
 
-.pg-pin-input:focus {
+input.pg-pin-input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);

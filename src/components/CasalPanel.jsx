@@ -14,7 +14,9 @@ const normName = (s) =>
     .trim()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, ''); // remove acentos (faixa de combinantes U+0300–U+036F)
+    // remove acentos — a faixa de combinantes é escrita escapada porque os
+    // caracteres literais viram regex inválida se o JS for lido sem UTF-8
+    .replace(/[\u0300-\u036f]/g, '');
 
 function Avatar({ profile }) {
   const src = profile?.data?.avatar;
