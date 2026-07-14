@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useSubscription } from './hooks/useSubscription.js';
+import { applyTheme, storedTheme } from './theme.js';
 import Dashboard from './Dashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import MobileGate from './components/MobileGate.jsx';
@@ -29,6 +30,16 @@ export default function App() {
   // Link de indicação (?ref=CODIGO): guarda para o cadastro preencher sozinho.
   const refCode = params.get('ref');
   if (refCode) localStorage.setItem('dinprev_ref', refCode.toUpperCase());
+
+  // O tema escuro salvo só vale dentro do dashboard; landing e telas de auth
+  // ficam sempre claras. Enquanto auth/assinatura carregam, não decide (evita
+  // flash contra o palpite do script inline do index.html).
+  const themeReady = !loading && (!user || subStatus !== 'loading');
+  const isDashboard = themeReady && !recovery && !!user && subStatus === 'active';
+  useEffect(() => {
+    if (!themeReady) return;
+    applyTheme(isDashboard ? storedTheme() : 'light');
+  }, [themeReady, isDashboard]);
 
   if (loading) return <Spinner />;
 

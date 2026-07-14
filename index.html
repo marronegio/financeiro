@@ -25,13 +25,22 @@
     </script>
     <!-- End Meta Pixel Code -->
     <script>
-      // Aplica o tema antes do CSS pintar (evita flash). Usa a preferência salva
-      // pelo usuário; na ausência, o padrão é o tema claro.
+      // Aplica o tema antes do CSS pintar (evita flash). O tema escuro salvo só
+      // vale dentro do dashboard (logado) — na landing fica sempre claro. Aqui
+      // não dá pra saber a tela ainda, então o palpite é a sessão do Supabase
+      // no localStorage (chave sb-*-auth-token); o App corrige depois se errar.
       (function () {
         try {
-          var t = localStorage.getItem('theme');
-          if (t !== 'dark' && t !== 'light') t = 'light';
-          document.documentElement.setAttribute('data-theme', t);
+          var t = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+          var logged = false;
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') > 0) {
+              logged = true;
+              break;
+            }
+          }
+          document.documentElement.setAttribute('data-theme', logged ? t : 'light');
         } catch (e) {}
       })();
     </script>

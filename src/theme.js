@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 // O tema fica no atributo data-theme do <html> (aplicado por um script inline no
 // index.html, sem flash) e é persistido no localStorage. Tema é preferência de
 // dispositivo/UI, então localStorage é o lugar certo (não é dado do usuário).
+//
+// Preferência ≠ aplicação: o tema escuro salvo só vale DENTRO do dashboard.
+// Landing, telas de auth e afins ficam sempre claras — o App decide qual tela
+// está visível e chama applyTheme; setTheme (toggle nas Configurações) persiste
+// a preferência e aplica na hora, já que só existe dentro do dashboard.
 
 const listeners = new Set();
 
@@ -10,15 +15,30 @@ export function getTheme() {
   return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
 }
 
-export function setTheme(t) {
+// Preferência salva (o que o usuário escolheu), independente do que está na tela.
+export function storedTheme() {
+  try {
+    return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+// Aplica um tema na tela sem mexer na preferência salva.
+export function applyTheme(t) {
   const theme = t === 'dark' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
+  listeners.forEach((l) => l(theme));
+}
+
+export function setTheme(t) {
+  const theme = t === 'dark' ? 'dark' : 'light';
   try {
     localStorage.setItem('theme', theme);
   } catch {
     /* ignore */
   }
-  listeners.forEach((l) => l(theme));
+  applyTheme(theme);
 }
 
 // Hook que reflete e altera o tema, sincronizado entre todos os pontos da UI.
