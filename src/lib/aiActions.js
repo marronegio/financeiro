@@ -44,6 +44,12 @@ export function applyAiAction(state, name, args = {}) {
       return push('assinaturas', { nome: args.nome || '', valor: money(args.valor) });
     case 'adicionar_renda_extra':
       return push('rendaExtra', { nome: args.nome || '', valor: money(args.valor) });
+    case 'adicionar_doacao':
+      return push('doacoes', {
+        nome: args.nome || '',
+        valor: money(args.valor),
+        recorrente: !!args.recorrente,
+      });
     case 'adicionar_parcelamento':
       return push('parcelamentos', {
         nome: args.nome || '',
@@ -77,6 +83,8 @@ export function describeAction(name, args = {}) {
       return `Assinatura "${args.nome}" de ${BRL(args.valor)}/mês adicionada.`;
     case 'adicionar_renda_extra':
       return `Renda extra "${args.nome}" de ${BRL(args.valor)} registrada.`;
+    case 'adicionar_doacao':
+      return `Doação "${args.nome}" de ${BRL(args.valor)}${args.recorrente ? '/mês' : ''} adicionada.`;
     case 'adicionar_parcelamento':
       return `Parcelamento "${args.nome}" (${BRL(args.total)} em ${args.parcelas}x) adicionado.`;
     case 'adicionar_meta':

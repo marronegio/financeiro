@@ -13,6 +13,7 @@ export default function EditableList({
   categories,
   showVenc,
   showPago,
+  showRecorrente,
   order,
 }) {
   // `order` (opcional) é uma lista de índices originais na ordem de exibição —
@@ -28,6 +29,7 @@ export default function EditableList({
           categories={categories}
           showVenc={showVenc}
           showPago={showPago}
+          showRecorrente={showRecorrente}
           onChange={(next) => updateItem(kind, i, next)}
           onRemove={() => removeItem(kind, i)}
         />

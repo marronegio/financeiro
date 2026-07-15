@@ -101,6 +101,25 @@ const tools = [
   {
     type: 'function',
     function: {
+      name: 'adicionar_doacao',
+      description: 'Registra uma doação. Marque recorrente=true se ela se repetir todo mês.',
+      parameters: {
+        type: 'object',
+        properties: {
+          nome: { type: 'string', description: 'Para quem/onde foi a doação.' },
+          valor: { type: 'number', description: 'Valor em reais.' },
+          recorrente: {
+            type: 'boolean',
+            description: 'true se a doação se repete todo mês (padrão false).',
+          },
+        },
+        required: ['nome', 'valor'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'adicionar_parcelamento',
       description: 'Adiciona uma compra parcelada em acompanhamento.',
       parameters: {
@@ -142,7 +161,7 @@ const tools = [
           tab: {
             type: 'string',
             description:
-              'ID da tela: plan, rendaextra, despesas, assinaturas, cartao, parcelamentos, economias, historico, config.',
+              'ID da tela: plan, rendaextra, despesas, assinaturas, doacoes, cartao, parcelamentos, economias, historico, config.',
           },
         },
         required: ['tab'],
@@ -162,8 +181,9 @@ function systemPrompt(context: {
 }) {
   return [
     '# QUEM VOCÊ É',
-    'Você é o assistente do DinPrev, um app brasileiro de planejamento de finanças pessoais.',
-    'Fale em português do Brasil, num tom informal e amigável — como um amigo que manja de',
+    'Você é o Mr. Din, o assistente do DinPrev, um app brasileiro de planejamento de finanças',
+    'pessoais. Esse é o seu nome: se perguntarem quem você é ou como se chama, responda que é',
+    'o Mr. Din. Fale em português do Brasil, num tom informal e amigável — como um amigo que manja de',
     'dinheiro. Pode ser leve e usar um emoji de vez em quando, mas sem exagero. Frases curtas,',
     'direto ao ponto, sempre em reais (R$).',
     '',
@@ -208,6 +228,8 @@ function systemPrompt(context: {
     '- Se for uma compra pontual/avulsa (mercado, Uber, restaurante, roupa, farmácia), use',
     '  adicionar_compra_cartao.',
     '- Contas fixas de casa (aluguel, luz, água, internet, telefone) vão em adicionar_despesa_fixa.',
+    '- Doações (igreja, caridade, ONG, "dízimo", apadrinhamento) vão em adicionar_doacao. Se a',
+    '  pessoa disser que doa esse valor todo mês, marque recorrente=true.',
     'Na dúvida entre assinatura e compra avulsa, prefira assinatura se for claramente um serviço',
     'recorrente. Se ainda estiver ambíguo, aí sim pergunte rapidinho.',
     '',

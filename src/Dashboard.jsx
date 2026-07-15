@@ -7,10 +7,13 @@ import { compute } from './money.js';
 import { applyRollover, manualClose } from './history.js';
 import { useTheme } from './theme.js';
 import Sidebar from './components/Sidebar.jsx';
+import BottomNav from './components/BottomNav.jsx';
+import { isNativeApp } from './lib/native.js';
 import PlanejamentoPanel from './components/PlanejamentoPanel.jsx';
 import CasalPanel from './components/CasalPanel.jsx';
 import DespesasPanel from './components/DespesasPanel.jsx';
 import AssinaturasPanel from './components/AssinaturasPanel.jsx';
+import DoacoesPanel from './components/DoacoesPanel.jsx';
 import RendaExtraPanel from './components/RendaExtraPanel.jsx';
 import CartaoPanel from './components/CartaoPanel.jsx';
 import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
@@ -45,6 +48,8 @@ const newItem = (kind) =>
     ? { nome: '', valor: '', guardado: '', prazo: '' }
     : kind === 'despesas'
     ? { nome: '', valor: '', venc: '' }
+    : kind === 'doacoes'
+    ? { nome: '', valor: '', recorrente: false }
     : { nome: '', valor: '' };
 
 // Cabeçalho próprio de cada aba — título com palavra em destaque + subtítulo.
@@ -88,6 +93,14 @@ const HEADERS = {
       </>
     ),
     sub: 'Serviços recorrentes como streaming, apps e academia. Some tudo que debita automático todo mês.',
+  },
+  doacoes: {
+    title: (
+      <>
+        Suas <em>doações</em> do mês.
+      </>
+    ),
+    sub: 'Cadastre o que você doa. Marque as que se repetem todo mês como recorrentes, e elas continuam aqui sem precisar recadastrar.',
   },
   cartao: {
     title: (
@@ -165,6 +178,15 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
   const navOpenRef = useRef(navOpen);
   navOpenRef.current = navOpen;
 
+  // App nativo: sheet "Mais" do menu inferior e painel da IA também vivem aqui,
+  // pelo mesmo motivo (o botão voltar fecha antes de navegar).
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreOpenRef = useRef(moreOpen);
+  moreOpenRef.current = moreOpen;
+  const [aiOpen, setAiOpen] = useState(false);
+  const aiOpenRef = useRef(aiOpen);
+  aiOpenRef.current = aiOpen;
+
   // Pilha de abas visitadas: o botão voltar do Android navega para trás.
   const tabHistRef = useRef([]);
 
@@ -221,6 +243,16 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
       if (navOpenRef.current) {
         e.preventDefault();
         setNavOpen(false);
+        return;
+      }
+      if (aiOpenRef.current) {
+        e.preventDefault();
+        setAiOpen(false);
+        return;
+      }
+      if (moreOpenRef.current) {
+        e.preventDefault();
+        setMoreOpen(false);
         return;
       }
       const prev = tabHistRef.current.pop();
@@ -347,19 +379,37 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
   const head = HEADERS[tab] ?? HEADERS.plan;
 
   return (
-    <div className="app">
-      <Sidebar
-        tab={tab}
-        onTab={setTab}
-        user={user}
-        onSignOut={signOut}
-        avatar={state.avatar}
-        isDuo={isDuo}
-        activeProfile={profileList.find((p) => p.id === active)}
-        onOpenProfiles={openProfiles}
-        open={navOpen}
-        setOpen={setNavOpen}
-      />
+    <div className={'app' + (isNativeApp ? ' native-nav' : '')}>
+      {isNativeApp ? (
+        <BottomNav
+          tab={tab}
+          onTab={setTab}
+          user={user}
+          isDuo={isDuo}
+          aiEnabled={aiEnabled}
+          aiOpen={aiOpen}
+          onAiToggle={() => setAiOpen((v) => !v)}
+          tourActive={showOnboarding}
+          moreOpen={moreOpen}
+          setMoreOpen={setMoreOpen}
+          onSignOut={signOut}
+          activeProfile={profileList.find((p) => p.id === active)}
+          onOpenProfiles={openProfiles}
+        />
+      ) : (
+        <Sidebar
+          tab={tab}
+          onTab={setTab}
+          user={user}
+          onSignOut={signOut}
+          avatar={state.avatar}
+          isDuo={isDuo}
+          activeProfile={profileList.find((p) => p.id === active)}
+          onOpenProfiles={openProfiles}
+          open={navOpen}
+          setOpen={setNavOpen}
+        />
+      )}
       <main className="main">
         <div className="wrap">
           <header style={{ position: 'relative' }}>
@@ -403,6 +453,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
           )}
           {tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
           {tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
+          {tab === 'doacoes' && <DoacoesPanel state={state} c={c} {...listProps} />}
           {tab === 'cartao' && (
             <CartaoPanel
               state={state}
@@ -459,7 +510,15 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
         <DespesaAlerts despesas={state.despesas} onPaid={marcarDespesaPaga} />
       )}
       {aiEnabled && (
-        <AiAssistant state={state} c={c} onAction={runAiAction} tourActive={showOnboarding} />
+        <AiAssistant
+          state={state}
+          c={c}
+          onAction={runAiAction}
+          tourActive={showOnboarding}
+          hideFab={isNativeApp}
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+        />
       )}
     </div>
   );

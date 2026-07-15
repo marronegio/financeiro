@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { syncStatusBarWithTheme } from './lib/native.js';
 
 // O tema fica no atributo data-theme do <html> (aplicado por um script inline no
 // index.html, sem flash) e é persistido no localStorage. Tema é preferência de
@@ -28,6 +29,7 @@ export function storedTheme() {
 export function applyTheme(t) {
   const theme = t === 'dark' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
+  syncStatusBarWithTheme(theme); // app nativo: ícones da status bar acompanham o fundo
   listeners.forEach((l) => l(theme));
 }
 

@@ -81,9 +81,9 @@ const STEPS = [
     tab: null,
     target: '[data-tour="ai-fab"]',
     icon: '✦',
-    title: 'Assistente com IA',
+    title: 'Mr. Din, seu assistente',
     description:
-      'Este é o seu assistente. Ele analisa seus gastos, dá dicas e lança despesas e receitas por você — é só conversar. Também entende áudio (mande um recado de voz, tipo no WhatsApp) e imagens (fotografe um comprovante, boleto ou nota fiscal e ele lança sozinho).',
+      'Este é o Mr. Din, seu assistente com IA. Ele analisa seus gastos, dá dicas e lança despesas e receitas por você — é só conversar. Também entende áudio (mande um recado de voz, tipo no WhatsApp) e imagens (fotografe um comprovante, boleto ou nota fiscal e ele lança sozinho).',
   },
 ];
 

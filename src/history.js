@@ -109,8 +109,12 @@ function performClose(state, periodo, historico, guardadoReal) {
     if (!(p.parc > 0) || p.done) return it;
     return { ...it, pagas: String(Math.min(p.parc, p.pagas + 1)) };
   });
+  // Doações avulsas somem no fechamento (como a renda extra); as recorrentes ficam,
+  // então quem doa todo mês não precisa recadastrar.
+  const doacoesRecorrentes = (state.doacoes || []).filter((d) => d.recorrente);
+  const doacoes = doacoesRecorrentes.length ? doacoesRecorrentes : [{ nome: '', valor: '', recorrente: false }];
 
-  return { ...state, cartao, rendaExtra, despesas, parcelamentos };
+  return { ...state, cartao, rendaExtra, despesas, parcelamentos, doacoes };
 }
 
 // Roda no carregamento: fecha automaticamente os meses pendentes desde o último

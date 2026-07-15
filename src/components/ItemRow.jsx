@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiRepeat } from 'react-icons/fi';
 import { maskMoney } from '../money.js';
 import { duePeriodFor } from '../despesaAlerts.js';
 
@@ -10,9 +11,9 @@ const maskDia = (raw) => {
   return String(n);
 };
 
-// Linha: [pago opcional] + [categoria opcional] + nome + [vencimento opcional] + valor (R$) + remover.
-// Usada em despesas, assinaturas e cartão. `categories` só é passado no cartão;
-// `showVenc` e `showPago` só são passados nas despesas fixas.
+// Linha: [pago/recorrente opcional] + [categoria opcional] + nome + [vencimento opcional] + valor (R$) + remover.
+// Usada em despesas, assinaturas, cartão e doações. `categories` só é passado no cartão;
+// `showVenc` e `showPago` só são passados nas despesas fixas; `showRecorrente` nas doações.
 export default function ItemRow({
   item,
   namePlaceholder = 'Nome',
@@ -21,11 +22,13 @@ export default function ItemRow({
   categories,
   showVenc = false,
   showPago = false,
+  showRecorrente = false,
 }) {
   const hasCat = Array.isArray(categories) && categories.length > 0;
   // `pago` guarda o período pago ('YYYY-MM'); qualquer valor = marcado como pago.
   // Zera no fechamento do mês (history.performClose), desmarcando o check.
   const paid = !!item.pago;
+  const recorrente = !!item.recorrente;
   return (
     <div
       className={
@@ -33,7 +36,8 @@ export default function ItemRow({
         (hasCat ? ' has-cat' : '') +
         (showVenc ? ' has-venc' : '') +
         (showPago ? ' has-pago' : '') +
-        (showPago && paid ? ' is-paid' : '')
+        (showPago && paid ? ' is-paid' : '') +
+        (showRecorrente ? ' has-recorrente' : '')
       }
     >
       {showPago && (
@@ -46,6 +50,18 @@ export default function ItemRow({
           aria-label={paid ? 'Despesa paga' : 'Marcar despesa como paga'}
         >
           {paid ? '✓' : ''}
+        </button>
+      )}
+      {showRecorrente && (
+        <button
+          type="button"
+          className={'recorrente-btn' + (recorrente ? ' on' : '')}
+          onClick={() => onChange({ ...item, recorrente: !recorrente })}
+          title={recorrente ? 'Recorrente — clique para desmarcar' : 'Marcar como recorrente'}
+          aria-pressed={recorrente}
+          aria-label={recorrente ? 'Doação recorrente' : 'Marcar doação como recorrente'}
+        >
+          <FiRepeat size={15} aria-hidden="true" />
         </button>
       )}
       {hasCat && (

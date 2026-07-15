@@ -13,6 +13,7 @@ export const createDefaultState = () => ({
     { nome: 'Telefone', valor: '', venc: '' },
   ],
   assinaturas: [{ nome: '', valor: '' }],
+  doacoes: [{ nome: '', valor: '', recorrente: false }], // doações; `recorrente` marca as que se repetem todo mês
   rendaExtra: [{ nome: '', valor: '' }], // ganhos avulsos do mês (freela, venda, bônus); zera no fechamento
   somarRendaExtra: true, // se a renda extra entra na sobra do planejamento
   cartao: [{ nome: '', valor: '', cat: '' }],
@@ -50,9 +51,15 @@ export const createDefaultProfiles = () => ({
 //  - null/{}                  → conta nova
 //  - estado plano antigo (v1) → vira profiles.main.data, sem perda
 //  - já v2                    → retorna garantindo que 'main' exista
+// Em todos os casos, campos novos do app (ex.: doacoes) são preenchidos com o
+// padrão em perfis salvos antes de o campo existir — senão a tela nova quebra.
 export const migrateState = (raw) => {
   if (raw && raw.v === 2 && raw.profiles && raw.profiles.main) {
-    return raw;
+    const profiles = {};
+    for (const [id, p] of Object.entries(raw.profiles)) {
+      profiles[id] = { ...p, data: { ...createDefaultState(), ...(p.data || {}) } };
+    }
+    return { ...raw, profiles };
   }
   const flat = raw && typeof raw === 'object' ? raw : {};
   return {
@@ -72,6 +79,7 @@ export const TABS = [
   { id: 'rendaextra', label: 'Renda extra' },
   { id: 'despesas', label: 'Despesas fixas' },
   { id: 'assinaturas', label: 'Assinaturas' },
+  { id: 'doacoes', label: 'Doações' },
   { id: 'cartao', label: 'Cartão de crédito' },
   { id: 'parcelamentos', label: 'Parcelamentos' },
   { id: 'economias', label: 'Economias' },

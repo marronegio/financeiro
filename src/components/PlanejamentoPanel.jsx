@@ -120,6 +120,15 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
                 </span>
                 <span className="amt">{BRL(c.gastos)}</span>
               </div>
+              {c.totDoacoes > 0 && (
+                <div className="summary-line" title="As doações já estão somadas no total de gastos acima.">
+                  <span className="lbl">
+                    <span className="dot" style={{ background: 'var(--accent)' }} />
+                    Doações
+                  </span>
+                  <span className="amt">{BRL(c.totDoacoes)}</span>
+                </div>
+              )}
               <div className="summary-line minus">
                 <span className="lbl">
                   <span className="dot" style={{ background: 'var(--savings)' }} />
@@ -179,7 +188,7 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
       {confirmReset && (
         <ConfirmDialog
           title="Limpar todos os dados?"
-          message="Isso apaga salário, despesas, assinaturas, cartão, parcelamentos e a meta. Esta ação não pode ser desfeita."
+          message="Isso apaga salário, despesas, assinaturas, doações, cartão, parcelamentos e a meta. Esta ação não pode ser desfeita."
           confirmLabel="Limpar tudo"
           cancelLabel="Cancelar"
           danger

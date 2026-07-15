@@ -297,7 +297,7 @@ export function AiChatMock() {
   return (
     <div className="lp-ai-chat">
       <div className="lp-ai-head">
-        <span className="lp-ai-head-title">✦ Assistente</span>
+        <span className="lp-ai-head-title">✦ Mr. Din</span>
       </div>
       <div className="lp-ai-msgs">
         <div className="lp-ai-msg user lp-rowin">

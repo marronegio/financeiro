@@ -244,6 +244,7 @@ function buildContext(state, c) {
     }`,
     `Despesas fixas: ${BRL(c.totDesp)}`,
     `Assinaturas: ${BRL(c.totAss)}`,
+    `Doações: ${BRL(c.totDoacoes)}`,
     `Compras no cartão: ${BRL(c.totCartao)}`,
     `Parcela do mês: ${BRL(c.parcelaMensal)} (${c.parcelaAtivas} parcelamento(s) ativo(s)${
       c.parcelaMensalPix > 0 ? `; ${BRL(c.parcelaMensalPix)} via Pix, fora da fatura` : ''
@@ -264,6 +265,11 @@ function buildContext(state, c) {
     ),
     'Assinaturas:',
     listaDetalhada(state.assinaturas, (it) => `${it.nome || 'Sem nome'}: ${BRL(toNumber(it.valor))}/mês`),
+    'Doações:',
+    listaDetalhada(
+      state.doacoes,
+      (it) => `${it.nome || 'Sem nome'}: ${BRL(toNumber(it.valor))}${it.recorrente ? ' (recorrente)' : ''}`
+    ),
     'Compras no cartão:',
     listaDetalhada(
       state.cartao,
@@ -285,8 +291,16 @@ function buildContext(state, c) {
   return { tab: state.tab, tabLabel, categorias, resumo, detalhes };
 }
 
-const WELCOME =
-  'Oi! Sou o assistente do DinPrev. Posso analisar seus gastos, dar dicas e lançar despesas ou receitas pra você. O que precisa?';
+const WELCOME = 'Como posso ajudar?';
+
+// Sugestões de primeira mensagem — aparecem só no início da conversa e são
+// enviadas como se o usuário tivesse digitado.
+const SUGGESTIONS = [
+  'Lançar um gasto no cartão',
+  'Resumo dos meus gastos do mês',
+  'Quanto ainda posso gastar?',
+  'Dicas pra economizar',
+];
 
 // Renderiza marcação inline (**negrito**, *itálico*, `código`) como nós React.
 function renderInline(text, keyBase = '') {
@@ -381,8 +395,21 @@ function Markdown({ text }) {
   );
 }
 
-export default function AiAssistant({ state, c, onAction, tourActive = false }) {
-  const [open, setOpen] = useState(false);
+// `open`/`onOpenChange` (opcionais) permitem controlar o painel de fora — o
+// BottomNav do app nativo usa isso no botão central. `hideFab` esconde o botão
+// flutuante quando outro botão já faz esse papel.
+export default function AiAssistant({
+  state, c, onAction, tourActive = false,
+  hideFab = false, open: openProp, onOpenChange,
+}) {
+  const controlled = openProp !== undefined;
+  const [openState, setOpenState] = useState(false);
+  const open = controlled ? openProp : openState;
+  const setOpen = (next) => {
+    const v = typeof next === 'function' ? next(open) : next;
+    if (controlled) onOpenChange?.(v);
+    else setOpenState(v);
+  };
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -398,6 +425,7 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
   const [history, setHistory] = useState([]);
   const scrollRef = useRef(null);
   const fileRef = useRef(null);
+  const inputRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
 
@@ -406,6 +434,17 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [history, open, busy]);
+
+  // Campo de mensagem estilo WhatsApp: começa com 1 linha e cresce conforme o
+  // texto quebra, até o teto (max-height do CSS); daí em diante rola por dentro.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const max = 120; // mantém em sincronia com o max-height de .ai-input
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, max) + 'px';
+    el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
+  }, [input, open]);
 
   // Uma "rodada" com a IA: manda o histórico + contexto, aplica as ferramentas
   // que ela pedir e repete até vir uma resposta em texto (ou estourar o limite).
@@ -458,6 +497,27 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
       setError('Não consegui carregar essa imagem.');
     } finally {
       setImgLoading(false);
+    }
+  }
+
+  // Envia um texto pronto (botões de sugestão) como se o usuário tivesse digitado.
+  async function sendText(text) {
+    if (busy || imgLoading || recording || transcribing) return;
+    setError('');
+    setBusy(true);
+    const next = [...history, { role: 'user', content: text }];
+    setHistory(next);
+    try {
+      await converse(next);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.code === 'limit_reached'
+          ? err.message
+          : 'Não consegui responder agora. Tente de novo em instantes.'
+      );
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -594,22 +654,24 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
 
   return (
     <>
-      <button
-        className={`ai-fab${tourActive ? ' ai-fab-tour' : ''}`}
-        data-tour="ai-fab"
-        onClick={() => setOpen((v) => !v)}
-        disabled={tourActive}
-        aria-label="Abrir assistente de IA"
-        title="Assistente de IA"
-      >
-        {open ? <RiCloseLine /> : <RiSparkling2Line />}
-      </button>
+      {!hideFab && (
+        <button
+          className={`ai-fab${tourActive ? ' ai-fab-tour' : ''}`}
+          data-tour="ai-fab"
+          onClick={() => setOpen((v) => !v)}
+          disabled={tourActive}
+          aria-label="Abrir o Mr. Din, assistente de IA"
+          title="Mr. Din — assistente de IA"
+        >
+          {open ? <RiCloseLine /> : <RiSparkling2Line />}
+        </button>
+      )}
 
       {open && (
-        <div className="ai-panel" role="dialog" aria-label="Assistente de IA">
+        <div className="ai-panel" role="dialog" aria-label="Mr. Din — assistente de IA">
           <div className="ai-head">
             <span className="ai-head-title">
-              <RiSparkling2Line /> Assistente
+              <RiSparkling2Line /> Mr. Din
             </span>
             <button className="ai-close" onClick={() => setOpen(false)} aria-label="Fechar">
               <RiCloseLine />
@@ -618,6 +680,15 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
 
           <div className="ai-msgs" ref={scrollRef}>
             <div className="ai-msg bot">{WELCOME}</div>
+            {visible.length === 0 && !busy && (
+              <div className="ai-suggestions">
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} className="ai-suggest" onClick={() => sendText(s)}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
             {visible.map((m, i) =>
               m.role === 'user' ? (
                 <div key={i} className="ai-msg user">
@@ -696,13 +767,14 @@ export default function AiAssistant({ state, c, onAction, tourActive = false }) 
             </button>
             <textarea
               className="ai-input"
+              ref={inputRef}
               rows={1}
               placeholder={
                 recording
                   ? 'Gravando… toque para parar'
                   : transcribing
                     ? 'Transcrevendo áudio…'
-                    : 'Ex: gastei 45 no mercado no cartão'
+                    : 'Ex: gastei 45 no mercado'
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}

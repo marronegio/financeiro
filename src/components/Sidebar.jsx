@@ -12,6 +12,7 @@ import {
   FiSettings,
   FiShield,
   FiUsers,
+  FiHeart,
 } from 'react-icons/fi';
 import { TABS } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
@@ -19,13 +20,15 @@ import ConfirmDialog from './ConfirmDialog.jsx';
 
 const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
 
-// Ícone (react-icons) de cada aba. Mantém a escolha visual junto da renderização.
-const TAB_ICONS = {
+// Ícone (react-icons) de cada aba. Exportado para o BottomNav (app nativo)
+// usar exatamente os mesmos ícones.
+export const TAB_ICONS = {
   plan: FiPieChart,
   casal: FiUsers,
   rendaextra: FiTrendingUp,
   despesas: FiFileText,
   assinaturas: FiRepeat,
+  doacoes: FiHeart,
   cartao: FiCreditCard,
   parcelamentos: FiLayers,
   economias: FiTarget,
