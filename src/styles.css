@@ -747,6 +747,8 @@ h1 em {
 .pcard input {
   padding: 7px 0;
   font-size: 0.86rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .pcard-top {
@@ -1682,7 +1684,9 @@ input::placeholder {
 }
 
 .row .name-wrap,
-.row .val-wrap {
+.row .val-wrap,
+.pcard .name-wrap,
+.pcard .val-wrap {
   min-width: 0;
   background: var(--surface-2);
   border: 1px solid var(--line-strong);
@@ -1694,13 +1698,16 @@ input::placeholder {
 }
 
 .row .name-wrap:focus-within,
-.row .val-wrap:focus-within {
+.row .val-wrap:focus-within,
+.pcard .name-wrap:focus-within,
+.pcard .val-wrap:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
   background: var(--surface);
 }
 
-.row .val-wrap .prefix {
+.row .val-wrap .prefix,
+.pcard .val-wrap .prefix {
   font-family: 'IBM Plex Mono', monospace;
   color: var(--faint);
   font-size: 0.8rem;
