@@ -94,7 +94,14 @@ export default function BottomNav({
             );
           })}
           {onSignOut && (
-            <button className="bnav-sheet-item" onClick={() => setConfirmSignOut(true)}>
+            <button
+              className="bnav-sheet-item"
+              onClick={() => {
+                // Fecha o sheet antes: a confirmação deve aparecer sozinha na tela.
+                setMoreOpen(false);
+                setConfirmSignOut(true);
+              }}
+            >
               <span className="ico"><FiLogOut aria-hidden="true" /></span>
               <span className="bnav-sheet-lbl">Sair</span>
             </button>
@@ -145,7 +152,11 @@ export default function BottomNav({
         {barItem('historico')}
         <button
           className={'bnav-item' + (moreOpen || moreActive ? ' active' : '')}
-          onClick={() => setMoreOpen(!moreOpen)}
+          onClick={() => {
+            // Chat da IA e sheet não convivem: abrir o "Mais" fecha o chat.
+            if (!moreOpen && aiOpen) onAiToggle?.();
+            setMoreOpen(!moreOpen);
+          }}
           aria-label="Mais painéis"
           aria-expanded={moreOpen}
         >

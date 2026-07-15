@@ -3636,8 +3636,40 @@ input.auth-input:focus,
   border-radius: 16px;
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  /* aura de brilho pulsante enquanto o chat está aberto */
-  animation: ai-aura 3s ease-in-out infinite;
+  /* nasce do canto do botão e pulsa a aura enquanto está aberto */
+  transform-origin: bottom right;
+  animation:
+    ai-pop-in 0.26s cubic-bezier(0.32, 0.72, 0.22, 1),
+    ai-aura 3s ease-in-out infinite;
+}
+
+/* saída: encolhe de volta em direção ao botão e some (o componente segura o
+   unmount por ~220ms pra animação completar) */
+.ai-panel.ai-panel-closing {
+  animation: ai-pop-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes ai-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ai-pop-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(26px) scale(0.9);
+  }
 }
 
 /* brilho respirando em volta do painel da IA, nas cores da marca */
@@ -3663,6 +3695,11 @@ input.auth-input:focus,
   .ai-panel {
     animation: none;
     box-shadow: 0 0 24px rgba(99, 91, 255, 0.3), var(--shadow-md);
+  }
+
+  .ai-panel.ai-panel-closing {
+    animation: none;
+    opacity: 0;
   }
 }
 
@@ -4414,10 +4451,11 @@ input.auth-input:focus,
   padding-bottom: calc(128px + var(--sab));
 }
 
-/* O painel da IA abre acima da barra inferior. */
+/* O painel da IA abre acima da barra inferior e nasce do botão central. */
 .app.native-nav .ai-panel {
   bottom: calc(110px + var(--sab));
   max-height: calc(100vh - 154px - var(--sab) - var(--sat));
+  transform-origin: bottom center;
 }
 
 .app.native-nav .toast-stack {

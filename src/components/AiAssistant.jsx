@@ -423,6 +423,9 @@ export default function AiAssistant({
   // `history` é a lista completa enviada à IA (inclui mensagens de tool). A UI só
   // renderiza as de user/assistant com texto — ver `visible`.
   const [history, setHistory] = useState([]);
+  // O painel fica montado por alguns ms depois de fechar, para a animação de
+  // saída rodar antes do unmount (ver .ai-panel-closing no CSS).
+  const [mounted, setMounted] = useState(open);
   const scrollRef = useRef(null);
   const fileRef = useRef(null);
   const inputRef = useRef(null);
@@ -434,6 +437,16 @@ export default function AiAssistant({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [history, open, busy]);
+
+  // Abertura monta na hora; fechamento espera a animação de saída terminar.
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+    const t = setTimeout(() => setMounted(false), 220); // duração do ai-pop-out
+    return () => clearTimeout(t);
+  }, [open]);
 
   // Campo de mensagem estilo WhatsApp: começa com 1 linha e cresce conforme o
   // texto quebra, até o teto (max-height do CSS); daí em diante rola por dentro.
@@ -667,8 +680,12 @@ export default function AiAssistant({
         </button>
       )}
 
-      {open && (
-        <div className="ai-panel" role="dialog" aria-label="Mr. Din — assistente de IA">
+      {mounted && (
+        <div
+          className={'ai-panel' + (open ? '' : ' ai-panel-closing')}
+          role="dialog"
+          aria-label="Mr. Din — assistente de IA"
+        >
           <div className="ai-head">
             <span className="ai-head-title">
               <RiSparkling2Line /> Mr. Din
