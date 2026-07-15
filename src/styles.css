@@ -656,22 +656,8 @@ h1 em {
     padding: 14px;
   }
 
-  .row {
-    grid-template-columns: 1fr 104px 34px;
-    gap: 6px;
-  }
-
-  .row.has-venc {
-    grid-template-columns: 1fr 60px 104px 30px;
-  }
-
-  .row.has-venc.has-pago {
-    grid-template-columns: 30px 1fr 60px 104px 30px;
-  }
-
-  .row.has-recorrente {
-    grid-template-columns: 30px 1fr 104px 30px;
-  }
+  /* o layout mobile das .row (listas editáveis) fica junto das regras base,
+     mais abaixo no arquivo, para vencer a cascata. */
 
   .pcard-fields {
     grid-template-columns: 1fr 1fr;
@@ -1326,14 +1312,82 @@ input::placeholder {
   background: var(--surface);
 }
 
-@media (max-width: 480px) {
-  .row.has-cat {
-    grid-template-columns: 92px 1fr 92px 30px;
+/* Em telas estreitas as linhas quebram em dois níveis — nome em cima e campos
+   numéricos embaixo — para o campo de nome nunca ficar espremido. Os botões
+   laterais (✓, 🔁 e ×) atravessam as duas linhas, centralizados. */
+@media (max-width: 560px) {
+  .row {
+    grid-template-columns: 1fr 34px;
+    grid-template-areas:
+      'nome del'
+      'valor del';
     gap: 6px;
+    margin-bottom: 12px;
   }
+
+  /* cartão: [nome ×] / [categoria valor] */
+  .row.has-cat {
+    grid-template-columns: 1fr 1fr 34px;
+    grid-template-areas:
+      'nome nome del'
+      'cat valor del';
+  }
+
+  /* despesa fixa: [nome ×] / [dia valor] */
+  .row.has-venc {
+    grid-template-columns: 76px 1fr 34px;
+    grid-template-areas:
+      'nome nome del'
+      'venc valor del';
+  }
+
+  /* despesa fixa com check de pago: [✓ nome ×] / [✓ dia valor ×] */
+  .row.has-venc.has-pago {
+    grid-template-columns: 34px 76px 1fr 34px;
+    grid-template-areas:
+      'pago nome nome del'
+      'pago venc valor del';
+  }
+
+  /* doação: [🔁 nome ×] / [🔁 valor ×] */
+  .row.has-recorrente {
+    grid-template-columns: 34px 1fr 34px;
+    grid-template-areas:
+      'rec nome del'
+      'rec valor del';
+  }
+
+  .row .name-wrap {
+    grid-area: nome;
+  }
+
+  .row .val-wrap {
+    grid-area: valor;
+  }
+
+  .row .venc-wrap {
+    grid-area: venc;
+  }
+
+  .row .cat-select {
+    grid-area: cat;
+  }
+
+  .row .pago-btn {
+    grid-area: pago;
+  }
+
+  .row .recorrente-btn {
+    grid-area: rec;
+  }
+
+  .row .del-btn {
+    grid-area: del;
+  }
+
   .cat-select {
-    font-size: 0.76rem;
-    padding: 0 5px;
+    font-size: 0.8rem;
+    padding: 0 8px;
   }
 }
 
@@ -1629,6 +1683,7 @@ input::placeholder {
 
 .row .name-wrap,
 .row .val-wrap {
+  min-width: 0;
   background: var(--surface-2);
   border: 1px solid var(--line-strong);
   border-radius: 8px;
@@ -1655,6 +1710,7 @@ input::placeholder {
 .row input {
   padding: 8px 0;
   font-size: 0.88rem;
+  min-width: 0;
 }
 
 .del-btn {
