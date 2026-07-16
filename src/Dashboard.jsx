@@ -224,6 +224,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
     localStorage.setItem(obKey(user.id, active), '1');
     setState((s) => ({ ...s, onboarded: true, tab: 'plan' }));
     setShowOnboarding(false);
+    setMoreOpen(false); // app: o tour pode terminar com o sheet "Mais" aberto
   }
 
   const setField = (key, value) => setState((s) => ({ ...s, [key]: value }));
@@ -504,6 +505,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
           onFinish={finishOnboarding}
           onSkip={finishOnboarding}
           onStepChange={setTab}
+          onMenuChange={setMoreOpen}
         />
       )}
       {!showOnboarding && (

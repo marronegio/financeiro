@@ -159,6 +159,7 @@ export default function BottomNav({
           }}
           aria-label="Mais painéis"
           aria-expanded={moreOpen}
+          data-tour="tab-mais"
         >
           <span className="bnav-ico"><FiGrid aria-hidden="true" /></span>
           <span className="bnav-lbl">Mais</span>

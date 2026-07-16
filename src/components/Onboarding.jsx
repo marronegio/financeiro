@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isNativeApp } from '../lib/native.js';
 
 const PAD = 8;
 const TOOLTIP_W = 272;
@@ -24,6 +25,7 @@ const STEPS = [
   {
     tab: 'rendaextra',
     target: '[data-tour="tab-rendaextra"]',
+    sheet: true, // no app, este painel mora no sheet "Mais" — o tour o abre
     icon: '⊕',
     title: 'Renda Extra',
     description:
@@ -32,6 +34,7 @@ const STEPS = [
   {
     tab: 'despesas',
     target: '[data-tour="tab-despesas"]',
+    sheet: true,
     icon: '⊟',
     title: 'Despesas Fixas',
     description:
@@ -40,6 +43,7 @@ const STEPS = [
   {
     tab: 'assinaturas',
     target: '[data-tour="tab-assinaturas"]',
+    sheet: true,
     icon: '↻',
     title: 'Assinaturas',
     description:
@@ -56,6 +60,7 @@ const STEPS = [
   {
     tab: 'parcelamentos',
     target: '[data-tour="tab-parcelamentos"]',
+    sheet: true,
     icon: '≣',
     title: 'Parcelamentos',
     description:
@@ -64,6 +69,7 @@ const STEPS = [
   {
     tab: 'economias',
     target: '[data-tour="tab-economias"]',
+    sheet: true,
     icon: '◎',
     title: 'Economias',
     description:
@@ -87,6 +93,20 @@ const STEPS = [
   },
 ];
 
+// Só no app: apresenta o botão "Mais" antes dos painéis que moram dentro dele.
+// Os passos marcados com `sheet: true` abrem o sheet e destacam o item lá dentro,
+// ensinando onde cada área fica no menu.
+const MAIS_STEP = {
+  tab: null,
+  target: '[data-tour="tab-mais"]',
+  icon: '⊞',
+  title: 'O botão "Mais"',
+  description:
+    'Os demais painéis moram aqui dentro. Nos próximos passos o menu abre sozinho e mostra onde fica cada um.',
+};
+
+const APP_STEPS = [...STEPS.slice(0, 2), MAIS_STEP, ...STEPS.slice(2)];
+
 function measureTarget(selector) {
   if (!selector) return null;
   const el = document.querySelector(selector);
@@ -97,6 +117,11 @@ function measureTarget(selector) {
   return { top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
 }
 
+// Altura estimada do tooltip (dots + ícone + título + descrição + botões).
+// Varia com o texto, então usamos um teto seguro: um ramo só é escolhido se
+// couber ESSA altura — senão cai no próximo, e por fim no card centralizado.
+const TOOLTIP_H = 360;
+
 function tooltipPosition(rect) {
   if (!rect) return null;
   const spaceRight = window.innerWidth - rect.right - MARGIN;
@@ -105,49 +130,63 @@ function tooltipPosition(rect) {
   const clampLeft = (l) =>
     Math.max(MARGIN, Math.min(window.innerWidth - TOOLTIP_W - MARGIN, l));
 
-  if (spaceRight >= TOOLTIP_W + MARGIN) {
+  // Alvo colado no rodapé (itens do menu inferior do app): as posições lateral
+  // e abaixo não têm altura — vai direto para o ramo "acima do elemento".
+  const nearBottom = rect.top > window.innerHeight - 150;
+
+  if (spaceRight >= TOOLTIP_W + MARGIN && !nearBottom) {
     // Tooltip à direita do spotlight
-    const top = Math.max(MARGIN, Math.min(window.innerHeight - 260, cy - 120));
+    const top = Math.max(MARGIN, Math.min(window.innerHeight - TOOLTIP_H - MARGIN, cy - 120));
     return { top, left: rect.right + MARGIN, arrowDir: 'left' };
   }
-  if (spaceBelow >= 200) {
+  if (spaceBelow >= TOOLTIP_H) {
     // Tooltip abaixo do spotlight
     const left = clampLeft(rect.left + rect.width / 2 - TOOLTIP_W / 2);
     return { top: rect.bottom + MARGIN, left, arrowDir: 'top' };
   }
-  // Sem espaço à direita nem abaixo (ex: botão flutuante no canto inferior):
-  // tooltip acima do elemento. Usa `bottom` pra não depender da altura dele.
-  const left = clampLeft(rect.right - TOOLTIP_W);
-  return { bottom: window.innerHeight - rect.top + MARGIN, left, arrowDir: 'bottom' };
+  if (rect.top >= TOOLTIP_H + MARGIN) {
+    // Tooltip acima do elemento (ex: botão flutuante ou item do menu inferior
+    // do app). Usa `bottom` pra não depender da altura real. A folga extra
+    // evita colidir com o botão central da IA, que salta acima da barra.
+    const left = clampLeft(rect.right - TOOLTIP_W);
+    return { bottom: window.innerHeight - rect.top + MARGIN + 24, left, arrowDir: 'bottom' };
+  }
+  // Não coube em lugar nenhum (tela muito baixa): sinaliza para o chamador
+  // usar o card centralizado, mantendo o spotlight no alvo.
+  return null;
 }
 
-export default function Onboarding({ onFinish, onSkip, onStepChange }) {
+export default function Onboarding({ onFinish, onSkip, onStepChange, onMenuChange = () => {} }) {
+  const steps = isNativeApp ? APP_STEPS : STEPS;
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState(null);
 
+  // No app, abre o sheet "Mais" nos passos dos painéis que vivem lá dentro
+  // (e fecha nos demais). A medição espera a animação do sheet (~280ms).
   useEffect(() => {
+    if (isNativeApp) onMenuChange(!!steps[step].sheet);
     const id = setTimeout(() => {
-      setRect(measureTarget(STEPS[step].target));
-    }, 60);
+      setRect(measureTarget(steps[step].target));
+    }, isNativeApp ? 380 : 60);
     return () => clearTimeout(id);
   }, [step]);
 
   function goNext() {
-    if (step < STEPS.length - 1) {
+    if (step < steps.length - 1) {
       const next = step + 1;
       setStep(next);
-      if (STEPS[next].tab) onStepChange(STEPS[next].tab);
+      if (steps[next].tab) onStepChange(steps[next].tab);
     } else {
       onFinish();
     }
   }
 
-  const current = STEPS[step];
-  const isLast = step === STEPS.length - 1;
+  const current = steps[step];
+  const isLast = step === steps.length - 1;
 
   const dots = (
     <div className="ob-dots">
-      {STEPS.map((_, i) => (
+      {steps.map((_, i) => (
         <span key={i} className={`ob-dot${i === step ? ' active' : ''}`} />
       ))}
     </div>
@@ -168,8 +207,10 @@ export default function Onboarding({ onFinish, onSkip, onStepChange }) {
     </>
   );
 
-  // Passo de boas-vindas ou fallback (mobile sem sidebar visível): card centralizado
-  if (!rect) {
+  // Passo de boas-vindas ou fallback (alvo invisível, ou tooltip sem lugar que
+  // caiba na tela): card centralizado.
+  const tip = tooltipPosition(rect);
+  if (!rect || !tip) {
     return (
       <div className="ob-backdrop">
         <div className="ob-card">{body}</div>
@@ -184,7 +225,6 @@ export default function Onboarding({ onFinish, onSkip, onStepChange }) {
     height: rect.height + PAD * 2,
   };
 
-  const tip = tooltipPosition(rect);
   const tipStyle = { left: tip.left, width: TOOLTIP_W };
   if (tip.top != null) tipStyle.top = tip.top;
   if (tip.bottom != null) tipStyle.bottom = tip.bottom;

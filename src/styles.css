@@ -2148,17 +2148,19 @@ input[type="range"]::-moz-range-thumb {
 /* ---------- onboarding ---------- */
 
 /* Bloqueia cliques no app durante o tour */
+/* O tour fica acima de TUDO — inclusive do menu inferior do app (z 1100) e do
+   painel/botão da IA (z 1200); o recorte do spotlight revela o item destacado. */
 .ob-clickblock {
   position: fixed;
   inset: 0;
-  z-index: 99;
+  z-index: 1400;
 }
 
 /* Spotlight: recorte luminoso sobre o elemento destacado.
    O box-shadow enorme escurece tudo ao redor. */
 .ob-spotlight {
   position: fixed;
-  z-index: 100;
+  z-index: 1401;
   border-radius: 10px;
   box-shadow: 0 0 0 9999px rgba(12, 16, 14, 0.68);
   outline: 2px solid var(--accent);
@@ -2170,7 +2172,7 @@ input[type="range"]::-moz-range-thumb {
 /* Tooltip posicionado ao lado do spotlight */
 .ob-tooltip {
   position: fixed;
-  z-index: 101;
+  z-index: 1402;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -2237,7 +2239,7 @@ input[type="range"]::-moz-range-thumb {
 .ob-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1400;
   background: rgba(12, 16, 14, 0.55);
   display: flex;
   align-items: center;
