@@ -46,7 +46,7 @@ const newItem = (kind) =>
     ? { nome: '', valor: '', cat: '' }
     : kind === 'metas'
     ? { nome: '', valor: '', guardado: '', prazo: '' }
-    : kind === 'despesas'
+    : kind === 'despesas' || kind === 'assinaturas'
     ? { nome: '', valor: '', venc: '' }
     : kind === 'doacoes'
     ? { nome: '', valor: '', recorrente: false }

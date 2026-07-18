@@ -52,6 +52,9 @@ export function compute(state) {
   let parcelaMensalCartao = 0;
   let parcelaMensalPix = 0;
   let parcelaRestante = 0;
+  // Saldo devedor total das parcelas que passam pelo cartão (todas as parcelas
+  // ainda não pagas, não só a do mês). É o que continua reservado no limite.
+  let parcelaRestanteCartao = 0;
   let parcelaAtivas = 0;
   let parcelaUltimasCount = 0;
   let parcelaUltimasValor = 0;
@@ -60,7 +63,10 @@ export function compute(state) {
     if (p.parc > 0 && !p.done) {
       parcelaMensal += p.mensal;
       if (it.pix) parcelaMensalPix += p.mensal;
-      else parcelaMensalCartao += p.mensal;
+      else {
+        parcelaMensalCartao += p.mensal;
+        parcelaRestanteCartao += p.falta;
+      }
       parcelaAtivas += 1;
       // Parcelamentos com apenas uma parcela restante — estão acabando este mês.
       if (p.restantes === 1) {
@@ -83,11 +89,20 @@ export function compute(state) {
   const credito = (Math.max(0, sobra) * pctC) / 100;
   const debito = (Math.max(0, sobra) * pctD) / 100;
 
+  // Limite do cartão: o que já está comprometido (compras + assinaturas +
+  // saldo devedor das parcelas do cartão, menos abates) reserva o limite; o
+  // resto fica disponível. Só faz sentido quando o usuário informou o limite.
+  const limiteCartao = toNumber(state.limiteCartao);
+  const limiteUsado = totCartao + totAss + parcelaRestanteCartao - totAbates;
+  const limiteDisponivel = limiteCartao - limiteUsado;
+
   return {
     salario, guardar, totDesp, totAss, totDoacoes, totCartao, totAbates,
     totRendaExtra, somarRendaExtra, rendaExtraNoPlano,
-    parcelaMensal, parcelaMensalCartao, parcelaMensalPix, parcelaRestante, parcelaAtivas,
+    parcelaMensal, parcelaMensalCartao, parcelaMensalPix, parcelaRestante,
+    parcelaRestanteCartao, parcelaAtivas,
     parcelaUltimasCount, parcelaUltimasValor, faturaCartao,
+    limiteCartao, limiteUsado, limiteDisponivel,
     gastos, sobra, pctC, pctD, credito, debito,
   };
 }

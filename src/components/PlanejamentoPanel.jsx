@@ -3,6 +3,7 @@ import { BRL } from '../money.js';
 import MoneyField from './MoneyField.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import MetasResumo from './MetasResumo.jsx';
+import LimiteCartao from './LimiteCartao.jsx';
 
 export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) {
   const [confirmReset, setConfirmReset] = useState(false);
@@ -34,21 +35,17 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
 
           <div className="card">
             <div className="card-head">
-              <span className="card-title">Divisão do que sobra</span>
+              <span className="card-title">Cartão de crédito</span>
             </div>
-            <div className="split-head">
-              <span className="split-pill c">Crédito {c.pctC}%</span>
-              <span className="split-pill d">{c.pctD}% Débito</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={state.split}
-              style={{ '--p': c.pctC + '%' }}
-              onChange={(e) => setField('split', parseInt(e.target.value, 10))}
+            <MoneyField
+              label="Limite do cartão"
+              value={state.limiteCartao}
+              onChange={(v) => setField('limiteCartao', v)}
             />
+            <LimiteCartao c={c} />
+            <p className="hint">
+              O disponível desconta compras, assinaturas e o saldo das parcelas no cartão.
+            </p>
           </div>
 
           <MetasResumo metas={state.metas} onManage={() => onTab('economias')} />
@@ -80,20 +77,15 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
                 Guardado
               </div>
               <div className="item">
-                <span className="dot" style={{ background: 'var(--credit)' }} />
-                Crédito
-              </div>
-              <div className="item">
-                <span className="dot" style={{ background: 'var(--debit)' }} />
-                Débito
+                <span className="dot" style={{ background: 'var(--positive)' }} />
+                Sobra
               </div>
             </div>
 
             <div className="bar">
               <span style={{ background: 'var(--expense)', width: pct(c.gastos) + '%' }} />
               <span style={{ background: 'var(--savings)', width: pct(c.guardar) + '%' }} />
-              <span style={{ background: 'var(--credit)', width: pct(c.credito) + '%' }} />
-              <span style={{ background: 'var(--debit)', width: pct(c.debito) + '%' }} />
+              <span style={{ background: 'var(--positive)', width: pct(Math.max(0, c.sobra)) + '%' }} />
             </div>
 
             <div>
@@ -146,25 +138,6 @@ export default function PlanejamentoPanel({ state, c, setField, reset, onTab }) 
                 >
                   {BRL(c.sobra)}
                 </span>
-              </div>
-            </div>
-
-            <div className="split-cards">
-              <div className="split-card credit">
-                <div className="sc-tag">
-                  <span>Crédito</span>
-                  <span className="sc-pct">{c.pctC}%</span>
-                </div>
-                <div className="sc-value">{BRL(c.credito)}</div>
-                <div className="sc-desc">limite pra gastar na fatura</div>
-              </div>
-              <div className="split-card debit">
-                <div className="sc-tag">
-                  <span>Débito</span>
-                  <span className="sc-pct">{c.pctD}%</span>
-                </div>
-                <div className="sc-value">{BRL(c.debito)}</div>
-                <div className="sc-desc">disponível na conta</div>
               </div>
             </div>
 

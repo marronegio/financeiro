@@ -1,6 +1,7 @@
 import React from 'react';
 import { BRL, maskMoney, onlyDigits, computeParcela } from '../money.js';
 import ParcelasProjecaoChart from './ParcelasProjecaoChart.jsx';
+import LimiteCartao from './LimiteCartao.jsx';
 
 function ParcelaCard({ item, onChange, onRemove }) {
   const p = computeParcela(item);
@@ -186,6 +187,8 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
               </div>
             </div>
           </div>
+
+          <LimiteCartao c={c} card />
 
           <ParcelasProjecaoChart parcelamentos={state.parcelamentos} />
         </div>

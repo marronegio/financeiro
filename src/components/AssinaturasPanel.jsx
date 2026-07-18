@@ -16,13 +16,14 @@ export default function AssinaturasPanel({ state, c, updateItem, addItem, remove
             items={state.assinaturas}
             namePlaceholder="Nome"
             addLabel="Adicionar assinatura"
+            showVenc
             updateItem={updateItem}
             addItem={addItem}
             removeItem={removeItem}
           />
           <p className="hint">
-            Serviços recorrentes — streaming, apps, academia. Somadas às despesas, compõem seus
-            gastos do mês.
+            Serviços recorrentes — streaming, apps, academia. Informe o dia da cobrança de cada uma.
+            Somadas às despesas, compõem seus gastos do mês.
           </p>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { BRL, toNumber } from '../money.js';
 import { getCardCategories } from '../state.js';
 import EditableList from './EditableList.jsx';
 import CategoryManager from './CategoryManager.jsx';
+import LimiteCartao from './LimiteCartao.jsx';
 
 const SORTS = [
   { id: 'add', label: 'Data' },
@@ -185,6 +186,8 @@ export default function CartaoPanel({
               </div>
             </div>
           </div>
+
+          <LimiteCartao c={c} card />
 
           {porCategoria.length > 0 && (
             <div className="card">

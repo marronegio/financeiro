@@ -12,11 +12,12 @@ export const createDefaultState = () => ({
     { nome: 'Internet', valor: '', venc: '' },
     { nome: 'Telefone', valor: '', venc: '' },
   ],
-  assinaturas: [{ nome: '', valor: '' }],
+  assinaturas: [{ nome: '', valor: '', venc: '' }], // `venc` = dia do mês da cobrança (1–31)
   doacoes: [{ nome: '', valor: '', recorrente: false }], // doações; `recorrente` marca as que se repetem todo mês
   rendaExtra: [{ nome: '', valor: '' }], // ganhos avulsos do mês (freela, venda, bônus); zera no fechamento
   somarRendaExtra: true, // se a renda extra entra na sobra do planejamento
   cartao: [{ nome: '', valor: '', cat: '' }],
+  limiteCartao: '', // limite total do cartão de crédito (informado pelo usuário)
   cardCategories: CARD_CATEGORIES.map((c) => ({ ...c })), // etiquetas das compras (editáveis pelo usuário)
   abates: [], // valores abatidos da fatura (estornos, cashback, créditos)
   parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }],

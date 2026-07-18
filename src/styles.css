@@ -441,7 +441,7 @@ body {
 }
 
 .wrap {
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 22px 26px 56px;
 }
@@ -1647,6 +1647,41 @@ input::placeholder {
   height: 100%;
   border-radius: 6px;
   transition: width .35s ease;
+}
+
+/* limite do cartão de crédito (Planejamento / Cartão / Parcelamentos) */
+.limite-box {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.limite-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.limite-lbl {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.limite-val {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.limite-note {
+  font-size: 0.74rem;
+  color: var(--muted);
 }
 
 /* insights do histórico */
