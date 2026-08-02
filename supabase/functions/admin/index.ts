@@ -1,4 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { PLAN_CONFIG, planKeyOf } from '../_shared/asaasPlans.ts'
+
+const ASAAS_URL = Deno.env.get('ASAAS_API_URL') || 'https://api.asaas.com/v3'
+
+async function asaas(path: string, apiKey: string, init?: RequestInit) {
+  const resp = await fetch(`${ASAAS_URL}${path}`, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', access_token: apiKey, ...(init?.headers || {}) },
+  })
+  const data = await resp.json().catch(() => ({}))
+  if (!resp.ok) throw new Error(data?.errors?.[0]?.description || `ASAAS ${resp.status}`)
+  return data
+}
 
 // Painel administrativo — só o admin (ADMIN_EMAIL) pode chamar.
 //
@@ -55,7 +68,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    const { action, userId, value, enabled, plan } = await req.json().catch(() => ({}))
+    const { action, userId, value, enabled, plan, apply } = await req.json().catch(() => ({}))
 
     switch (action) {
       // Lista todos os usuários (perfil + e-mail + consumo de IA do mês).
@@ -137,16 +150,112 @@ Deno.serve(async (req) => {
         return json({ ok: true })
       }
 
-      // Troca o plano (solo/duo).
+      // Troca o plano/tier (free/solo/duo). 'free' é o tier sem assinatura —
+      // ortogonal ao set_subscription, que controla o acesso em si.
       case 'set_plan': {
         if (!userId) return json({ error: 'userId obrigatório.' }, 400)
-        const p = plan === 'duo' ? 'duo' : 'solo'
+        if (!['free', 'solo', 'duo'].includes(plan)) {
+          return json({ error: 'plan deve ser free, solo ou duo.' }, 400)
+        }
+        // Upsert pelo mesmo motivo do set_subscription: quem nunca pagou pode
+        // ainda não ter linha em profiles, e um UPDATE falharia em silêncio.
         const { error } = await admin
           .from('profiles')
-          .update({ plan: p, updated_at: new Date().toISOString() })
-          .eq('id', userId)
+          .upsert({ id: userId, plan, updated_at: new Date().toISOString() })
         if (error) throw error
         return json({ ok: true })
+      }
+
+      // Realinha o valor das assinaturas JÁ existentes no ASAAS com a tabela de
+      // preços atual (_shared/asaasPlans.ts). Sem isso, baixar um preço só vale
+      // para quem assina depois — quem já assina segue pagando o valor gravado
+      // na assinatura lá.
+      //
+      // `apply` ausente/false = só confere e devolve o que MUDARIA. Nada é
+      // escrito sem apply === true: isto mexe em cobrança de gente real.
+      case 'asaas_price_sync': {
+        const apiKey = Deno.env.get('ASAAS_API_KEY')
+        if (!apiKey) return json({ error: 'ASAAS_API_KEY não configurada.' }, 500)
+
+        const { data: profiles, error: pErr } = await admin
+          .from('profiles')
+          .select('id, plan, plan_cycle, subscription_status, asaas_subscription_id')
+          .not('asaas_subscription_id', 'is', null)
+        if (pErr) throw pErr
+
+        // E-mails para o relatório ficar legível no painel.
+        const emailBy = new Map<string, string | null>()
+        for (let page = 1; page <= 100; page++) {
+          const { data: list, error: lErr } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+          if (lErr) throw lErr
+          for (const u of list.users) emailBy.set(u.id, u.email ?? null)
+          if (list.users.length < 200) break
+        }
+
+        const rows: Record<string, unknown>[] = []
+        for (const p of profiles || []) {
+          const key = planKeyOf(p.plan, p.plan_cycle)
+          const target = key ? PLAN_CONFIG[key] : null
+          const row: Record<string, unknown> = {
+            userId: p.id,
+            email: emailBy.get(p.id) ?? null,
+            planKey: key,
+            status: p.subscription_status,
+            subscriptionId: p.asaas_subscription_id,
+            targetValue: target?.value ?? null,
+            currentValue: null as number | null,
+            changed: false,
+            skipped: null as string | null,
+          }
+
+          if (!target) {
+            // plan 'free' ou desconhecido: não há preço de tabela a aplicar.
+            row.skipped = 'sem plano pago'
+            rows.push(row)
+            continue
+          }
+
+          try {
+            const sub = await asaas(`/subscriptions/${p.asaas_subscription_id}`, apiKey)
+            row.currentValue = typeof sub?.value === 'number' ? sub.value : null
+            // Assinatura já encerrada no ASAAS não deve ser mexida.
+            if (sub?.status && sub.status !== 'ACTIVE') {
+              row.skipped = `assinatura ${sub.status} no ASAAS`
+              rows.push(row)
+              continue
+            }
+            if (row.currentValue === target.value) {
+              row.skipped = 'já está no preço'
+              rows.push(row)
+              continue
+            }
+            if (apply === true) {
+              await asaas(`/subscriptions/${p.asaas_subscription_id}`, apiKey, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  value: target.value,
+                  // Sem isto, cobranças já geradas e ainda em aberto seguiriam
+                  // com o valor antigo.
+                  updatePendingPayments: true,
+                }),
+              })
+              row.changed = true
+            }
+          } catch (e) {
+            row.skipped = `erro: ${(e as Error).message}`
+          }
+          rows.push(row)
+        }
+
+        const pendentes = rows.filter((r) => !r.skipped && !r.changed).length
+        const alteradas = rows.filter((r) => r.changed).length
+        return json({
+          applied: apply === true,
+          total: rows.length,
+          pendentes, // divergem do preço de tabela (quando apply = false)
+          alteradas,
+          rows,
+        })
       }
 
       // Zera os créditos de IA do mês atual (devolve o saldo cheio).

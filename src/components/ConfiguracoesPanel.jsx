@@ -147,6 +147,7 @@ function ReferralCard() {
 
 export default function ConfiguracoesPanel({
   user, avatar, onAvatar, trialing = false, provider = 'stripe',
+  isFree = false, onUpgrade,
   isDuo = false, profiles = [], activeProfile, canAddPartner = false,
   onAddPartner, onRenameProfile, onRemovePartner, onVerifyPin, onSetPin,
   emailVencimentos = true, onToggleEmailVencimentos,
@@ -603,7 +604,23 @@ export default function ConfiguracoesPanel({
       {/* Indique e ganhe */}
       <ReferralCard />
 
-      {/* Assinatura */}
+      {/* Assinatura. No grátis não há nada para gerenciar nem cancelar — mostrar
+          "Cancelar assinatura" para quem nunca pagou seria só confusão. */}
+      {isFree ? (
+        <div className="card">
+          <div className="card-head">
+            <span className="card-title">Seu plano</span>
+          </div>
+          <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0, marginBottom: 14 }}>
+            Você está no plano <b>Grátis</b>: planejamento, despesas fixas, cartão e parcelamentos,
+            sem prazo para acabar. O Pro acrescenta o assistente com IA, o histórico mensal e os
+            painéis de assinaturas, doações e renda extra.
+          </p>
+          <button type="button" className="cfg-submit" onClick={() => onUpgrade?.()}>
+            Conhecer o Pro
+          </button>
+        </div>
+      ) : (
       <div className="card">
         <div className="card-head">
           <span className="card-title">Assinatura</span>
@@ -642,6 +659,7 @@ export default function ConfiguracoesPanel({
           </button>
         )}
       </div>
+      )}
 
       {/* Excluir conta (LGPD) */}
       <div className="card">

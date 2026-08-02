@@ -4,7 +4,10 @@ import LandingDemo, { PlanMock, AiChatMock } from './LandingDemo.jsx';
 import PaywallModal from './PaywallModal.jsx';
 import AuthModal from './AuthModal.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { PLANS, planKey, planPerks, normalizePlanKey } from '../plans.js';
+import {
+  PLANS, planKey, planPerks, normalizePlanKey,
+  FREE_PLAN, FREE_PERKS, FREE_MISSING,
+} from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
 // Card de preço de um plano (Solo/Duo × Mensal/Anual).
@@ -34,6 +37,32 @@ export function PriceCard({ planId, onStart }) {
         Assinar agora
       </button>
       <p className="lp-price-note">{plan.note}</p>
+    </div>
+  );
+}
+
+// Card do plano grátis (só existe no Solo). Mesma estrutura do PriceCard para
+// ficar lado a lado com os pagos; só o botão é vazado, para "Assinar agora" não
+// disputar atenção com três CTAs sólidos iguais.
+export function FreePlanCard({ onStart }) {
+  return (
+    <div className="lp-price-card lp-price-card-free">
+      <div className="lp-price-label">{FREE_PLAN.label}</div>
+      <div className="lp-price-value">
+        <span className="lp-price-currency">R$</span>
+        <span className="lp-price-amount">{FREE_PLAN.amount}</span>
+      </div>
+      <div className="lp-price-period">{FREE_PLAN.period}</div>
+      <ul className="lp-price-perks">
+        {FREE_PERKS.map((perk) => <li key={perk}>{perk}</li>)}
+      </ul>
+      <ul className="lp-free-missing">
+        {FREE_MISSING.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+      <button className="lp-cta-price lp-cta-free" onClick={onStart}>
+        Começar grátis
+      </button>
+      <p className="lp-price-note">{FREE_PLAN.note}</p>
     </div>
   );
 }
@@ -79,6 +108,15 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
     setSelectedPlan(planId);
     trackMetaEvent('Lead');
     if (authed) setPaywallOpen(true);
+    else openAuth('signup');
+  };
+
+  // Começar no grátis: não guarda plano nenhum — se guardasse, o paywall
+  // reabriria depois com um plano pago pré-selecionado.
+  const startFree = () => {
+    localStorage.removeItem('dinprev_plan');
+    trackMetaEvent('Lead');
+    if (authed) window.location.href = '/';
     else openAuth('signup');
   };
 
@@ -149,7 +187,7 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
           </div>
 
           <p className="lp-hero-footnote">
-            <strong className="lp-trial-pill">A partir de R$37,90/mês</strong>
+            <strong className="lp-trial-pill">A partir de R$17,90/mês</strong>
             cartão de crédito ou PIX · cancele quando quiser
           </p>
         </div>
@@ -439,7 +477,18 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
           </button>
         </div>
 
-        <div className="lp-price-cards reveal reveal-delay-3">
+        {/* O grátis é exclusivo do Solo — na aba Duo a grade volta a ter dois
+            cards. O "são três" vai num data-attribute, e não no className, de
+            propósito: o useReveal adiciona a classe `visible` direto no DOM e
+            depois faz unobserve. Se o className fosse dinâmico, alternar
+            Solo/Duo faria o React reescrever o atributo, apagando o `visible` —
+            e a grade sumiria de vez (fica em opacity: 0, sem observer para
+            trazê-la de volta). */}
+        <div
+          className="lp-price-cards reveal reveal-delay-3"
+          data-cards={tier === 'solo' ? '3' : '2'}
+        >
+          {tier === 'solo' && <FreePlanCard onStart={startFree} />}
           <PriceCard planId={planKey(tier, 'monthly')} onStart={start} />
           <PriceCard planId={planKey(tier, 'annual')} onStart={start} />
         </div>
@@ -453,12 +502,12 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
         </h2>
         <p className="reveal reveal-delay-1">
           Em menos de cinco minutos você já tem o panorama completo.
-          Comece agora — a partir de R$37,90/mês.
+          Comece agora — a partir de R$17,90/mês.
         </p>
         <button className="lp-cta-final reveal reveal-delay-2" onClick={() => scrollTo('preco')}>
           Começar agora
         </button>
-        <p className="lp-final-note reveal reveal-delay-3">A partir de R$37,90/mês · cartão ou PIX · cancele quando quiser</p>
+        <p className="lp-final-note reveal reveal-delay-3">A partir de R$17,90/mês · cartão ou PIX · cancele quando quiser</p>
       </section>
 
       {/* ── footer ── */}

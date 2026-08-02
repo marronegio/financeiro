@@ -21,7 +21,7 @@ function Spinner({ label = 'Carregando…' }) {
 
 export default function App() {
   const { user, loading, recovery } = useAuth();
-  const { status: subStatus, plan, trialing, provider, aiEnabled } = useSubscription(user);
+  const { status: subStatus, plan, tier, trialing, provider, aiEnabled } = useSubscription(user);
 
   // Lê resultado do redirect do gateway (?payment=success|cancel)
   const params = new URLSearchParams(window.location.search);
@@ -35,7 +35,7 @@ export default function App() {
   // ficam sempre claras. Enquanto auth/assinatura carregam, não decide (evita
   // flash contra o palpite do script inline do index.html).
   const themeReady = !loading && (!user || subStatus !== 'loading');
-  const isDashboard = themeReady && !recovery && !!user && subStatus === 'active';
+  const isDashboard = themeReady && !recovery && !!user;
   useEffect(() => {
     if (!themeReady) return;
     applyTheme(isDashboard ? storedTheme() : 'light');
@@ -56,13 +56,17 @@ export default function App() {
   // Logado — aguarda verificação de assinatura
   if (subStatus === 'loading') return <Spinner label="Verificando assinatura…" />;
 
-  // Logado — sem assinatura ativa. No site, landing com o popup de pagamento
-  // por cima; no app nativo, tela de escolha de plano + pagamento.
-  if (subStatus !== 'active') {
-    if (isNativeApp) return <MobileGate stage="plans" paymentResult={paymentResult} />;
-    return <LandingPage authed paywall paymentResult={paymentResult} />;
-  }
-
-  // Logado + assinatura ativa
-  return <Dashboard plan={plan} trialing={trialing} provider={provider} aiEnabled={aiEnabled} />;
+  // Logado — entra sempre. Sem assinatura ativa, o tier é 'free' e o Dashboard
+  // aplica os limites (src/limits.js). O paywall deixou de ser um portão na
+  // entrada e virou o caminho de upgrade, aberto de dentro do app.
+  return (
+    <Dashboard
+      tier={tier}
+      plan={plan}
+      trialing={trialing}
+      provider={provider}
+      aiEnabled={aiEnabled}
+      paymentResult={paymentResult}
+    />
+  );
 }

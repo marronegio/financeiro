@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useState } from 'react';
 import { BRL, onlyDigits, toNumber } from '../money.js';
 import { fmtPeriodo, computeInsights } from '../history.js';
 import MoneyField from './MoneyField.jsx';
+import ProLocked from './ProLocked.jsx';
 
 // Carrega o gráfico (e todo o MUI Charts) só quando a aba Histórico é aberta.
 const HistoryChart = lazy(() => import('./HistoryChart.jsx'));
@@ -31,7 +32,11 @@ function DayField({ label, value, onChange }) {
   );
 }
 
-export default function HistoricoPanel({ state, setField, onClose }) {
+// No plano grátis o mês FECHA normalmente e os resumos continuam sendo
+// guardados — só a visualização (insights, gráfico e lista) fica no Pro. Isso é
+// de propósito: quanto mais meses a pessoa acumula sem poder ver, maior o motivo
+// de assinar, e nada se perde no caminho.
+export default function HistoricoPanel({ state, setField, onClose, isFree = false, onUpgrade }) {
   const [confirmando, setConfirmando] = useState(false);
   const [guardadoInput, setGuardadoInput] = useState('');
 
@@ -95,7 +100,20 @@ export default function HistoricoPanel({ state, setField, onClose }) {
         )}
       </div>
 
-      {insights.length > 0 && (
+      {isFree && (
+        <ProLocked
+          feature="historico"
+          title="Seu histórico está guardado"
+          hint={
+            historico.length === 0
+              ? 'Assim que você fechar o primeiro mês, ele fica salvo aqui esperando você.'
+              : `Você já tem ${historico.length} ${historico.length === 1 ? 'mês fechado' : 'meses fechados'} guardados. Assine para ver a evolução, os insights e o gráfico.`
+          }
+          onUpgrade={onUpgrade}
+        />
+      )}
+
+      {!isFree && insights.length > 0 && (
         <div className="card">
           <div className="card-head">
             <span className="card-title">Insights</span>
@@ -111,19 +129,22 @@ export default function HistoricoPanel({ state, setField, onClose }) {
         </div>
       )}
 
-      <Suspense
-        fallback={
-          <div className="card">
-            <div className="card-head">
-              <span className="card-title">Evolução</span>
+      {!isFree && (
+        <Suspense
+          fallback={
+            <div className="card">
+              <div className="card-head">
+                <span className="card-title">Evolução</span>
+              </div>
+              <p className="hint hist-empty">Carregando gráfico…</p>
             </div>
-            <p className="hint hist-empty">Carregando gráfico…</p>
-          </div>
-        }
-      >
-        <HistoryChart historico={state.historico} />
-      </Suspense>
+          }
+        >
+          <HistoryChart historico={state.historico} />
+        </Suspense>
+      )}
 
+      {!isFree && (
       <div className="card">
         <div className="card-head">
           <span className="card-title">Resumo mensal</span>
@@ -158,6 +179,7 @@ export default function HistoricoPanel({ state, setField, onClose }) {
           ))
         )}
       </div>
+      )}
     </div>
   );
 }

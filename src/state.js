@@ -73,14 +73,16 @@ export const migrateState = (raw) => {
 };
 
 // Os ícones de cada aba ficam na Sidebar (react-icons), mapeados por id.
-// `duoOnly` esconde a aba fora do plano Duo (a Sidebar filtra).
+// `duoOnly` esconde a aba fora do plano Duo (a Sidebar filtra). `proOnly` NÃO
+// esconde: no grátis a aba continua no menu, com cadeado, e abre o convite de
+// upgrade em vez do painel (a lista canônica está em src/limits.js).
 export const TABS = [
   { id: 'plan', label: 'Planejamento' },
   { id: 'casal', label: 'Visão do casal', duoOnly: true },
-  { id: 'rendaextra', label: 'Renda extra' },
+  { id: 'rendaextra', label: 'Renda extra', proOnly: true },
   { id: 'despesas', label: 'Despesas fixas' },
-  { id: 'assinaturas', label: 'Assinaturas' },
-  { id: 'doacoes', label: 'Doações' },
+  { id: 'assinaturas', label: 'Assinaturas', proOnly: true },
+  { id: 'doacoes', label: 'Doações', proOnly: true },
   { id: 'cartao', label: 'Cartão de crédito' },
   { id: 'parcelamentos', label: 'Parcelamentos' },
   { id: 'economias', label: 'Economias' },

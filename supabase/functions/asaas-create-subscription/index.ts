@@ -12,6 +12,7 @@
 // verify_jwt = true (config.toml): exige usuário logado.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { PLAN_CONFIG } from '../_shared/asaasPlans.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,14 +37,8 @@ function isValidCPF(value: string): boolean {
   return digit(9) === parseInt(cpf[9], 10) && digit(10) === parseInt(cpf[10], 10)
 }
 
-// Fonte da verdade dos preços fica NO SERVIDOR — o frontend só manda a chave do
-// plano. Espelha o plans.js. Valor em reais; ciclo no formato do ASAAS.
-const PLAN_CONFIG: Record<string, { tier: 'solo' | 'duo'; value: number; cycle: 'MONTHLY' | 'YEARLY'; label: string }> = {
-  'solo-monthly': { tier: 'solo', value: 37.9, cycle: 'MONTHLY', label: 'DinPrev Solo (Mensal)' },
-  'solo-annual': { tier: 'solo', value: 238.8, cycle: 'YEARLY', label: 'DinPrev Solo (Anual)' },
-  'duo-monthly': { tier: 'duo', value: 67.9, cycle: 'MONTHLY', label: 'DinPrev Duo (Mensal)' },
-  'duo-annual': { tier: 'duo', value: 478.8, cycle: 'YEARLY', label: 'DinPrev Duo (Anual)' },
-}
+// Preços vivem em _shared/asaasPlans.ts — os mesmos que a função admin usa para
+// realinhar as assinaturas já existentes quando a tabela muda.
 
 // Data de hoje em YYYY-MM-DD (horário de Brasília) para o primeiro vencimento.
 function todayInSaoPaulo(): string {

@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase.js';
 
-// Retorna { status: 'loading' | 'active' | 'inactive', plan: 'solo' | 'duo',
+// Retorna { status: 'loading' | 'active' | 'inactive',
+// plan: 'free' | 'solo' | 'duo', tier: 'free' | 'solo' | 'duo',
 // trialing, provider: 'stripe' | 'asaas', aiEnabled: boolean }.
+//
+// `plan` é o que está gravado no perfil e `status` é o acesso (se a assinatura
+// está em dia). `tier` combina os dois e é o que o app deve consultar: sem
+// assinatura ativa, o tier é 'free' — ninguém mais fica trancado do lado de
+// fora, só com menos recursos (ver src/limits.js).
 export function useSubscription(user) {
   // Guardamos o resultado junto do uid a que ele pertence, pra nunca devolver
   // um status defasado de outro usuário (ou do estado deslogado).
@@ -37,10 +43,16 @@ export function useSubscription(user) {
         : data?.admin_override === 'inactive'
         ? false
         : paidOk;
+      // Repassa o plano como está no banco (o admin pode marcar 'free'); só
+      // valores desconhecidos caem no padrão 'solo'.
+      const plan = ['free', 'solo', 'duo'].includes(data?.plan) ? data.plan : 'solo';
       setResolved({
         uid: user.id,
         status: ok ? 'active' : 'inactive',
-        plan: data?.plan === 'duo' ? 'duo' : 'solo',
+        plan,
+        // Sem acesso em dia, o tier é grátis — e o admin pode marcar 'free'
+        // mesmo com assinatura ativa.
+        tier: ok && plan !== 'free' ? plan : 'free',
         trialing,
         provider: data?.payment_provider === 'asaas' ? 'asaas' : 'stripe',
         aiEnabled: data?.ai_enabled !== false, // default true (coluna pode faltar em bases antigas)
@@ -51,9 +63,16 @@ export function useSubscription(user) {
     return () => { ignore = true; };
   }, [user]);
 
-  if (!user) return { status: 'inactive', plan: 'solo', trialing: false, provider: 'stripe', aiEnabled: true };
+  if (!user) return { status: 'inactive', plan: 'solo', tier: 'free', trialing: false, provider: 'stripe', aiEnabled: true };
   // Enquanto não houver resultado verificado para ESTE usuário, seguimos carregando
-  // (evita o flash da tela de assinatura logo após o login).
-  if (!resolved || resolved.uid !== user.id) return { status: 'loading', plan: 'solo', trialing: false, provider: 'stripe', aiEnabled: true };
-  return { status: resolved.status, plan: resolved.plan, trialing: resolved.trialing, provider: resolved.provider, aiEnabled: resolved.aiEnabled };
+  // (evita o flash de um dashboard limitado para quem é assinante).
+  if (!resolved || resolved.uid !== user.id) return { status: 'loading', plan: 'solo', tier: 'free', trialing: false, provider: 'stripe', aiEnabled: true };
+  return {
+    status: resolved.status,
+    plan: resolved.plan,
+    tier: resolved.tier,
+    trialing: resolved.trialing,
+    provider: resolved.provider,
+    aiEnabled: resolved.aiEnabled,
+  };
 }

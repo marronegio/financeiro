@@ -25,7 +25,8 @@ autoridade real é esta função.
 | `list` | lista usuários (perfil + e-mail + créditos de IA do mês) |
 | `set_subscription` | `value: 'active' \| 'inactive' \| null` — override manual que ignora o gateway |
 | `set_ai` | `enabled: bool` — liga/desliga o assistente de IA |
-| `set_plan` | `plan: 'solo' \| 'duo'` |
+| `set_plan` | `plan: 'free' \| 'solo' \| 'duo'` — o tier liberado; independe do acesso, que é o `set_subscription` |
+| `asaas_price_sync` | `apply?: bool` — realinha as assinaturas ASAAS já existentes com a tabela de `_shared/asaasPlans.ts`. Sem `apply: true` só confere e devolve o que mudaria |
 | `reset_ai` | zera os créditos de IA do mês atual |
 | `delete_user` | exclusão definitiva (dados + Auth) |
 

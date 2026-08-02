@@ -6,7 +6,7 @@ create table if not exists public.profiles (
   stripe_customer_id    text unique,
   subscription_id       text,
   subscription_status   text not null default 'inactive',
-  plan                  text not null default 'solo', -- 'solo' | 'duo' (gravado pelo webhook a partir do price)
+  plan                  text not null default 'solo', -- 'free' | 'solo' | 'duo' (webhook grava a partir do price; 'free' só pelo painel admin)
   cpf                   text, -- só dígitos; gravado no 1º checkout, base do controle de teste grátis
   updated_at            timestamptz not null default now()
 );

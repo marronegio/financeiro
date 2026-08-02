@@ -53,12 +53,35 @@ export async function consumeAiCredit(
 
   const { data: profile, error: profileError } = await admin
     .from('profiles')
-    .select('plan_cycle, ai_enabled')
+    .select('plan, plan_cycle, subscription_status, access_until, admin_override, ai_enabled')
     .eq('id', userId)
     .maybeSingle()
   if (profileError) {
     console.error('Créditos de IA: falha ao ler o plano (seguindo):', profileError.message)
     return null
+  }
+
+  // Tier grátis não tem assistente. Esta checagem é a que vale: a interface
+  // esconde o Mr. Din no grátis, mas quem chamar a função direto tem que bater
+  // aqui — cada chamada custa dinheiro na OpenAI.
+  // Espelha src/hooks/useSubscription.js; ao mexer em um, confira o outro.
+  const trialing = profile?.subscription_status === 'trialing'
+  const notExpired = !profile?.access_until ||
+    new Date(profile.access_until).getTime() > Date.now()
+  const paidOk = (profile?.subscription_status === 'active' || trialing) && notExpired
+  const hasAccess = profile?.admin_override === 'active'
+    ? true
+    : profile?.admin_override === 'inactive'
+    ? false
+    : paidOk
+  if (!hasAccess || profile?.plan === 'free') {
+    return new Response(
+      JSON.stringify({
+        error: 'upgrade_required',
+        message: 'O assistente com IA faz parte do plano Pro.',
+      }),
+      { status: 402, headers: jsonHeaders },
+    )
   }
 
   // Liga/desliga da IA pelo painel admin. false = bloqueia mesmo com créditos.

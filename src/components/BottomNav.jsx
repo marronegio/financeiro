@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FiGrid, FiLogOut } from 'react-icons/fi';
+import { FiGrid, FiLogOut, FiLock } from 'react-icons/fi';
 import { RiSparkling2Line } from 'react-icons/ri';
 import { TABS } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
@@ -14,7 +14,7 @@ const PINNED = ['plan', 'cartao', 'historico'];
 
 // Menu inferior do app nativo (substitui a Sidebar no Android/iOS).
 export default function BottomNav({
-  tab, onTab, user, isDuo = false,
+  tab, onTab, user, isDuo = false, isFree = false,
   aiEnabled = true, aiOpen = false, onAiToggle, tourActive = false,
   moreOpen = false, setMoreOpen = () => {},
   onSignOut, activeProfile, onOpenProfiles,
@@ -90,6 +90,9 @@ export default function BottomNav({
               >
                 <span className="ico">{Icon && <Icon aria-hidden="true" />}</span>
                 <span className="bnav-sheet-lbl">{t.label}</span>
+                {isFree && t.proOnly && (
+                  <span className="tab-lock"><FiLock aria-label="Disponível no plano Pro" /></span>
+                )}
               </button>
             );
           })}

@@ -2,12 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PLANS, planKey, normalizePlanKey } from '../plans.js';
+import { UPGRADE_REASONS } from '../limits.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
 // Popup de pagamento exibido SOBRE a landing (fundo desfocado/escurecido).
 // O plano já vem escolhido da landing (planId) — aqui o usuário só escolhe o
 // método (cartão ou PIX) e paga. Sem período de teste.
-export default function PaywallModal({ open, planId, paymentResult, onClose, onChangePlan, dismissible = true }) {
+export default function PaywallModal({
+  open, planId, paymentResult, onClose, onChangePlan, dismissible = true,
+  // Chave de UPGRADE_REASONS: qual recurso o usuário tentou usar. Sem isso o
+  // popup de pagamento aparece do nada e parece cobrança, não oferta.
+  reason = null,
+}) {
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -177,9 +183,12 @@ export default function PaywallModal({ open, planId, paymentResult, onClose, onC
   } else {
     body = (
       <>
-        <h2 className="auth-title">Ative sua assinatura</h2>
+        <h2 className="auth-title">{reason ? 'Libere com o Pro' : 'Ative sua assinatura'}</h2>
+        {reason && UPGRADE_REASONS[reason] && (
+          <p className="auth-msg" style={{ marginBottom: 12 }}>{UPGRADE_REASONS[reason]}</p>
+        )}
         <p className="auth-lead">
-          Você escolheu o plano{' '}
+          Plano{' '}
           <strong>{plan.tier === 'duo' ? 'Duo' : 'Solo'} · {plan.cycle === 'annual' ? 'Anual' : 'Mensal'}</strong>{' '}
           — {plan.short}. Escolha como quer pagar.
         </p>

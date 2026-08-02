@@ -13,6 +13,7 @@ import {
   FiShield,
   FiUsers,
   FiHeart,
+  FiLock,
 } from 'react-icons/fi';
 import { TABS } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
@@ -40,7 +41,7 @@ export const TAB_ICONS = {
 
 export default function Sidebar({
   tab, onTab, user, onSignOut, avatar,
-  isDuo = false, activeProfile, onOpenProfiles,
+  isDuo = false, isFree = false, activeProfile, onOpenProfiles,
   // Drawer controlado pelo Dashboard (o botão voltar do Android precisa saber
   // se o menu está aberto para fechá-lo em vez de navegar).
   open = false, setOpen = () => {},
@@ -149,15 +150,23 @@ export default function Sidebar({
         <nav className="nav">
           {navTabs.map((t) => {
             const Icon = TAB_ICONS[t.id];
+            // No grátis a aba do Pro continua clicável — leva ao convite de
+            // upgrade, que explica o que tem lá dentro.
+            const locked = isFree && t.proOnly;
             return (
               <button
                 key={t.id}
-                className={'tab' + (tab === t.id ? ' active' : '')}
+                className={'tab' + (tab === t.id ? ' active' : '') + (locked ? ' tab-locked' : '')}
                 onClick={() => pick(t.id)}
                 data-tour={`tab-${t.id}`}
               >
                 <span className="ico">{Icon && <Icon size={18} aria-hidden="true" />}</span>{' '}
                 {t.label}
+                {locked && (
+                  <span className="tab-lock" title="Disponível no plano Pro">
+                    <FiLock size={13} aria-label="Disponível no plano Pro" />
+                  </span>
+                )}
               </button>
             );
           })}

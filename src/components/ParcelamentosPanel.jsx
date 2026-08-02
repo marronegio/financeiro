@@ -2,6 +2,7 @@ import React from 'react';
 import { BRL, maskMoney, onlyDigits, computeParcela } from '../money.js';
 import ParcelasProjecaoChart from './ParcelasProjecaoChart.jsx';
 import LimiteCartao from './LimiteCartao.jsx';
+import ProLocked from './ProLocked.jsx';
 
 function ParcelaCard({ item, onChange, onRemove }) {
   const p = computeParcela(item);
@@ -104,7 +105,9 @@ function ParcelaCard({ item, onChange, onRemove }) {
   );
 }
 
-export default function ParcelamentosPanel({ state, c, updateItem, addItem, removeItem }) {
+export default function ParcelamentosPanel({
+  state, c, updateItem, addItem, removeItem, isFree = false, onUpgrade,
+}) {
   return (
     <div className="panel">
       <div className="grid">
@@ -190,7 +193,19 @@ export default function ParcelamentosPanel({ state, c, updateItem, addItem, remo
 
           <LimiteCartao c={c} card />
 
-          <ParcelasProjecaoChart parcelamentos={state.parcelamentos} />
+          {/* Lançar e acompanhar parcelamentos é do grátis; ver como eles pesam
+              nos próximos meses é do Pro. */}
+          {isFree ? (
+            <ProLocked
+              feature="projecao"
+              title="Projeção dos próximos meses"
+              hint="Veja em quais meses as parcelas apertam e quando cada uma sai da fatura."
+              onUpgrade={onUpgrade}
+              compact
+            />
+          ) : (
+            <ParcelasProjecaoChart parcelamentos={state.parcelamentos} />
+          )}
         </div>
       </div>
     </div>

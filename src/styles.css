@@ -5028,3 +5028,193 @@ input.auth-input:focus,
   max-width: 46ch;
   margin: 0 auto 16px;
 }
+/* ── plano grátis: bloqueios do Pro ───────────────────────────────
+   Tudo aqui vale só para quem está no tier grátis (ver src/limits.js). A regra
+   visual é a mesma em todos os pontos: nada some, tudo ganha cadeado e um
+   caminho para o upgrade. */
+
+/* Cadeado no item de menu (sidebar e sheet do app nativo). */
+.tab-lock {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--faint);
+}
+
+/* Na sidebar o fundo é navy, então o cadeado usa a paleta do shell escuro —
+   var(--faint) sumiria contra ele. */
+.tab .tab-lock {
+  color: var(--side-muted);
+}
+
+/* No sheet do app nativo o item é um ladrilho em coluna (ícone sobre o rótulo),
+   então o cadeado vai no canto em vez de usar margin-left: auto. */
+.bnav-sheet-item {
+  position: relative;
+}
+
+.bnav-sheet-item .tab-lock {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+/* Card que substitui um painel (ou um bloco) exclusivo do Pro. */
+.pro-locked {
+  text-align: center;
+  padding: 34px 22px;
+}
+
+.pro-locked-compact {
+  padding: 26px 20px;
+}
+
+.pro-locked-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.pro-locked-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.pro-locked-text {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 46ch;
+  margin: 0 auto;
+}
+
+.pro-locked-hint {
+  font-size: 13px;
+  color: var(--faint);
+  max-width: 46ch;
+  margin: 8px auto 0;
+  line-height: 1.5;
+}
+
+.pro-locked-cta {
+  margin-top: 18px;
+  padding: 11px 26px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.pro-locked-cta:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* FAB do Mr. Din no grátis: continua visível, apagado e com cadeado. */
+.ai-fab-locked {
+  background: var(--muted);
+  position: fixed;
+}
+
+.ai-fab-lock {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+}
+
+/* Tela de upgrade por cima do app. Usa as classes da landing (.lp/.mg), que
+   trazem a própria paleta clara — por isso cobre a tela inteira em vez de
+   conviver com o tema escuro do dashboard. */
+.upgrade-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+/* ── admin: sincronização de preços ─────────────────────────────── */
+.adm-sync {
+  margin-bottom: 14px;
+}
+
+.adm-sync-result {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.adm-sync-sum {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.adm-sync-list {
+  list-style: none;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.adm-sync-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.adm-sync-mail {
+  word-break: break-all;
+}
+
+.adm-sync-vals {
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap;
+}
+
+.adm-sync-err {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--negative);
+}
+
+.adm-sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}

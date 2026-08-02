@@ -7,6 +7,12 @@ import ConfirmDialog from './ConfirmDialog.jsx';
 // Sidebar/Dashboard). Toda a autoridade fica na Edge Function `admin`: aqui só
 // chamamos a função e refletimos o retorno.
 
+// Valor em reais vindo do ASAAS (número) ou null quando não foi possível ler.
+const BRL_ = (v) =>
+  typeof v === 'number'
+    ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : '—';
+
 const fmtDate = (iso) => {
   if (!iso) return '—';
   try {
@@ -142,6 +148,27 @@ export default function AdminPanel() {
     }
   };
 
+  // ── Sincronização de preços das assinaturas ASAAS ────────────────
+  // Baixar um preço só vale para quem assina depois; quem já assina segue com o
+  // valor gravado na assinatura no ASAAS. Aqui conferimos e realinhamos.
+  const [sync, setSync] = useState(null); // resultado da última conferência/aplicação
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [confirmSync, setConfirmSync] = useState(false);
+
+  const runSync = async (apply) => {
+    setSyncBusy(true);
+    setError('');
+    try {
+      const data = await callAdmin({ action: 'asaas_price_sync', apply });
+      setSync(data);
+      setConfirmSync(false);
+    } catch (err) {
+      setError(err.message || 'Falha ao sincronizar preços.');
+    } finally {
+      setSyncBusy(false);
+    }
+  };
+
   const q = query.trim().toLowerCase();
   // Contagem por balde (sobre a busca por e-mail, para os números baterem com o
   // que está sendo listado). 'all' = total.
@@ -198,6 +225,67 @@ export default function AdminPanel() {
       )}
 
       {error && <div className="adm-error">{error}</div>}
+
+      <div className="card adm-sync">
+        <div className="card-head">
+          <span className="card-title">Preços das assinaturas (ASAAS)</span>
+        </div>
+        <p className="hint" style={{ borderTop: 'none', marginTop: 0, paddingTop: 0 }}>
+          A tabela de preços vale para assinaturas novas. Quem já assina continua no valor
+          gravado no ASAAS até você realinhar aqui.
+        </p>
+
+        {sync && (
+          <div className="adm-sync-result">
+            <p className="adm-sync-sum">
+              {sync.applied
+                ? `${sync.alteradas} assinatura(s) atualizada(s) de ${sync.total} verificada(s).`
+                : `${sync.pendentes} de ${sync.total} assinatura(s) estão fora do preço de tabela.`}
+            </p>
+            {sync.rows.filter((r) => !r.skipped || r.changed).length > 0 && (
+              <ul className="adm-sync-list">
+                {sync.rows
+                  .filter((r) => !r.skipped || r.changed)
+                  .map((r) => (
+                    <li key={r.subscriptionId}>
+                      <span className="adm-sync-mail">{r.email || r.userId}</span>
+                      <span className="adm-sync-vals">
+                        {r.planKey} · {BRL_(r.currentValue)} → <b>{BRL_(r.targetValue)}</b>
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            )}
+            {sync.rows.some((r) => String(r.skipped || '').startsWith('erro:')) && (
+              <p className="adm-sync-err">
+                {sync.rows.filter((r) => String(r.skipped || '').startsWith('erro:')).length}{' '}
+                assinatura(s) deram erro — veja os logs da função admin.
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="adm-sync-actions">
+          <button
+            type="button"
+            className="adm-mini-btn"
+            disabled={syncBusy}
+            onClick={() => runSync(false)}
+          >
+            {syncBusy ? 'Verificando…' : 'Conferir'}
+          </button>
+          {sync && !sync.applied && sync.pendentes > 0 && (
+            <button
+              type="button"
+              className="cfg-danger-btn"
+              disabled={syncBusy}
+              onClick={() => setConfirmSync(true)}
+            >
+              Aplicar a {sync.pendentes} assinatura(s)
+            </button>
+          )}
+        </div>
+      </div>
 
       {loading ? (
         <div className="adm-loading"><div className="spinner" /></div>
@@ -274,6 +362,7 @@ export default function AdminPanel() {
                       value={u.plan}
                       disabled={anyBusy}
                       options={[
+                        { value: 'free', label: 'Grátis' },
                         { value: 'solo', label: 'Solo' },
                         { value: 'duo', label: 'Duo' },
                       ]}
@@ -302,6 +391,19 @@ export default function AdminPanel() {
             );
           })}
         </div>
+      )}
+
+      {confirmSync && (
+        <ConfirmDialog
+          title="Aplicar os preços novos?"
+          message={`Isto altera o valor de ${sync?.pendentes} assinatura(s) ativa(s) no ASAAS, incluindo as cobranças já geradas e ainda em aberto. Afeta o que essas pessoas pagam na próxima renovação.`}
+          confirmLabel="Aplicar"
+          cancelLabel="Cancelar"
+          danger
+          busy={syncBusy}
+          onConfirm={() => runSync(true)}
+          onCancel={() => setConfirmSync(false)}
+        />
       )}
 
       {confirmDel && (

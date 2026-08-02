@@ -1013,6 +1013,62 @@
   margin-bottom: 24px;
 }
 
+/* ── plano grátis ───────────────────────────────────────────
+   Card irmão dos pagos: usa .lp-price-card inteiro, inclusive a borda em
+   gradiente. A única diferença é o botão vazado — com três CTAs sólidos
+   idênticos, o "Assinar agora" perderia o destaque para o grátis, que ainda por
+   cima vem primeiro na linha. Os seletores precisam de dois níveis para vencer
+   .lp-cta-price, que vem depois neste arquivo. */
+.lp-cta-price.lp-cta-free {
+  background: transparent;
+  color: var(--accent);
+  box-shadow: none;
+  border: 1.5px solid var(--accent);
+}
+
+.lp-cta-price.lp-cta-free:hover {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(99, 91, 255, 0.4);
+}
+
+/* O que o grátis não inclui, logo acima do botão. Mesmo ritmo da lista de
+   benefícios (para ler como um par), mas com ✕ e em tom apagado — os dois
+   blocos juntos deixam a diferença entre os planos escaneável. */
+.lp-free-missing {
+  list-style: none;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  margin-bottom: 30px;
+  border-top: 1px solid var(--line);
+}
+
+.lp-free-missing li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.lp-free-missing li::before {
+  content: '✕';
+  flex: 0 0 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(105, 115, 134, 0.12);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .lp-price-cards {
   display: flex;
   flex-wrap: wrap;
@@ -1036,6 +1092,51 @@
 
 .lp-price-cards .lp-price-perks {
   flex: 1;
+}
+
+/* Aba Solo: são três cards na linha (Grátis + Mensal + Anual). A grade alarga,
+   cada card encolhe e o preço diminui — 82px em card de ~340px estouraria a
+   largura em "142,80". */
+.lp-price-cards[data-cards="3"] {
+  max-width: 1180px;
+}
+
+.lp-price-cards[data-cards="3"] .lp-price-card {
+  flex: 1 1 320px;
+  max-width: 380px;
+  padding: 40px 32px;
+}
+
+.lp-price-cards[data-cards="3"] .lp-price-amount {
+  font-size: 64px;
+}
+
+.lp-price-cards[data-cards="3"] .lp-price-cents {
+  font-size: 32px;
+  margin-top: 6px;
+}
+
+.lp-price-card-free .lp-price-perks {
+  margin-bottom: 20px;
+}
+
+/* A nota fica embaixo do botão, então uma nota de 1 linha (Mensal) contra as de
+   2 (Grátis e Anual) desalinharia os três botões. Reserva a altura de 2 linhas. */
+.lp-price-cards[data-cards="3"] .lp-price-note {
+  min-height: 2.9em;
+}
+
+/* Os três cards só cabem lado a lado a partir de 1088px: 3 × 320 de base + 2 ×
+   24 de gap = 1008, mais os 2 × 40px de --lp-px da seção. Abaixo disso o flex
+   quebraria em 2 + 1, deixando o "Mais popular" órfão na segunda linha — melhor
+   empilhar de uma vez. Quem força o empilhamento é a largura do contêiner:
+   mexer só no max-width do card não adianta, porque dois cards de 430 + gap
+   ainda cabem na faixa de 1000px. */
+@media (max-width: 1100px) {
+  .lp-price-cards[data-cards="3"],
+  .lp-price-cards[data-cards="3"] .lp-price-card {
+    max-width: 430px;
+  }
 }
 
 .lp-price-card-duo::before {
@@ -2120,7 +2221,8 @@
     padding: 24px;
   }
 
-  .lp-price-card {
+  .lp-price-card,
+  .lp-price-cards[data-cards="3"] .lp-price-card {
     padding: 34px 28px;
   }
 }

@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { RiSparkling2Line } from 'react-icons/ri';
+import { FiLock } from 'react-icons/fi';
 import { createDefaultState, CARD_CATEGORIES } from './state.js';
 import { supabase } from './lib/supabase.js';
 import { useAuth } from './auth/AuthContext.jsx';
@@ -26,6 +28,9 @@ import ProfileGate from './components/ProfileGate.jsx';
 import DespesaAlerts from './components/DespesaAlerts.jsx';
 import AiAssistant from './components/AiAssistant.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
+import ProLocked from './components/ProLocked.jsx';
+import UpgradeScreen from './components/UpgradeScreen.jsx';
+import { isProTab, FREE_METAS } from './limits.js';
 import { isAdmin } from './lib/admin.js';
 import { applyAiAction, describeAction } from './lib/aiActions.js';
 import {
@@ -160,8 +165,21 @@ const HEADERS = {
   },
 };
 
-export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabled = true }) {
+export default function Dashboard({
+  tier = 'free', plan, trialing, provider = 'stripe', aiEnabled = true,
+  paymentResult = null,
+}) {
   const { user, signOut } = useAuth();
+  // No grátis o app abre inteiro, só com menos recursos (ver src/limits.js).
+  const isFree = tier === 'free';
+
+  // Paywall de upgrade. Guarda qual recurso disparou, para o popup dizer por que
+  // apareceu. `paymentResult === 'success'` reabre o popup na volta do checkout,
+  // onde ele fica esperando o webhook ativar a assinatura.
+  const [upgrade, setUpgrade] = useState(
+    paymentResult === 'success' ? { feature: null } : null
+  );
+  const openUpgrade = (feature) => setUpgrade({ feature });
   const { theme, toggle: toggleTheme } = useTheme();
   const {
     state, setState, status,
@@ -268,8 +286,14 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
 
   const updateItem = (kind, i, item) =>
     setState((s) => ({ ...s, [kind]: (s[kind] || []).map((it, idx) => (idx === i ? item : it)) }));
-  const addItem = (kind) =>
+  const addItem = (kind) => {
+    // Teto de metas do grátis. As outras listas são ilimitadas nos dois planos.
+    if (isFree && kind === 'metas' && (state?.metas?.length || 0) >= FREE_METAS) {
+      openUpgrade('metas');
+      return;
+    }
     setState((s) => ({ ...s, [kind]: [...(s[kind] || []), newItem(kind)] }));
+  };
   const removeItem = (kind, i) =>
     setState((s) => ({ ...s, [kind]: (s[kind] || []).filter((_, idx) => idx !== i) }));
 
@@ -277,13 +301,19 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
   // Semeia com as padrão caso o perfil ainda não tenha a lista salva.
   const catsOf = (s) => (s.cardCategories?.length ? s.cardCategories : CARD_CATEGORIES);
 
-  const addCategory = (label, color) =>
+  const addCategory = (label, color) => {
+    // Categorias personalizadas são do Pro; no grátis valem as 7 padrão.
+    if (isFree) {
+      openUpgrade('categorias');
+      return;
+    }
     setState((s) => {
       const nome = label.trim();
       if (!nome) return s;
       const id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
       return { ...s, cardCategories: [...catsOf(s), { id, label: nome, color }] };
     });
+  };
 
   const updateCategory = (id, patch) =>
     setState((s) => ({
@@ -378,6 +408,8 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
   // Aba salva pode não existir mais no plano atual (ex.: 'casal' após sair do Duo).
   const tab = state.tab === 'casal' && !isDuo ? 'plan' : state.tab;
   const head = HEADERS[tab] ?? HEADERS.plan;
+  // Verdadeiro quando a aba aberta é do Pro e o usuário está no grátis.
+  const lockedTab = isFree && isProTab(tab);
 
   return (
     <div className={'app' + (isNativeApp ? ' native-nav' : '')}>
@@ -387,9 +419,10 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
           onTab={setTab}
           user={user}
           isDuo={isDuo}
+          isFree={isFree}
           aiEnabled={aiEnabled}
           aiOpen={aiOpen}
-          onAiToggle={() => setAiOpen((v) => !v)}
+          onAiToggle={() => (isFree ? openUpgrade('ia') : setAiOpen((v) => !v))}
           tourActive={showOnboarding}
           moreOpen={moreOpen}
           setMoreOpen={setMoreOpen}
@@ -405,6 +438,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
           onSignOut={signOut}
           avatar={state.avatar}
           isDuo={isDuo}
+          isFree={isFree}
           activeProfile={profileList.find((p) => p.id === active)}
           onOpenProfiles={openProfiles}
           open={navOpen}
@@ -449,12 +483,46 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
               onReload={reload}
             />
           )}
+          {/* Abas do Pro: o bloqueio mora AQUI, no render, e não na navegação —
+              assim nem o tour nem uma aba salva de quando a pessoa era assinante
+              abrem o painel de verdade para quem está no grátis. */}
           {tab === 'rendaextra' && (
-            <RendaExtraPanel state={state} c={c} setField={setField} {...listProps} />
+            lockedTab ? (
+              <ProLocked
+                feature="rendaextra"
+                title="Renda extra"
+                hint="Freelas, vendas e bônus entram no cálculo do quanto sobra no mês."
+                onUpgrade={openUpgrade}
+              />
+            ) : (
+              <RendaExtraPanel state={state} c={c} setField={setField} {...listProps} />
+            )
           )}
           {tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
-          {tab === 'assinaturas' && <AssinaturasPanel state={state} c={c} {...listProps} />}
-          {tab === 'doacoes' && <DoacoesPanel state={state} c={c} {...listProps} />}
+          {tab === 'assinaturas' && (
+            lockedTab ? (
+              <ProLocked
+                feature="assinaturas"
+                title="Assinaturas"
+                hint="Streaming, academia, apps — tudo que se repete todo mês, com o dia da cobrança."
+                onUpgrade={openUpgrade}
+              />
+            ) : (
+              <AssinaturasPanel state={state} c={c} {...listProps} />
+            )
+          )}
+          {tab === 'doacoes' && (
+            lockedTab ? (
+              <ProLocked
+                feature="doacoes"
+                title="Doações"
+                hint="Dízimos, apadrinhamentos e doações avulsas, separados das despesas fixas."
+                onUpgrade={openUpgrade}
+              />
+            ) : (
+              <DoacoesPanel state={state} c={c} {...listProps} />
+            )
+          )}
           {tab === 'cartao' && (
             <CartaoPanel
               state={state}
@@ -466,11 +534,23 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
             />
           )}
           {tab === 'parcelamentos' && (
-            <ParcelamentosPanel state={state} c={c} {...listProps} />
+            <ParcelamentosPanel
+              state={state}
+              c={c}
+              {...listProps}
+              isFree={isFree}
+              onUpgrade={openUpgrade}
+            />
           )}
           {tab === 'economias' && <EconomiasPanel state={state} {...listProps} />}
           {tab === 'historico' && (
-            <HistoricoPanel state={state} setField={setField} onClose={fecharMes} />
+            <HistoricoPanel
+              state={state}
+              setField={setField}
+              onClose={fecharMes}
+              isFree={isFree}
+              onUpgrade={openUpgrade}
+            />
           )}
           {tab === 'contato' && <ContatoPanel user={user} />}
           {tab === 'config' && (
@@ -480,6 +560,8 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
               onAvatar={(dataUrl) => setField('avatar', dataUrl)}
               trialing={trialing}
               provider={provider}
+              isFree={isFree}
+              onUpgrade={() => openUpgrade(null)}
               isDuo={isDuo}
               profiles={profileList}
               activeProfile={active}
@@ -511,7 +593,7 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
       {!showOnboarding && (
         <DespesaAlerts despesas={state.despesas} onPaid={marcarDespesaPaga} />
       )}
-      {aiEnabled && (
+      {aiEnabled && !isFree && (
         <AiAssistant
           state={state}
           c={c}
@@ -520,6 +602,30 @@ export default function Dashboard({ plan, trialing, provider = 'stripe', aiEnabl
           hideFab={isNativeApp}
           open={aiOpen}
           onOpenChange={setAiOpen}
+        />
+      )}
+
+      {/* No grátis o Mr. Din não responde, mas o botão continua ali: é o
+          principal motivo de assinar, e escondê-lo jogaria fora a conversão. */}
+      {aiEnabled && isFree && !isNativeApp && (
+        <button
+          className="ai-fab ai-fab-locked"
+          data-tour="ai-fab"
+          onClick={() => openUpgrade('ia')}
+          disabled={showOnboarding}
+          aria-label="Assistente com IA — disponível no plano Pro"
+          title="Mr. Din — disponível no plano Pro"
+        >
+          <RiSparkling2Line />
+          <span className="ai-fab-lock" aria-hidden="true"><FiLock /></span>
+        </button>
+      )}
+
+      {upgrade && (
+        <UpgradeScreen
+          feature={upgrade.feature}
+          paymentResult={paymentResult}
+          onClose={() => setUpgrade(null)}
         />
       )}
     </div>
