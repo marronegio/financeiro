@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { emailBadge, emailButton, emailLayout, emailRow } from '../_shared/email.ts'
 
 // Aviso diário por e-mail: "vence amanhã".
 //
@@ -46,24 +47,43 @@ function dueInfo(venc: unknown, today: { y: number; m: number; d: number }) {
 // Normaliza o nome para compor a chave anti-duplicado (estável dentro do ciclo).
 const norm = (s: unknown) => String(s ?? '').trim().toLowerCase()
 
-function montarEmail(nomes: string[]) {
-  const lista = nomes.map((n) => `<li style="margin:4px 0">${n}</li>`).join('')
-  const plural = nomes.length > 1
+// "1.234,56" (máscara do app) -> 1234.56. Mesma regra de src/money.js#toNumber,
+// duplicada aqui porque esta função roda em Deno, sem acesso ao código do front.
+const toNumber = (v: unknown) => {
+  const d = String(v ?? '').replace(/\D/g, '')
+  return d ? parseInt(d, 10) / 100 : 0
+}
+
+const brl = (n: number) =>
+  (isFinite(n) ? n : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+function montarEmail(despesas: { nome: string; valor: number }[]) {
+  const plural = despesas.length > 1
   const subject = plural
-    ? `${nomes.length} despesas fixas vencem amanhã`
-    : `A despesa fixa "${nomes[0]}" vence amanhã`
-  const html = `
-    <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0a2540;max-width:480px">
-      <h2 style="font-size:18px;margin:0 0 12px">Lembrete de vencimento</h2>
-      <p style="margin:0 0 10px;font-size:15px;line-height:1.5">
-        ${plural ? 'Estas despesas fixas vencem' : 'Esta despesa fixa vence'} <b>amanhã</b>:
-      </p>
-      <ul style="font-size:15px;padding-left:20px;margin:0 0 16px">${lista}</ul>
-      <p style="margin:0;font-size:13px;color:#8898aa">
-        Você recebe este aviso porque ativou as notificações de vencimento no DinPrev.
-        Pode desligá-las em Configurações → Notificações.
-      </p>
+    ? `${despesas.length} despesas fixas vencem amanhã`
+    : `A despesa fixa "${despesas[0].nome}" vence amanhã`
+
+  const contentHtml = `
+    <p style="margin:0 0 14px;font-family:'Hanken Grotesk',-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.6;color:#425466;">
+      ${plural ? 'Estas despesas fixas vencem' : 'Esta despesa fixa vence'} ${emailBadge('amanhã')} — dá tempo de se organizar.
+    </p>
+    ${despesas.map((d) => emailRow(d.nome, brl(d.valor))).join('')}
+    <div style="margin-top:22px;">
+      ${emailButton('https://dinprev.com.br', 'Abrir o DinPrev')}
     </div>`
+
+  const preheaderText = plural
+    ? `${despesas.length} despesas vencem amanhã: ${despesas.map((d) => d.nome).join(', ')}.`
+    : `"${despesas[0].nome}" vence amanhã.`
+
+  const html = emailLayout({
+    preheaderText,
+    title: plural ? 'Despesas vencendo amanhã' : 'Uma despesa vence amanhã',
+    contentHtml,
+    footerNote:
+      'Você recebe este aviso porque ativou as notificações de vencimento no DinPrev. ' +
+      'Pode desligá-las em Configurações → Notificações.',
+  })
   return { subject, html }
 }
 
@@ -92,7 +112,7 @@ Deno.serve(async (req) => {
     const profiles = blob?.profiles || {}
 
     // Reúne todas as despesas que vencem amanhã, somando os perfis (Duo).
-    const pendentes: { chave: string; nome: string }[] = []
+    const pendentes: { chave: string; nome: string; valor: number }[] = []
     for (const [pid, prof] of Object.entries<any>(profiles)) {
       const data = prof?.data || {}
       if (data.emailVencimentos === false) continue
@@ -101,7 +121,7 @@ Deno.serve(async (req) => {
         if (!info || info.days !== 1) continue
         if (dsp.pago === info.duePeriod) continue
         const nome = String(dsp.nome || '').trim() || 'sem nome'
-        pendentes.push({ chave: `${pid}|${norm(nome)}|${info.duePeriod}`, nome })
+        pendentes.push({ chave: `${pid}|${norm(nome)}|${info.duePeriod}`, nome, valor: toNumber(dsp.valor) })
       }
     }
     if (pendentes.length === 0) continue
@@ -121,7 +141,7 @@ Deno.serve(async (req) => {
     const email = userRes?.user?.email
     if (!email) continue
 
-    const { subject, html } = montarEmail(novos.map((n) => n.nome))
+    const { subject, html } = montarEmail(novos.map((n) => ({ nome: n.nome, valor: n.valor })))
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {

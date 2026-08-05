@@ -19,6 +19,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { PDFDocument, StandardFonts, rgb } from 'https://esm.sh/pdf-lib@1.17.1'
 import { hasPaidAccess, userIdFromRequest } from '../_shared/auth.ts'
+import { emailButton, emailKpis, emailLayout } from '../_shared/email.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -295,17 +296,22 @@ Deno.serve(async (req) => {
         from: FROM,
         to: email,
         subject: `Seu resumo de ${mes} — DinPrev`,
-        html: `
-          <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0a2540;max-width:480px">
-            <h2 style="font-size:18px;margin:0 0 12px">Resumo de ${mes}</h2>
-            <p style="margin:0 0 10px;font-size:15px;line-height:1.5">
-              O PDF em anexo traz tudo o que você viu no app: quanto entrou, quanto saiu,
-              quanto você guardou e cada gasto do mês com sua categoria.
+        html: emailLayout({
+          preheaderText: `Você guardou ${brl(resumo.guardado)} em ${mes}. O PDF completo está em anexo.`,
+          title: `Resumo de ${mes}`,
+          contentHtml: `
+            ${emailKpis([
+              { label: 'Ganhou', value: brl(resumo.ganhos), tone: 'pos' },
+              { label: 'Gastou', value: brl(resumo.gasto), tone: 'neg' },
+              { label: 'Guardou', value: brl(resumo.guardado), tone: num(resumo.guardado) >= 0 ? 'pos' : 'neg' },
+            ])}
+            <p style="margin:0 0 18px;font-family:'Hanken Grotesk',-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.6;color:#425466;">
+              O PDF em anexo traz o resto: cada gasto do mês com a categoria, as parcelas e o
+              detalhamento completo — tudo que você viu no app.
             </p>
-            <p style="margin:0;font-size:13px;color:#8898aa">
-              Você recebeu este e-mail porque pediu o resumo em PDF dentro do DinPrev.
-            </p>
-          </div>`,
+            ${emailButton('https://dinprev.com.br', 'Abrir o DinPrev')}`,
+          footerNote: 'Você recebeu este e-mail porque pediu o resumo em PDF dentro do DinPrev.',
+        }),
         attachments: [
           { filename: `dinprev-resumo-${periodo}.pdf`, content: toBase64(pdf) },
         ],
