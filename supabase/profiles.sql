@@ -7,7 +7,7 @@ create table if not exists public.profiles (
   subscription_id       text,
   subscription_status   text not null default 'inactive',
   plan                  text not null default 'solo', -- 'free' | 'solo' | 'duo' (webhook grava a partir do price; 'free' só pelo painel admin)
-  cpf                   text, -- só dígitos; gravado no 1º checkout, base do controle de teste grátis
+  cpf                   text, -- só dígitos; informado na tela de pagamento (exigência do ASAAS) e gravado no 1º checkout. O cadastro não pede CPF.
   updated_at            timestamptz not null default now()
 );
 

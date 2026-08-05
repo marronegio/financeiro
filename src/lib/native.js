@@ -1,5 +1,6 @@
 import { Capacitor, SystemBars, SystemBarsStyle, SystemBarType } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 
 // true quando o código roda dentro do app empacotado (Android/iOS via Capacitor).
 // No navegador (site/webapp) é false e nada aqui muda o comportamento atual.
@@ -12,6 +13,43 @@ export const siteUrl =
   isNativeApp && import.meta.env.VITE_SITE_URL
     ? import.meta.env.VITE_SITE_URL
     : window.location.origin;
+
+// ── Login social (OAuth) ────────────────────────────────────────────
+// O Google recusa OAuth dentro de WebView embutido (erro `disallowed_useragent`),
+// então o app não pode simplesmente navegar para a tela de login: abre o
+// navegador do sistema (Chrome Custom Tabs) e volta por deep link.
+//
+// Este é o endereço para onde o Supabase devolve o usuário depois do Google. No
+// app é um esquema próprio, declarado no AndroidManifest e cadastrado na
+// allowlist de Redirect URLs do Supabase; no navegador é a própria página.
+export const OAUTH_REDIRECT_URL = isNativeApp
+  ? 'com.dinprev.app://auth'
+  : window.location.origin;
+
+// Abre a tela de login do Google fora do WebView.
+export const openOAuthUrl = (url) => Browser.open({ url });
+
+// Volta do login: o deep link traz os tokens no fragmento
+// (com.dinprev.app://auth#access_token=…&refresh_token=…). Repassa para quem
+// souber criar a sessão e fecha o navegador. `onError` recebe a mensagem quando
+// o usuário cancela ou o Google recusa.
+//
+// Devolve uma função de limpeza — o listener é nativo e sobrevive ao remount do
+// React (o StrictMode monta duas vezes em desenvolvimento).
+export function initOAuthDeepLink(onTokens, onError = () => {}) {
+  if (!isNativeApp) return () => {};
+  const handle = CapApp.addListener('appUrlOpen', ({ url }) => {
+    const frag = (url || '').split('#')[1];
+    if (!frag) return;
+    const params = new URLSearchParams(frag);
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    if (access_token && refresh_token) onTokens({ access_token, refresh_token });
+    else onError(params.get('error_description') || params.get('error') || '');
+    Browser.close().catch(() => {});
+  });
+  return () => { handle.then((h) => h.remove()).catch(() => {}); };
+}
 
 // Ícones da status bar acompanham o fundo da tela: fundo claro → ícones
 // escuros (LIGHT) e vice-versa. Só a status bar — a gesture bar de baixo fica

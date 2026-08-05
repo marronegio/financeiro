@@ -18,6 +18,18 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Volta do login com o Google. O Google recusa OAuth em WebView
+                 embutido, então o app abre o Chrome Custom Tabs e o Supabase
+                 devolve o usuário para com.dinprev.app://auth com os tokens no
+                 fragmento (tratado em src/lib/native.js). Este endereço também
+                 precisa estar na allowlist de Redirect URLs do Supabase. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.dinprev.app" android:host="auth" />
+            </intent-filter>
         </activity>
 
         <provider

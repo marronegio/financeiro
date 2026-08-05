@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import PasswordInput from './PasswordInput.jsx';
+import PasswordChecklist from './PasswordChecklist.jsx';
+import { isStrongPassword } from '../password.js';
 
 // Mostrada quando o usuário abre o link de recuperação de senha do e-mail.
 export default function ResetPasswordScreen() {
@@ -15,8 +17,8 @@ export default function ResetPasswordScreen() {
   const submit = async (e) => {
     e.preventDefault();
     setError('');
-    if (senha.length < 6) {
-      setError('A senha precisa ter ao menos 6 caracteres.');
+    if (!isStrongPassword(senha)) {
+      setError('A senha ainda não atende aos requisitos abaixo.');
       return;
     }
     if (senha !== confirmar) {
@@ -66,6 +68,7 @@ export default function ResetPasswordScreen() {
                   autoComplete="new-password"
                 />
               </label>
+              <PasswordChecklist password={senha} />
               <label className="auth-field">
                 <span className="field-label">Confirmar nova senha</span>
                 <PasswordInput

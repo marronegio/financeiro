@@ -72,8 +72,11 @@ quiser.
 
 ## Data Safety (formulário do Console) — resumo honesto
 
-- Coleta: e-mail, CPF (identificadores), dados financeiros digitados pelo
-  usuário, mensagens/áudio/fotos enviados ao assistente de IA.
+- Coleta: e-mail (identificador), CPF apenas de quem assina um plano pago —
+  exigência do ASAAS para emitir a cobrança; quem usa o grátis nunca informa —,
+  dados financeiros digitados pelo usuário, mensagens/áudio/fotos enviados ao
+  assistente de IA.
+- Login com o Google (opcional): recebemos nome, e-mail e foto da conta Google.
 - Compartilhamento com operadores: Supabase (hospedagem), ASAAS/Stripe
   (pagamento), OpenAI (assistente).
 - Dados criptografados em trânsito: sim. Exclusão: o usuário pode excluir a

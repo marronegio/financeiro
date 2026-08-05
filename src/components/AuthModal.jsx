@@ -1,17 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { isValidCPF, formatCPF, onlyDigits } from '../cpf.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 import PasswordInput from './PasswordInput.jsx';
+import PasswordChecklist from './PasswordChecklist.jsx';
+import { isStrongPassword } from '../password.js';
+
+// O "G" oficial do Google. As diretrizes de marca deles exigem o logo original,
+// nas quatro cores e sem alterações, em qualquer botão de "entrar com Google".
+function GoogleG() {
+  return (
+    <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z" />
+      <path fill="#FBBC05" d="M3.97 10.71a5.4 5.4 0 0 1 0-3.44V4.96H.96a9 9 0 0 0 0 8.08l3.01-2.33z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3.01 2.33C4.68 5.17 6.66 3.58 9 3.58z" />
+    </svg>
+  );
+}
 
 // Login/cadastro como popup sobre a landing (mesmo backdrop desfocado do pagamento).
 // `initialMode` define se abre em 'login' ou 'signup'. Com `dismissible: false`
 // vira tela obrigatória (app nativo): sem × e sem fechar clicando fora.
 export default function AuthModal({ open, onClose, initialMode = 'login', dismissible = true }) {
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, resetPassword, signInWithGoogle, oauthError } = useAuth();
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
-  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   // Código de quem indicou: preenchido sozinho quando o cadastro veio de um
   // link ?ref=CODIGO (guardado pelo App.jsx); no app instalado, digita à mão.
@@ -39,17 +52,15 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
       setError('Preencha e-mail e senha.');
       return;
     }
-    if (isSignup && !isValidCPF(cpf)) {
-      setError('Digite um CPF válido.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('A senha precisa ter ao menos 6 caracteres.');
+    // Só no cadastro: quem já tem conta pode ter uma senha de antes desta
+    // regra existir, e login não é o momento de barrar por isso.
+    if (isSignup && !isStrongPassword(password)) {
+      setError('A senha ainda não atende aos requisitos abaixo.');
       return;
     }
     setBusy(true);
     const { data, error } = isSignup
-      ? await signUp(email, password, onlyDigits(cpf), ref.trim().toUpperCase() || null)
+      ? await signUp(email, password, ref.trim().toUpperCase() || null)
       : await signIn(email, password);
     setBusy(false);
 
@@ -64,6 +75,19 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
     // Se a confirmação por e-mail estiver ligada, não há sessão imediata no cadastro.
     if (isSignup && !data.session) {
       setNotice('Conta criada! Confira seu e-mail para confirmar o acesso.');
+    }
+  };
+
+  // Entrar com o Google. No navegador esta chamada leva a página embora (o
+  // Supabase redireciona), então o `busy` só é desfeito em caso de erro.
+  const google = async () => {
+    setError('');
+    setNotice('');
+    setBusy(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setBusy(false);
+      setError('Não foi possível abrir o login do Google. Tente novamente.');
     }
   };
 
@@ -103,6 +127,17 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
               : 'Acesse sua conta para ver seu planejamento.'}
           </p>
 
+          {/* Caminho de menos atrito primeiro: um toque, sem senha para criar
+              nem lembrar. O formulário de e-mail continua logo abaixo. */}
+          <button type="button" className="auth-google" onClick={google} disabled={busy}>
+            <GoogleG />
+            {isSignup ? 'Criar conta com o Google' : 'Continuar com o Google'}
+          </button>
+
+          {oauthError && <div className="auth-msg err">{oauthError}</div>}
+
+          <div className="auth-sep"><span>ou com e-mail</span></div>
+
           <form onSubmit={submit} noValidate>
             <label className="auth-field">
               <span className="field-label">E-mail</span>
@@ -115,21 +150,6 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
                 autoComplete="email"
               />
             </label>
-            {isSignup && (
-              <label className="auth-field">
-                <span className="field-label">CPF</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className="auth-input"
-                  value={cpf}
-                  onChange={(e) => setCpf(formatCPF(e.target.value))}
-                  placeholder="000.000.000-00"
-                  autoComplete="off"
-                  maxLength={14}
-                />
-              </label>
-            )}
             {isSignup && (
               <label className="auth-field">
                 <span className="field-label">Código de indicação (opcional)</span>
@@ -153,6 +173,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', dismis
                 autoComplete={isSignup ? 'new-password' : 'current-password'}
               />
             </label>
+            {isSignup && <PasswordChecklist password={password} />}
 
             {!isSignup && (
               <button type="button" className="auth-link forgot" onClick={forgot} disabled={busy}>

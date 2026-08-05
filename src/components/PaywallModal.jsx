@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { PLANS, planKey, normalizePlanKey } from '../plans.js';
 import { UPGRADE_REASONS } from '../limits.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
+import { isValidCPF, formatCPF, onlyDigits } from '../cpf.js';
 
 // Popup de pagamento exibido SOBRE a landing (fundo desfocado/escurecido).
 // O plano já vem escolhido da landing (planId) — aqui o usuário só escolhe o
@@ -21,6 +22,11 @@ export default function PaywallModal({
   const [pix, setPix] = useState(null); // { encodedImage, payload, expirationDate }
   const [discountPct, setDiscountPct] = useState(0); // desconto de indicação na 1ª cobrança
   const [copied, setCopied] = useState(false);
+  // O cadastro não pede CPF, mas o ASAAS não emite cobrança sem ele. Pedimos
+  // aqui, uma única vez: `needsCpf` só fica true para quem ainda não tem um
+  // salvo no perfil (null = ainda verificando).
+  const [needsCpf, setNeedsCpf] = useState(null);
+  const [cpf, setCpf] = useState('');
   const pollRef = useRef(null);
 
   const plan = PLANS[normalizePlanKey(planId)];
@@ -32,6 +38,24 @@ export default function PaywallModal({
     sessionStorage.setItem('dinprev_purchase_tracked', '1');
     trackMetaEvent('Purchase', { value: plan.value, currency: 'BRL' });
   }, [paymentResult, plan.value]);
+
+  // Descobre se este usuário já tem CPF salvo (assinantes antigos e quem já
+  // tentou pagar têm). Só quem não tem vê o campo.
+  useEffect(() => {
+    if (!open) return;
+    let ignore = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('cpf')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!ignore) setNeedsCpf(!onlyDigits(data?.cpf || ''));
+    })();
+    return () => { ignore = true; };
+  }, [open]);
 
   // Enquanto aguarda o pagamento (tela de PIX ou retorno do cartão), verifica a
   // cada 4s se o webhook já ativou a assinatura; ao confirmar, cai no Dashboard.
@@ -64,6 +88,12 @@ export default function PaywallModal({
     : ['Assistente com IA', 'Todos os painéis desbloqueados', 'Dados salvos na nuvem', 'Cancele quando quiser'];
 
   async function handleSubscribe() {
+    // O ASAAS recusa a criação do cliente sem um CPF válido — barramos antes de
+    // gastar uma ida ao servidor.
+    if (needsCpf && !isValidCPF(cpf)) {
+      setError('Digite um CPF válido para emitir a cobrança.');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -78,7 +108,12 @@ export default function PaywallModal({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ plan: planKey(plan.tier, plan.cycle), billingType: method }),
+        body: JSON.stringify({
+          plan: planKey(plan.tier, plan.cycle),
+          billingType: method,
+          // Vai só quando o perfil ainda não tem CPF; o servidor valida e salva.
+          ...(needsCpf ? { cpf: onlyDigits(cpf) } : {}),
+        }),
       }
     );
 
@@ -231,6 +266,27 @@ export default function PaywallModal({
             ))}
           </ul>
         </div>
+
+        {/* Só aparece para quem ainda não tem CPF salvo: a nota fiscal e a
+            cobrança do ASAAS saem no nome de um CPF. */}
+        {needsCpf && (
+          <label className="auth-field">
+            <span className="field-label">CPF do titular</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              className="auth-input"
+              value={cpf}
+              onChange={(e) => setCpf(formatCPF(e.target.value))}
+              placeholder="000.000.000-00"
+              autoComplete="off"
+              maxLength={14}
+            />
+            <span style={{ display: 'block', marginTop: 6, fontSize: 12, color: 'var(--faint)' }}>
+              Necessário para emitir a cobrança. Pedimos uma vez só.
+            </span>
+          </label>
+        )}
 
         <p style={{ fontSize: 12.5, color: 'var(--faint)', margin: '0 0 16px' }}>
           {method === 'PIX'

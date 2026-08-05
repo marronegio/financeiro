@@ -6,6 +6,8 @@ import CropEditor from './CropEditor.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import PinDialog from './PinDialog.jsx';
 import EyeIcon from './EyeIcon.jsx';
+import PasswordChecklist from './PasswordChecklist.jsx';
+import { isStrongPassword } from '../password.js';
 
 function PasswordField({ label, value, onChange }) {
   const [show, setShow] = useState(false);
@@ -317,8 +319,8 @@ export default function ConfiguracoesPanel({
       setMsg({ err: 'A nova senha e a confirmação não coincidem.' });
       return;
     }
-    if (novaSenha.length < 6) {
-      setMsg({ err: 'A nova senha deve ter pelo menos 6 caracteres.' });
+    if (!isStrongPassword(novaSenha)) {
+      setMsg({ err: 'A nova senha ainda não atende aos requisitos abaixo.' });
       return;
     }
     if (novaSenha === senhaAtual) {
@@ -586,6 +588,7 @@ export default function ConfiguracoesPanel({
         <form onSubmit={handleSubmit}>
           <PasswordField label="Senha atual"         value={senhaAtual} onChange={setSenhaAtual} />
           <PasswordField label="Nova senha"           value={novaSenha}  onChange={setNovaSenha}  />
+          <PasswordChecklist password={novaSenha} />
           <PasswordField label="Confirmar nova senha" value={confirmar}  onChange={setConfirmar}  />
 
           {msg?.err && <p className="cfg-msg cfg-err">{msg.err}</p>}

@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    const { plan, billingType } = await req.json()
+    const { plan, billingType, cpf: bodyCpf } = await req.json()
     const config = PLAN_CONFIG[plan]
     if (!config) return json({ error: 'Plano inválido.' }, 400)
     const method = billingType === 'PIX' ? 'PIX' : 'CREDIT_CARD'
@@ -122,18 +122,22 @@ Deno.serve(async (req) => {
       return json({ error: 'Assinatura já ativa.' }, 400)
     }
 
-    // CPF é obrigatório pro ASAAS. Igual ao fluxo antigo: profiles.cpf é a fonte,
-    // com fallback pro metadata do cadastro (validado e persistido).
+    // CPF é obrigatório pro ASAAS emitir a cobrança — é o único motivo de o
+    // DinPrev ainda pedir um. O cadastro não pede mais: o checkout manda o CPF
+    // no corpo (ver PaywallModal) e a gente persiste aqui, para não pedir de
+    // novo. Fontes, em ordem: perfil salvo → corpo da requisição → metadata de
+    // cadastros antigos, que ainda pediam CPF no signup.
     let cpf = onlyDigits(profile?.cpf || '')
     if (!cpf) {
       const metaCpf = onlyDigits((user.user_metadata as Record<string, unknown> | null)?.cpf as string || '')
-      if (metaCpf && isValidCPF(metaCpf)) {
-        cpf = metaCpf
+      const candidate = onlyDigits(String(bodyCpf || '')) || metaCpf
+      if (candidate && isValidCPF(candidate)) {
+        cpf = candidate
         await supabaseAdmin.from('profiles').upsert({ id: user.id, cpf })
       }
     }
     if (!cpf || !isValidCPF(cpf)) {
-      return json({ error: 'CPF inválido ou ausente. Refaça o cadastro com um CPF válido.' }, 400)
+      return json({ error: 'Informe um CPF válido para emitir a cobrança.' }, 400)
     }
 
     // Programa de indicação — vincula quem indicou (uma vez só). O código usado
