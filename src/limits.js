@@ -5,9 +5,10 @@
 // A autoridade sobre o que custa dinheiro (a IA) fica no backend
 // (supabase/functions/_shared/aiCredits.ts). Daqui para baixo é só interface.
 
-// Abas exclusivas do Pro. Continuam VISÍVEIS no menu, com cadeado: quem está no
-// grátis precisa enxergar o tamanho do produto que não está usando — esconder
-// faz o app parecer menor do que é.
+// Abas exclusivas do Pro. Continuam VISÍVEIS com cadeado — no menu, ou na barra
+// de abas da janela de despesas, no caso de 'assinaturas': quem está no grátis
+// precisa enxergar o tamanho do produto que não está usando — esconder faz o
+// app parecer menor do que é.
 export const PRO_TABS = ['rendaextra', 'assinaturas', 'doacoes'];
 
 export const isProTab = (tabId) => PRO_TABS.includes(tabId);

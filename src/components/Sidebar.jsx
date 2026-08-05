@@ -15,14 +15,16 @@ import {
   FiHeart,
   FiLock,
 } from 'react-icons/fi';
-import { TABS } from '../state.js';
+import { TABS, isExpenseTab } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
 const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
 
-// Ícone (react-icons) de cada aba. Exportado para o BottomNav (app nativo)
-// usar exatamente os mesmos ícones.
+// Ícone (react-icons) de cada aba — inclusive as que hoje só existem como aba
+// interna da janela de despesas (cartao, assinaturas, parcelamentos).
+// Exportado para o BottomNav (app nativo) e o DespesasTabs usarem exatamente
+// os mesmos ícones.
 export const TAB_ICONS = {
   plan: FiPieChart,
   casal: FiUsers,
@@ -59,6 +61,10 @@ export default function Sidebar({
   const navTabs = isAdmin(user)
     ? [...planTabs, { id: 'admin', label: 'Admin' }]
     : planTabs;
+
+  // Crédito à vista, assinaturas e parcelamentos são abas dentro da janela de
+  // despesas: com uma delas aberta, quem fica marcado no menu é "Despesas".
+  const navTab = isExpenseTab(tab) ? 'despesas' : tab;
 
   // No plano Duo, a troca de perfil não é mais direta: um botão leva de volta à
   // tela de perfis (onde o PIN, se houver, é exigido). No Solo a barra fica igual.
@@ -156,7 +162,7 @@ export default function Sidebar({
             return (
               <button
                 key={t.id}
-                className={'tab' + (tab === t.id ? ' active' : '') + (locked ? ' tab-locked' : '')}
+                className={'tab' + (navTab === t.id ? ' active' : '') + (locked ? ' tab-locked' : '')}
                 onClick={() => pick(t.id)}
                 data-tour={`tab-${t.id}`}
               >

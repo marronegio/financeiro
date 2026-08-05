@@ -5,7 +5,7 @@
 // manter tudo consistente. Nada aqui fala com a rede — só transforma o estado.
 
 import { maskMoney, BRL } from '../money.js';
-import { getCardCategories, TABS } from '../state.js';
+import { getCardCategories, TABS, EXPENSE_TABS } from '../state.js';
 
 // number (reais) -> string mascarada do app ("1.234,56").
 const money = (reais) => maskMoney(String(Math.round((Number(reais) || 0) * 100)));
@@ -21,7 +21,11 @@ const inteiro = (v, fallback = '') => {
   return Number.isFinite(n) && n >= 0 ? String(n) : fallback;
 };
 
-const TAB_IDS = new Set(TABS.map((t) => t.id));
+// Telas navegáveis: as do menu mais as abas internas da janela de despesas
+// (crédito à vista, assinaturas e parcelamentos), que continuam sendo destinos
+// válidos mesmo sem item próprio no menu.
+const NAV_TABS = [...TABS, ...EXPENSE_TABS.filter((t) => !TABS.some((x) => x.id === t.id))];
+const TAB_IDS = new Set(NAV_TABS.map((t) => t.id));
 
 // Aplica a ação sobre o estado e devolve o novo estado (função pura, segura para
 // usar dentro de setState(s => applyAiAction(s, ...))).
@@ -90,7 +94,7 @@ export function describeAction(name, args = {}) {
     case 'adicionar_meta':
       return `Meta "${args.nome}" de ${BRL(args.valor)} criada.`;
     case 'navegar_para_tela': {
-      const label = TABS.find((t) => t.id === args.tab)?.label || args.tab;
+      const label = NAV_TABS.find((t) => t.id === args.tab)?.label || args.tab;
       return TAB_IDS.has(args.tab) ? `Abri a tela de ${label}.` : 'Tela não encontrada.';
     }
     default:

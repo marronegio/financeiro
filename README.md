@@ -35,8 +35,9 @@ src/
     EditableList.jsx        # lista de ItemRow + botão adicionar
     PlanejamentoPanel.jsx
     DespesasPanel.jsx
-    AssinaturasPanel.jsx
+    DespesasTabs.jsx        # janela "Despesas": abas de fixas, crédito à vista, assinaturas e parcelamentos
     CartaoPanel.jsx
+    AssinaturasPanel.jsx
     ParcelamentosPanel.jsx
   styles.css                # todo o estilo (idêntico ao protótipo original)
 ```
