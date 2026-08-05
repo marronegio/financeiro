@@ -508,6 +508,80 @@
   box-shadow: 0 4px 12px rgba(99, 91, 255, 0.35);
 }
 
+/* ── selo da Play Store (hero e rodapé) ────────────────────── */
+.lp-store {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+  padding: 9px 20px 9px 15px;
+  border-radius: 12px;
+  background: var(--navy);
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid transparent;
+  box-shadow: 0 6px 18px rgba(10, 37, 64, 0.2);
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+}
+
+.lp-store:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 13px 28px rgba(10, 37, 64, 0.28);
+}
+
+.lp-store-ico {
+  display: grid;
+  place-items: center;
+}
+
+.lp-store-txt {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.12;
+  text-align: left;
+}
+
+.lp-store-top {
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.lp-store-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* no rodapé o fundo já é navy: o selo vira contorno pra não sumir nele */
+.lp-store-navy {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+}
+
+.lp-store-navy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.lp-hero-store {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  animation: fadeUp 0.5s ease 0.58s both;
+}
+
+.lp-hero-store-note {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 250px;
+}
+
 /* ── hero right: preview card ──────────────────────────────── */
 .lp-hero-right {
   position: relative;
@@ -2177,6 +2251,16 @@
     justify-content: center;
   }
 
+  /* hero centralizado: o selo e a explicação acompanham */
+  .lp-hero-store {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .lp-hero-store-note {
+    max-width: 340px;
+  }
+
   .lp-problem-grid,
   .lp-how-inner,
   .lp-ai-inner,
@@ -2241,6 +2325,16 @@
   .lp-cta-sec {
     text-align: center;
     justify-content: center;
+  }
+
+  /* no celular o selo é o item mais clicável do bloco: ocupa a linha toda */
+  .lp-store {
+    justify-content: center;
+  }
+
+  .lp-hero-store {
+    flex-direction: column;
+    align-self: stretch;
   }
 
   .lp-price-amount {

@@ -10,6 +10,35 @@ import {
 } from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 
+// Listagem do app na Play Store (o app Android é este mesmo produto,
+// empacotado com Capacitor — ver MOBILE.md).
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.dinprev.app';
+
+// Selo que leva à Play Store. O ícone é um "play" neutro, e não a marca colorida
+// do Google: o logo deles só pode ser usado dentro do badge oficial, inteiro e
+// sem modificações. Para trocar pelo badge oficial, baixe o PNG na página de
+// marca do Google Play, jogue em public/ e troque isto por um <img>.
+function PlayBadge({ className = '' }) {
+  return (
+    <a
+      className={'lp-store' + (className ? ` ${className}` : '')}
+      href={PLAY_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span className="lp-store-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">
+          <path d="M5 2.5v19l16.5-9.5z" />
+        </svg>
+      </span>
+      <span className="lp-store-txt">
+        <span className="lp-store-top">Baixe para Android</span>
+        <span className="lp-store-name">Google Play</span>
+      </span>
+    </a>
+  );
+}
+
 // Card de preço de um plano (Solo/Duo × Mensal/Anual).
 // Exportado para o MobileGate (seleção de plano no app nativo).
 export function PriceCard({ planId, onStart }) {
@@ -190,6 +219,10 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
             <strong className="lp-trial-pill">A partir de R$17,90/mês</strong>
             cartão de crédito ou PIX · cancele quando quiser
           </p>
+
+          <div className="lp-hero-store">
+            <PlayBadge />
+          </div>
         </div>
 
         <div className="lp-hero-right">
@@ -204,7 +237,7 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
         <span className="lp-strip-item lp-strip-trial">✦ Cartão ou PIX</span>
         <span className="lp-strip-item">🤖 Assistente com IA</span>
         <span className="lp-strip-item">☁ Dados na nuvem</span>
-        <span className="lp-strip-item">📱 Celular e desktop</span>
+        <span className="lp-strip-item">📱 Android e web desktop</span>
         <span className="lp-strip-item">⚡ Sem planilhas</span>
       </div>
 
@@ -516,6 +549,7 @@ export default function LandingPage({ authed = false, paywall = false, paymentRe
           <div className="lp-logo"><img src="/logo.png" alt="DinPrev" /></div>
           <span style={{ color: '#cfd7e3', fontSize: 15, fontWeight: 600 }}>DinPrev</span>
         </div>
+        <PlayBadge className="lp-store-navy" />
         <span className="lp-footer-copy">© {new Date().getFullYear()} DinPrev. Todos os direitos reservados.</span>
       </footer>
 
