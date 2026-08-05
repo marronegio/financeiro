@@ -10,6 +10,8 @@ import {
   RiPauseFill,
 } from 'react-icons/ri';
 import { supabase } from '../lib/supabase.js';
+import { useAuth } from '../auth/AuthContext.jsx';
+import { useAiCredits } from '../hooks/useAiCredits.js';
 import { BRL, toNumber, computeParcela } from '../money.js';
 import { getCardCategories, TABS } from '../state.js';
 
@@ -232,7 +234,7 @@ function listaDetalhada(items, fmt) {
 // totais quanto CADA item nomeado (renda extra, despesas, assinaturas, compras,
 // parcelamentos, metas) para a IA saber a origem de cada valor, não só a soma.
 function buildContext(state, c) {
-  const tabLabel = TABS.find((t) => t.id === state.tab)?.label || 'Planejamento';
+  const tabLabel = TABS.find((t) => t.id === state.tab)?.label || 'Resumo';
   const cats = getCardCategories(state);
   const catLabel = (id) => cats.find((cat) => cat.id === id)?.label || 'Sem categoria';
   const categorias = cats.map((cat) => `${cat.id}=${cat.label}`).join(', ');
@@ -426,6 +428,9 @@ export default function AiAssistant({
   // O painel fica montado por alguns ms depois de fechar, para a animação de
   // saída rodar antes do unmount (ver .ai-panel-closing no CSS).
   const [mounted, setMounted] = useState(open);
+  // Saldo de créditos mostrado abaixo do nome do Mr. Din.
+  const { user } = useAuth();
+  const { credits, refresh: refreshCredits } = useAiCredits(user);
   const scrollRef = useRef(null);
   const fileRef = useRef(null);
   const inputRef = useRef(null);
@@ -437,6 +442,12 @@ export default function AiAssistant({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [history, open, busy]);
+
+  // Cada mensagem queima crédito, então o saldo é reconferido ao abrir o chat —
+  // inclusive depois de uma conversa em outro dispositivo.
+  useEffect(() => {
+    if (open) refreshCredits();
+  }, [open, refreshCredits]);
 
   // Abertura monta na hora; fechamento espera a animação de saída terminar.
   useEffect(() => {
@@ -531,6 +542,7 @@ export default function AiAssistant({
       );
     } finally {
       setBusy(false);
+      refreshCredits(); // a rodada acabou de consumir créditos
     }
   }
 
@@ -564,6 +576,7 @@ export default function AiAssistant({
       );
     } finally {
       setBusy(false);
+      refreshCredits(); // a rodada acabou de consumir créditos
     }
   }
 
@@ -587,6 +600,7 @@ export default function AiAssistant({
           : 'Não consegui processar o áudio. Tente de novo.'
       );
       setTranscribing(false);
+      refreshCredits(); // a transcrição consome crédito mesmo quando falha depois
       return;
     }
     setTranscribing(false);
@@ -612,6 +626,7 @@ export default function AiAssistant({
       );
     } finally {
       setBusy(false);
+      refreshCredits(); // a rodada acabou de consumir créditos
     }
   }
 
@@ -665,6 +680,17 @@ export default function AiAssistant({
     (m) => (m.role === 'user' || m.role === 'assistant') && m.content
   );
 
+  // Saldo do mês ao lado do "online". Sem leitura do consumo, mostra só o
+  // status — um saldo chutado seria pior que nenhum.
+  const creditsLabel = !credits
+    ? ''
+    : credits.left > 0
+      ? `${credits.left} ${credits.left === 1 ? 'crédito' : 'créditos'}`
+      : 'sem créditos'; // curto de propósito: o painel tem ~290px em telas pequenas
+  const creditsTitle = credits
+    ? `${credits.used} de ${credits.limit} créditos de IA usados neste mês. Renovam no dia 1º.`
+    : undefined;
+
   return (
     <>
       {!hideFab && (
@@ -687,9 +713,29 @@ export default function AiAssistant({
           aria-label="Mr. Din — assistente de IA"
         >
           <div className="ai-head">
-            <span className="ai-head-title">
-              <RiSparkling2Line /> Mr. Din
-            </span>
+            <div className="ai-head-id">
+              {/* a foto dele é a mesma marca do botão que abre a conversa */}
+              <span className="ai-head-avatar">
+                <span className="ai-avatar-mark" aria-hidden="true">
+                  <RiSparkling2Line />
+                </span>
+                <span className="ai-online-dot" aria-hidden="true" />
+              </span>
+              <span className="ai-head-txt">
+                <span className="ai-head-title">Mr. Din</span>
+                <span className="ai-head-sub" title={creditsTitle}>
+                  <span className="ai-online-lbl">online</span>
+                  {creditsLabel && (
+                    <>
+                      {' · '}
+                      <span className={credits.left === 0 ? 'ai-credits-out' : undefined}>
+                        {creditsLabel}
+                      </span>
+                    </>
+                  )}
+                </span>
+              </span>
+            </div>
             <button className="ai-close" onClick={() => setOpen(false)} aria-label="Fechar">
               <RiCloseLine />
             </button>

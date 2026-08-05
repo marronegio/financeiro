@@ -8,24 +8,10 @@
 //   supabase secrets set AI_CREDITS_MONTHLY=300 AI_CREDITS_ANNUAL=1000
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { hasPaidAccess, userIdFromRequest } from './auth.ts'
 
 const LIMIT_MONTHLY = Number(Deno.env.get('AI_CREDITS_MONTHLY') || 250)
 const LIMIT_ANNUAL = Number(Deno.env.get('AI_CREDITS_ANNUAL') || 900)
-
-// Extrai o user id (claim `sub`) do JWT. A plataforma já validou a assinatura
-// antes de o código rodar (verify_jwt = true no config.toml), então aqui basta
-// decodificar o payload — sem revalidar nada.
-function userIdFromRequest(req: Request): string | null {
-  try {
-    const jwt = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '')
-    const b64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4)
-    const payload = JSON.parse(atob(padded))
-    return (payload.sub as string) || null
-  } catch {
-    return null
-  }
-}
 
 // Tenta consumir 1 crédito do usuário desta requisição.
 // Retorna null quando pode seguir, ou uma Response pronta (401/429) para
@@ -64,17 +50,7 @@ export async function consumeAiCredit(
   // Tier grátis não tem assistente. Esta checagem é a que vale: a interface
   // esconde o Mr. Din no grátis, mas quem chamar a função direto tem que bater
   // aqui — cada chamada custa dinheiro na OpenAI.
-  // Espelha src/hooks/useSubscription.js; ao mexer em um, confira o outro.
-  const trialing = profile?.subscription_status === 'trialing'
-  const notExpired = !profile?.access_until ||
-    new Date(profile.access_until).getTime() > Date.now()
-  const paidOk = (profile?.subscription_status === 'active' || trialing) && notExpired
-  const hasAccess = profile?.admin_override === 'active'
-    ? true
-    : profile?.admin_override === 'inactive'
-    ? false
-    : paidOk
-  if (!hasAccess || profile?.plan === 'free') {
+  if (!hasPaidAccess(profile) || profile?.plan === 'free') {
     return new Response(
       JSON.stringify({
         error: 'upgrade_required',

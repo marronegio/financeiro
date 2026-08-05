@@ -31,6 +31,10 @@ verify_jwt = true
 [functions.ai-transcribe]
 verify_jwt = true
 
+# Resumo mensal em PDF por e-mail: exige JWT e manda só para o e-mail da conta.
+[functions.month-report]
+verify_jwt = true
+
 # ASAAS — gateway de pagamento (substitui o Stripe para novos assinantes).
 # Criar assinatura e cancelar exigem usuário logado (JWT).
 [functions.asaas-create-subscription]

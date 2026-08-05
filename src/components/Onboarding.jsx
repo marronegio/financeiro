@@ -18,7 +18,7 @@ const STEPS = [
     tab: 'plan',
     target: '[data-tour="tab-plan"]',
     icon: '◷',
-    title: 'Planejamento',
+    title: 'Resumo',
     description:
       'Comece informando seu salário e quanto quer guardar por mês. O app calcula quanto sobra e como dividir entre crédito e débito.',
   },
@@ -34,37 +34,36 @@ const STEPS = [
   {
     tab: 'despesas',
     target: '[data-tour="tab-despesas"]',
-    sheet: true,
     icon: '⊟',
-    title: 'Despesas Fixas',
+    title: 'Despesas',
     description:
-      'Adicione tudo que você paga todo mês: aluguel, luz, internet. Esses valores entram automaticamente no total de gastos.',
+      'Tudo que sai da sua conta mora aqui, em quatro abas. Esta é a das contas que se repetem todo mês — aluguel, luz, internet: elas entram automaticamente no total de gastos.',
   },
-  {
-    tab: 'assinaturas',
-    target: '[data-tour="tab-assinaturas"]',
-    sheet: true,
-    icon: '↻',
-    title: 'Assinaturas',
-    description:
-      'Netflix, Spotify, iCloud — cobranças recorrentes somam mais do que parecem. Mantenha-as separadas para ter visibilidade.',
-  },
+  // As outras três abas da janela de despesas: o alvo é o botão da aba, dentro
+  // do painel (por isso `sheet: false` — no app elas não moram no menu "Mais").
   {
     tab: 'cartao',
     target: '[data-tour="tab-cartao"]',
     icon: '▣',
-    title: 'Cartão de Crédito',
+    title: 'Crédito à Vista',
     description:
-      'A cada compra avulsa no crédito, adicione aqui. O app mostra quanto ainda cabe dentro do limite que você planejou.',
+      'As compras avulsas no crédito ficam nesta aba. O app mostra quanto ainda cabe dentro do limite que você planejou.',
+  },
+  {
+    tab: 'assinaturas',
+    target: '[data-tour="tab-assinaturas"]',
+    icon: '↻',
+    title: 'Assinaturas',
+    description:
+      'Netflix, Spotify, iCloud — cobranças recorrentes somam mais do que parecem. Ficam nesta aba, separadas das compras avulsas.',
   },
   {
     tab: 'parcelamentos',
     target: '[data-tour="tab-parcelamentos"]',
-    sheet: true,
     icon: '≣',
     title: 'Parcelamentos',
     description:
-      'Comprou parcelado? Cadastre aqui e o app avança as parcelas automaticamente todo mês, até quitá-las.',
+      'Comprou parcelado? Cadastre nesta aba e o app avança as parcelas automaticamente todo mês, até quitá-las.',
   },
   {
     tab: 'economias',
@@ -73,7 +72,7 @@ const STEPS = [
     icon: '◎',
     title: 'Economias',
     description:
-      'Crie metas de quanto quer juntar e até quando. O app calcula quanto poupar por mês pra chegar no prazo, e um resumo aparece no Planejamento.',
+      'Crie metas de quanto quer juntar e até quando. O app calcula quanto poupar por mês pra chegar no prazo, e um resumo aparece na aba Resumo.',
   },
   {
     tab: 'historico',
@@ -81,7 +80,7 @@ const STEPS = [
     icon: '◴',
     title: 'Histórico Mensal',
     description:
-      'Quando chegar o dia do salário, feche o mês aqui. O cartão é zerado, as parcelas avançam e um resumo fica salvo.',
+      'Escolha o dia em que o mês fecha e o app faz sozinho: o cartão é zerado, as parcelas avançam e um resumo fica salvo aqui.',
   },
   {
     tab: null,

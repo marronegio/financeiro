@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { FiGrid, FiLogOut, FiLock } from 'react-icons/fi';
 import { RiSparkling2Line } from 'react-icons/ri';
-import { TABS } from '../state.js';
+import { TABS, isExpenseTab } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
 import { TAB_ICONS } from './Sidebar.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
 const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
 
-// Abas fixas da barra: Planejamento e Cartão à esquerda, Histórico à direita.
+// Abas fixas da barra: Resumo e Despesas à esquerda, Histórico à direita.
 // O botão central abre a IA e o "Mais" abre o restante do menu num sheet.
-const PINNED = ['plan', 'cartao', 'historico'];
+const PINNED = ['plan', 'despesas', 'historico'];
 
 // Menu inferior do app nativo (substitui a Sidebar no Android/iOS).
 export default function BottomNav({
@@ -25,7 +25,10 @@ export default function BottomNav({
     ? [...planTabs, { id: 'admin', label: 'Admin' }]
     : planTabs;
   const moreTabs = navTabs.filter((t) => !PINNED.includes(t.id));
-  const moreActive = moreTabs.some((t) => t.id === tab);
+  // Crédito à vista, assinaturas e parcelamentos são abas dentro da janela de
+  // despesas: com uma delas aberta, quem fica marcado na barra é "Despesas".
+  const navTab = isExpenseTab(tab) ? 'despesas' : tab;
+  const moreActive = moreTabs.some((t) => t.id === navTab);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
 
@@ -42,9 +45,6 @@ export default function BottomNav({
     };
   }, [moreOpen]);
 
-  // Rótulos curtos só para a barra (na sidebar/sheet os nomes completos ficam).
-  const SHORT_LABELS = { plan: 'Plano', cartao: 'Cartão' };
-
   const barItem = (id) => {
     const t = navTabs.find((x) => x.id === id);
     if (!t) return null;
@@ -52,13 +52,13 @@ export default function BottomNav({
     return (
       <button
         key={t.id}
-        className={'bnav-item' + (tab === t.id && !moreOpen ? ' active' : '')}
+        className={'bnav-item' + (navTab === t.id && !moreOpen ? ' active' : '')}
         onClick={() => pick(t.id)}
         data-tour={`tab-${t.id}`}
         aria-label={t.label}
       >
         <span className="bnav-ico">{Icon && <Icon aria-hidden="true" />}</span>
-        <span className="bnav-lbl">{SHORT_LABELS[t.id] || t.label}</span>
+        <span className="bnav-lbl">{t.label}</span>
       </button>
     );
   };
@@ -84,7 +84,7 @@ export default function BottomNav({
             return (
               <button
                 key={t.id}
-                className={'bnav-sheet-item' + (tab === t.id ? ' active' : '')}
+                className={'bnav-sheet-item' + (navTab === t.id ? ' active' : '')}
                 onClick={() => pick(t.id)}
                 data-tour={`tab-${t.id}`}
               >

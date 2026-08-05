@@ -683,6 +683,101 @@ h1 em {
   max-width: 600px;
 }
 
+/* ---------- abas internas (janela de despesas) ----------
+   Despesas fixas, crédito à vista, assinaturas e parcelamentos numa tela só.
+   Fica logo abaixo do cabeçalho, acima do painel da aba aberta. */
+.subtabs {
+  display: inline-flex;
+  gap: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+.subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: transparent;
+  padding: 8px 15px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+
+.subtab:hover:not(.active) {
+  color: var(--ink);
+}
+
+.subtab.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.subtab-ico {
+  font-size: 15px;
+  flex: none;
+}
+
+.subtab.active .subtab-ico {
+  color: var(--accent);
+}
+
+/* O cadeado do Pro é um adendo ao rótulo, não empurra nada para a borda. */
+.subtab .tab-lock {
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 640px) {
+  /* Quatro abas não cabem numa linha no celular: viram uma grade 2×2, com a
+     barra ocupando a largura toda. Rolagem lateral esconderia abas — aqui as
+     quatro ficam sempre visíveis. */
+  .subtabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+  }
+
+  .subtab {
+    justify-content: center;
+    padding: 9px 6px;
+    gap: 5px;
+    font-size: 0.78rem;
+    min-width: 0;
+  }
+
+  .subtab-lbl {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 400px) {
+  /* "Crédito à Vista" é o rótulo mais longo — a escala aqui existe para ele
+     caber inteiro em telas de 320px, sem reticências. */
+  .subtab {
+    padding: 9px 4px;
+    font-size: 0.73rem;
+    gap: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtab-ico {
+    font-size: 13px;
+  }
+}
+
 /* ---------- parcelamentos ---------- */
 .pcard {
   border: 1px solid var(--line-strong);
@@ -2801,6 +2896,153 @@ input[type="range"]::-moz-range-thumb {
   border-color: var(--ink);
 }
 
+/* ---------- ciclo do mês ---------- */
+/* Uma linha só: rótulo à esquerda, dia escolhido e a chavinha à direita.
+   (O painel admin tem a própria variante, com a palavra ligada/desligada.) */
+.ciclo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ciclo-lbl {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.switch {
+  border: 0;
+  background: none;
+  padding: 0;
+  flex: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.switch-track {
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  position: relative;
+  transition: background .15s;
+}
+
+.switch[data-on="true"] .switch-track {
+  background: var(--positive);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .15s;
+}
+
+.switch[data-on="true"] .switch-thumb {
+  transform: translateX(18px);
+}
+
+/* Botão que abre o calendário do dia do mês */
+.dia-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+
+.dia-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dia-chip.vazio {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+/* o calendário puxa a leitura do chip: maior que o texto ao lado */
+.dia-chip-ico {
+  font-size: 1.15rem;
+  flex: none;
+}
+
+.dia-card {
+  max-width: 340px;
+}
+
+.dia-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.dia-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .12s;
+}
+
+.dia-cell:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dia-cell.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* desfazer o último fechamento: reparo, não ação do dia a dia — fica discreto */
+.undo-close {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  background: none;
+  border: none;
+  padding: 6px 0;
+  color: var(--faint);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s;
+}
+
+.undo-close:hover {
+  color: var(--ink);
+}
+
 /* ---------- histórico ---------- */
 .money-input .suffix {
   font-family: 'IBM Plex Mono', monospace;
@@ -2811,32 +3053,36 @@ input[type="range"]::-moz-range-thumb {
   user-select: none;
 }
 
-.day-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 4px;
-}
-
-@media (max-width: 460px) {
-  .day-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .hist-empty {
   border-top: none;
   margin-top: 0;
   padding-top: 0;
 }
 
+/* a linha é um botão: abre o resumo completo daquele mês */
 .hist-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
   padding: 11px 0;
+  border: none;
   border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.hist-row:hover {
+  opacity: 0.72;
+}
+
+.hist-open {
+  font-size: 1.1rem;
+  color: var(--faint);
+  align-self: center;
 }
 
 .hist-row:last-child {
@@ -2887,6 +3133,245 @@ input[type="range"]::-moz-range-thumb {
 
   .hist-num {
     font-size: 0.82rem;
+  }
+}
+
+/* ---------- popup do resumo do mês ---------- */
+.res-modal {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 520px;
+  max-height: min(86vh, 780px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fade .25s ease;
+}
+
+.res-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.res-kicker {
+  display: block;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 4px;
+}
+
+.res-title {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+  line-height: 1.1;
+}
+
+.res-close {
+  background: none;
+  border: none;
+  color: var(--faint);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: color .15s;
+}
+
+.res-close:hover {
+  color: var(--ink);
+}
+
+.res-body {
+  padding: 16px 22px 4px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.res-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.res-kpi {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.res-kpi-lbl {
+  display: block;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 4px;
+}
+
+.res-kpi-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.res-kpi-val.pos { color: var(--ink); }
+.res-kpi-val.neg { color: var(--expense); }
+.res-kpi-val.save { color: var(--positive); }
+
+.res-block {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+
+.res-block:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.res-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.res-block-title {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.res-block-total {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.86rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.res-block-total.pos { color: var(--positive); }
+
+.res-line,
+.res-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.85rem;
+}
+
+.res-line-lbl,
+.res-item-nome {
+  flex: 1;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.res-item-nome {
+  color: var(--ink);
+}
+
+.res-line.strong .res-line-lbl {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.res-line-val,
+.res-item-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.res-line.strong .res-line-val {
+  font-size: 0.95rem;
+}
+
+.res-tag {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.res-meta-hint,
+.res-nodetail {
+  border-top: none;
+  margin-top: 4px;
+  padding-top: 0;
+}
+
+.res-foot {
+  border-top: 1px solid var(--line);
+  padding: 14px 22px 16px;
+  background: var(--surface);
+}
+
+.res-foot .btn-confirm {
+  width: 100%;
+}
+
+.res-pdf-msg {
+  border-top: none;
+  margin-top: 10px;
+  padding-top: 0;
+}
+
+@media (max-width: 460px) {
+  .res-head,
+  .res-body,
+  .res-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .res-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .res-kpi {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    text-align: left;
+    padding: 8px 12px;
+  }
+
+  .res-kpi-lbl {
+    margin-bottom: 0;
   }
 }
 
@@ -3477,6 +3962,45 @@ input.auth-input:focus,
   color: var(--muted);
 }
 
+/* Checklist de requisitos da senha nova — cadastro, redefinição e troca em
+   Configurações (o componente é o mesmo nos três lugares). */
+.pw-checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 8px 0 14px;
+  padding: 0;
+}
+
+.pw-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--faint);
+  transition: color .15s;
+}
+
+.pw-checklist li.ok {
+  color: var(--positive);
+}
+
+.pw-checklist-ico {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.pw-checklist-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+
 .auth-submit {
   width: 100%;
   margin-top: 4px;
@@ -3499,6 +4023,56 @@ input.auth-input:focus,
 .auth-submit:disabled {
   opacity: 0.65;
   cursor: default;
+}
+
+/* Botão "entrar com o Google". As diretrizes do Google pedem fundo branco (ou
+   preto), o "G" original nas quatro cores e texto legível ao lado — por isso
+   este botão não usa a paleta do app. No tema escuro ele continua branco: é
+   assim que o usuário reconhece o botão do Google. */
+.auth-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 11px;
+  color: #1f1f1f;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow .15s, opacity .15s, background .15s;
+}
+
+.auth-google:hover:not(:disabled) {
+  background: #f7f8fa;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-google:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+/* Separador "ou com e-mail" entre os dois caminhos de entrada. */
+.auth-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 14px;
+  color: var(--faint);
+  font-size: 0.76rem;
+}
+
+.auth-sep::before,
+.auth-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
 }
 
 .auth-link {
@@ -3801,6 +4375,11 @@ input.auth-input:focus,
     animation: none;
     opacity: 0;
   }
+
+  /* a bolinha continua verde — o que some é só a pulsação */
+  .ai-online-dot {
+    animation: none;
+  }
 }
 
 .ai-head {
@@ -3810,15 +4389,90 @@ input.auth-input:focus,
   padding: 14px 16px;
   border-bottom: 1px solid var(--line);
 }
-.ai-head-title {
+/* identidade do Mr. Din no topo da conversa: foto, nome e status */
+.ai-head-id {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ai-head-avatar {
+  position: relative;
+  flex: none;
+  line-height: 0;
+}
+
+/* A foto de perfil é a mesma marca do botão que abre o chat (.ai-fab, e o
+   .bnav-ai no app): quem tocou no botão reconhece de imediato com quem está
+   falando. Ao mexer na aparência do botão, mexa aqui também. */
+.ai-avatar-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* bolinha de "online" no canto da foto. A borda usa o fundo do painel, então a
+   bolinha parece recortada nele — o mesmo truque dos apps de mensagem. */
+.ai-online-dot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--positive);
+  border: 2px solid var(--surface);
+  animation: ai-online-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes ai-online-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(14, 159, 110, 0.45);
+  }
+  55% {
+    box-shadow: 0 0 0 5px rgba(14, 159, 110, 0);
+  }
+}
+
+.ai-head-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ai-head-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.15;
   color: var(--ink);
 }
-.ai-head-title svg {
-  color: var(--accent);
+
+.ai-head-sub {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-online-lbl {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+/* saldo zerado: o Mr. Din segue online, mas só volta a responder no dia 1º */
+.ai-credits-out {
+  color: var(--negative);
+  font-weight: 600;
 }
 .ai-close {
   background: none;
@@ -4537,7 +5191,7 @@ input.auth-input:focus,
 }
 
 /* ---------- menu inferior (só no app nativo — .app.native-nav) ----------
-   Substitui a sidebar: Planejamento e Cartão à esquerda, IA no centro
+   Substitui a sidebar: Planejamento e Despesas à esquerda, IA no centro
    (botão elevado), Histórico e "Mais" à direita. O "Mais" abre um sheet
    com o restante dos painéis. */
 .app.native-nav {

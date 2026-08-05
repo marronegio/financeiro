@@ -24,7 +24,7 @@ export default function DespesasPanel({ state, c, updateItem, addItem, removeIte
           />
           <p className="hint">
             Contas que se repetem todo mês — aluguel, luz, água, internet. Elas entram no total de
-            gastos do Planejamento. Use o ✓ à esquerda para marcar as que já pagou; ele é
+            gastos do Resumo. Use o ✓ à esquerda para marcar as que já pagou; ele é
             desmarcado sozinho quando o mês é fechado.
           </p>
         </div>

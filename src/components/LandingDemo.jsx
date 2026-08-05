@@ -347,7 +347,7 @@ export function AiChatMock() {
 }
 
 const TABS = [
-  { id: 'plan', label: 'Planejamento', ico: '◷', render: () => <PlanMock /> },
+  { id: 'plan', label: 'Resumo', ico: '◷', render: () => <PlanMock /> },
   { id: 'desp', label: 'Despesas', ico: '⊟', render: () => <DespesasMock /> },
   { id: 'assin', label: 'Assinaturas', ico: '↻', render: () => <AssinaturasMock /> },
   { id: 'cartao', label: 'Cartão', ico: '▣', render: () => <CartaoMock /> },

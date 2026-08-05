@@ -1,24 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { RiSparkling2Line } from 'react-icons/ri';
 import { FiLock } from 'react-icons/fi';
-import { createDefaultState, CARD_CATEGORIES } from './state.js';
+import { createDefaultState, CARD_CATEGORIES, isExpenseTab } from './state.js';
 import { supabase } from './lib/supabase.js';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useProfiles } from './hooks/useProfiles.js';
 import { compute } from './money.js';
-import { applyRollover, manualClose } from './history.js';
+import { applyRollover, manualClose, setFechamentoDia, undoLastClose } from './history.js';
 import { useTheme } from './theme.js';
 import Sidebar from './components/Sidebar.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import { isNativeApp } from './lib/native.js';
 import PlanejamentoPanel from './components/PlanejamentoPanel.jsx';
 import CasalPanel from './components/CasalPanel.jsx';
-import DespesasPanel from './components/DespesasPanel.jsx';
-import AssinaturasPanel from './components/AssinaturasPanel.jsx';
+import DespesasTabs from './components/DespesasTabs.jsx';
 import DoacoesPanel from './components/DoacoesPanel.jsx';
 import RendaExtraPanel from './components/RendaExtraPanel.jsx';
-import CartaoPanel from './components/CartaoPanel.jsx';
-import ParcelamentosPanel from './components/ParcelamentosPanel.jsx';
 import EconomiasPanel from './components/EconomiasPanel.jsx';
 import HistoricoPanel from './components/HistoricoPanel.jsx';
 import ContatoPanel from './components/ContatoPanel.jsx';
@@ -83,21 +80,16 @@ const HEADERS = {
     ),
     sub: 'Ganhos avulsos como freelas, vendas e bônus. Somam à sua renda disponível e zeram a cada fechamento de mês.',
   },
+  // As quatro abas da janela de despesas dividem o mesmo título — o que muda é
+  // o subtítulo, que explica a aba aberta. Assim a troca de aba não parece uma
+  // troca de tela.
   despesas: {
     title: (
       <>
-        Seus gastos <em>fixos</em> do mês.
+        Tudo que você <em>gasta</em> no mês.
       </>
     ),
     sub: 'Contas que se repetem todo mês — aluguel, luz, internet. Elas entram no total de gastos do planejamento.',
-  },
-  assinaturas: {
-    title: (
-      <>
-        As <em>assinaturas</em> que pesam na conta.
-      </>
-    ),
-    sub: 'Serviços recorrentes como streaming, apps e academia. Some tudo que debita automático todo mês.',
   },
   doacoes: {
     title: (
@@ -110,15 +102,23 @@ const HEADERS = {
   cartao: {
     title: (
       <>
-        Suas compras no <em>cartão</em>.
+        Tudo que você <em>gasta</em> no mês.
       </>
     ),
-    sub: 'Lance os gastos do cartão e veja quanto ainda cabe no limite de crédito que você planejou.',
+    sub: 'Compras avulsas no crédito. Lance os gastos do cartão e veja quanto ainda cabe no limite que você planejou.',
+  },
+  assinaturas: {
+    title: (
+      <>
+        Tudo que você <em>gasta</em> no mês.
+      </>
+    ),
+    sub: 'Serviços recorrentes como streaming, apps e academia. Some tudo que debita automático todo mês.',
   },
   parcelamentos: {
     title: (
       <>
-        O que você ainda <em>parcela</em>.
+        Tudo que você <em>gasta</em> no mês.
       </>
     ),
     sub: 'Acompanhe as compras parceladas, a parcela do mês e quanto falta pra quitar cada uma.',
@@ -137,7 +137,7 @@ const HEADERS = {
         Seu histórico <em>mês a mês</em>.
       </>
     ),
-    sub: 'Defina os dias do recebimento e da fatura. A cada ciclo, o cartão é zerado, as parcelas avançam e um resumo do mês fica guardado aqui.',
+    sub: 'Escolha o dia em que o mês fecha. A cada ciclo, o cartão é zerado, as parcelas avançam e um resumo do mês fica guardado aqui.',
   },
   contato: {
     title: (
@@ -245,7 +245,13 @@ export default function Dashboard({
     setMoreOpen(false); // app: o tour pode terminar com o sheet "Mais" aberto
   }
 
-  const setField = (key, value) => setState((s) => ({ ...s, [key]: value }));
+  // O dia do fechamento passa por um caminho próprio: ele define o período do
+  // ciclo, então mexer nele re-ancora o fechamento em vez de disparar um (ver
+  // setFechamentoDia em history.js).
+  const setField = (key, value) =>
+    setState((s) => (key === 'fechamentoDia'
+      ? setFechamentoDia(s, value)
+      : { ...s, [key]: value }));
 
   const setTab = (tab) => {
     if (state && state.tab !== tab) {
@@ -353,12 +359,16 @@ export default function Dashboard({
     setState((s) => manualClose(s, new Date(), guardadoReal));
   };
 
+  const desfazerFechamento = () => {
+    setState((s) => undoLastClose(s));
+  };
+
   // Fechamento automático dos meses pendentes ao abrir o app.
   useEffect(() => {
     if (!state) return;
     setState((s) => applyRollover(s));
     // Reage à definição do dia e ao avanço do último fechamento; converge sozinho.
-  }, [state?.recebimentoDia, state?.ultimoFechamento, setState]);
+  }, [state?.fechamentoDia, state?.ultimoFechamento, setState]);
 
   // Notificações locais de vencimento (app nativo): reagenda sempre que as
   // despesas mudam — inclusive o "já paguei", que remove o aviso daquele ciclo.
@@ -498,19 +508,6 @@ export default function Dashboard({
               <RendaExtraPanel state={state} c={c} setField={setField} {...listProps} />
             )
           )}
-          {tab === 'despesas' && <DespesasPanel state={state} c={c} {...listProps} />}
-          {tab === 'assinaturas' && (
-            lockedTab ? (
-              <ProLocked
-                feature="assinaturas"
-                title="Assinaturas"
-                hint="Streaming, academia, apps — tudo que se repete todo mês, com o dia da cobrança."
-                onUpgrade={openUpgrade}
-              />
-            ) : (
-              <AssinaturasPanel state={state} c={c} {...listProps} />
-            )
-          )}
           {tab === 'doacoes' && (
             lockedTab ? (
               <ProLocked
@@ -523,21 +520,18 @@ export default function Dashboard({
               <DoacoesPanel state={state} c={c} {...listProps} />
             )
           )}
-          {tab === 'cartao' && (
-            <CartaoPanel
+          {/* Despesas fixas, crédito à vista, assinaturas e parcelamentos:
+              uma janela só, em abas. */}
+          {isExpenseTab(tab) && (
+            <DespesasTabs
+              tab={tab}
+              onTab={setTab}
               state={state}
               c={c}
               {...listProps}
               addCategory={addCategory}
               updateCategory={updateCategory}
               removeCategory={removeCategory}
-            />
-          )}
-          {tab === 'parcelamentos' && (
-            <ParcelamentosPanel
-              state={state}
-              c={c}
-              {...listProps}
               isFree={isFree}
               onUpgrade={openUpgrade}
             />
@@ -548,6 +542,7 @@ export default function Dashboard({
               state={state}
               setField={setField}
               onClose={fecharMes}
+              onUndoClose={desfazerFechamento}
               isFree={isFree}
               onUpgrade={openUpgrade}
             />
