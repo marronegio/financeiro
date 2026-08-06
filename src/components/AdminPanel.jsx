@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiSearch, FiRefreshCw, FiTrash2, FiZap } from 'react-icons/fi';
 import { supabase } from '../lib/supabase.js';
+import { hasPaidAccess } from '../hooks/useSubscription.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
 // Painel administrativo, renderizado como aba nativa do app (só o admin vê — ver
@@ -51,6 +52,21 @@ const bucketOf = (status) => {
 const STATUS_LABEL = {
   active: 'Ativa', trialing: 'Em teste', inactive: 'Inativa',
   pending: 'Pendente', past_due: 'Atrasado', canceled: 'Cancelado',
+};
+
+// O status cru do gateway NÃO é o que a pessoa vê no app, e mostrá-lo direto
+// fazia o painel exibir "Ativa" para quem já tinha perdido o acesso: quem
+// cancela continua em 'active' até o access_until vencer (ver asaas-cancel) e o
+// override manual tem a palavra final. Aqui aplicamos a mesma regra do gate de
+// acesso (hasPaidAccess), para o painel contar a mesma história que o app.
+const effectiveStatus = (u) => {
+  if (u.adminOverride === 'active') return 'active';
+  if (u.adminOverride === 'inactive') return 'inactive';
+  const row = { subscription_status: u.subscriptionStatus, access_until: u.accessUntil };
+  if (hasPaidAccess(row)) return u.subscriptionStatus;
+  // Cancelamento cujo período já venceu: o status cru fica 'active' para sempre.
+  if (u.subscriptionStatus === 'active' || u.subscriptionStatus === 'trialing') return 'canceled';
+  return u.subscriptionStatus;
 };
 
 const FILTERS = [
@@ -175,7 +191,7 @@ export default function AdminPanel() {
   const bySearch = q ? users.filter((u) => (u.email || '').toLowerCase().includes(q)) : users;
   const counts = bySearch.reduce(
     (acc, u) => {
-      const b = bucketOf(u.subscriptionStatus);
+      const b = bucketOf(effectiveStatus(u));
       acc[b] = (acc[b] || 0) + 1;
       acc.all += 1;
       return acc;
@@ -184,7 +200,7 @@ export default function AdminPanel() {
   );
   const shown = filter === 'all'
     ? bySearch
-    : bySearch.filter((u) => bucketOf(u.subscriptionStatus) === filter);
+    : bySearch.filter((u) => bucketOf(effectiveStatus(u)) === filter);
 
   return (
     <div className="adm">
@@ -295,6 +311,7 @@ export default function AdminPanel() {
         <div className="adm-list">
           {shown.map((u) => {
             const anyBusy = busyId.startsWith(u.id);
+            const status = effectiveStatus(u);
             return (
               <div className="card adm-user" key={u.id}>
                 <div className="adm-user-head">
@@ -303,14 +320,17 @@ export default function AdminPanel() {
                       {u.email || '(sem e-mail)'}
                       <span
                         className="adm-badge"
-                        data-tone={BUCKETS[bucketOf(u.subscriptionStatus)].tone}
+                        data-tone={BUCKETS[bucketOf(status)].tone}
                       >
-                        {STATUS_LABEL[u.subscriptionStatus] || u.subscriptionStatus}
+                        {STATUS_LABEL[status] || status}
                       </span>
                     </div>
                     <div className="adm-meta">
                       Criado em {fmtDate(u.createdAt)}
                       {u.provider ? ` · ${u.provider}` : ''}
+                      {/* Data em que o acesso pago acaba (ou acabou) — é o que
+                          explica a etiqueta de quem cancelou. */}
+                      {u.accessUntil ? ` · acesso até ${fmtDate(u.accessUntil)}` : ''}
                     </div>
                   </div>
                   <button

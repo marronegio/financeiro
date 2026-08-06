@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from './auth/AuthContext.jsx';
 import { useSubscription } from './hooks/useSubscription.js';
 import { applyTheme, storedTheme } from './theme.js';
@@ -25,11 +25,23 @@ export default function App() {
 
   // Lê resultado do redirect do gateway (?payment=success|cancel)
   const params = new URLSearchParams(window.location.search);
-  const paymentResult = params.get('payment'); // 'success' | 'cancel' | null
 
   // Link de indicação (?ref=CODIGO): guarda para o cadastro preencher sozinho.
   const refCode = params.get('ref');
   if (refCode) localStorage.setItem('dinprev_ref', refCode.toUpperCase());
+
+  // O resultado do pagamento é lido UMA vez e some da URL logo depois. Enquanto
+  // o parâmetro ficava lá, ele descrevia o estado da página em vez de um evento:
+  // qualquer recarregamento (inclusive um link salvo de uma compra antiga)
+  // reabria a tela de "pagamento recebido", que recarrega sozinha ao confirmar —
+  // e a pessoa ficava presa nesse ciclo, sem conseguir chegar ao checkout.
+  const [paymentResult] = useState(() => params.get('payment')); // 'success' | 'cancel' | null
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('payment')) return;
+    url.searchParams.delete('payment');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
 
   // O tema escuro salvo só vale dentro do dashboard; landing e telas de auth
   // ficam sempre claras. Enquanto auth/assinatura carregam, não decide (evita

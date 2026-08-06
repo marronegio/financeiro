@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { hasPaidAccess } from '../hooks/useSubscription.js';
 import { PLANS, planKey, normalizePlanKey } from '../plans.js';
 import { UPGRADE_REASONS } from '../limits.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
@@ -59,6 +60,11 @@ export default function PaywallModal({
 
   // Enquanto aguarda o pagamento (tela de PIX ou retorno do cartão), verifica a
   // cada 4s se o webhook já ativou a assinatura; ao confirmar, cai no Dashboard.
+  //
+  // A confirmação usa hasPaidAccess, o MESMO critério do gate de acesso: quem
+  // cancelou fica com subscription_status 'active' até o access_until vencer, e
+  // olhar só o status dava o pagamento por confirmado na hora — recarregando a
+  // página em cima de um PIX ainda não pago.
   useEffect(() => {
     if (!pix && paymentResult !== 'success') return;
     pollRef.current = setInterval(async () => {
@@ -66,10 +72,10 @@ export default function PaywallModal({
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('subscription_status')
+        .select('subscription_status, access_until')
         .eq('id', user.id)
         .single();
-      if (data?.subscription_status === 'active') {
+      if (hasPaidAccess(data)) {
         clearInterval(pollRef.current);
         if (!sessionStorage.getItem('dinprev_purchase_tracked')) {
           sessionStorage.setItem('dinprev_purchase_tracked', '1');
