@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiGrid, FiLogOut, FiLock } from 'react-icons/fi';
 import { RiSparkling2Line } from 'react-icons/ri';
-import { TABS, isExpenseTab } from '../state.js';
+import { TABS, isExpenseTab, menuTabTarget } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
 import { TAB_ICONS } from './Sidebar.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
@@ -33,7 +33,7 @@ export default function BottomNav({
   const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   const pick = (id) => {
-    onTab(id);
+    onTab(menuTabTarget(id));
     setMoreOpen(false);
   };
 

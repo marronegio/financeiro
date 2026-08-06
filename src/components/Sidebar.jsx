@@ -15,7 +15,7 @@ import {
   FiHeart,
   FiLock,
 } from 'react-icons/fi';
-import { TABS, isExpenseTab } from '../state.js';
+import { TABS, isExpenseTab, menuTabTarget } from '../state.js';
 import { isAdmin } from '../lib/admin.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
@@ -87,7 +87,7 @@ export default function Sidebar({
   }, [open]);
 
   const pick = (id) => {
-    onTab(id);
+    onTab(menuTabTarget(id));
     setOpen(false);
   };
 

@@ -122,6 +122,14 @@ export const EXPENSE_TABS = [
 
 export const isExpenseTab = (tabId) => EXPENSE_TABS.some((t) => t.id === tabId);
 
+// Abrir "Despesas" pelo menu cai em Crédito à Vista: é a primeira aba da janela
+// e a que mais se mexe no dia a dia. O item de menu divide o id com a aba de
+// despesas fixas, então quem entra pelo menu precisa desta tradução — já a
+// navegação direta ('despesas' vindo da IA, do tour ou da notificação de
+// vencimento) continua abrindo as fixas.
+export const EXPENSE_HOME_TAB = 'cartao';
+export const menuTabTarget = (tabId) => (tabId === 'despesas' ? EXPENSE_HOME_TAB : tabId);
+
 // Categorias/etiquetas para as compras no cartão.
 export const CARD_CATEGORIES = [
   { id: 'alimentacao', label: 'Alimentação', color: '#e0564c' },
