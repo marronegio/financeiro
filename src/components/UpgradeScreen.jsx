@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../landing.css';
 import { planKey, normalizePlanKey } from '../plans.js';
 import { trackMetaEvent } from '../lib/metaPixel.js';
 import { UPGRADE_REASONS } from '../limits.js';
+import { applyTheme, storedTheme } from '../theme.js';
 import PaywallModal from './PaywallModal.jsx';
 import { PriceCard } from './LandingPage.jsx';
 
@@ -20,6 +21,15 @@ export default function UpgradeScreen({ feature = null, paymentResult = null, on
   );
   // Voltando do checkout, pula direto para o popup, que espera o webhook ativar.
   const [payOpen, setPayOpen] = useState(paymentResult === 'success');
+
+  // Esta tela cobre o app inteiro e reaproveita a paleta clara da landing
+  // (`.lp`/`.mg`) — mas o PaywallModal usa as vars globais (--surface, --ink
+  // etc.), que continuavam seguindo o tema escuro salvo do dashboard. Força
+  // claro enquanto está aberta e devolve o tema do dashboard ao fechar.
+  useEffect(() => {
+    applyTheme('light');
+    return () => applyTheme(storedTheme());
+  }, []);
 
   const start = (planId) => {
     localStorage.setItem('dinprev_plan', planId);
