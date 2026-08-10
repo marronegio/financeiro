@@ -4,12 +4,13 @@ import { EXPENSE_TABS } from '../state.js';
 import { TAB_ICONS } from './Sidebar.jsx';
 import DespesasPanel from './DespesasPanel.jsx';
 import CartaoPanel from './CartaoPanel.jsx';
+import DebitoPanel from './DebitoPanel.jsx';
 import AssinaturasPanel from './AssinaturasPanel.jsx';
 import ParcelamentosPanel from './ParcelamentosPanel.jsx';
 import ProLocked from './ProLocked.jsx';
 
-// Janela única das despesas: contas fixas, crédito à vista, assinaturas e
-// parcelamentos são abas aqui dentro. Tudo que sai da conta no mês vive num
+// Janela única das despesas: contas fixas, crédito à vista, débito, assinaturas
+// e parcelamentos são abas aqui dentro. Tudo que sai da conta no mês vive num
 // lugar só; a navegação continua por `tab` (ver EXPENSE_TABS em src/state.js),
 // então trocar de aba é uma troca de tela de verdade — entra no histórico do
 // botão voltar e o cabeçalho da página acompanha.
@@ -73,6 +74,30 @@ export default function DespesasTabs({
       {/* O bloqueio do Pro mora no render, e não na navegação — assim nem o
           tour nem uma aba salva de quando a pessoa era assinante abrem o painel
           de verdade para quem está no grátis. */}
+      {tab === 'debito' && (
+        isFree ? (
+          <div className="panel">
+            <div className="single">
+              <ProLocked
+                feature="debito"
+                title="Débito"
+                hint="Mercado, Uber, farmácia — o que você paga na hora, com orçamento próprio para o mês."
+                onUpgrade={onUpgrade}
+              />
+            </div>
+          </div>
+        ) : (
+          <DebitoPanel
+            state={state}
+            c={c}
+            {...listProps}
+            addCategory={addCategory}
+            updateCategory={updateCategory}
+            removeCategory={removeCategory}
+          />
+        )
+      )}
+
       {tab === 'assinaturas' && (
         isFree ? (
           <div className="panel">

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 
 const NEW_COLOR = '#635bff';
 
-// Gerenciador das categorias de compra do cartão: criar, renomear, recolorir e
-// remover etiquetas. A categoria "Outros" é o destino das compras sem etiqueta,
-// então não pode ser removida (mas pode ser renomeada/recolorida).
+// Gerenciador das categorias de compra: criar, renomear, recolorir e remover
+// etiquetas. Aparece nas duas abas de compras avulsas (crédito à vista e
+// débito), que dividem a MESMA lista — mexer numa muda nas duas. A categoria
+// "Outros" é o destino das compras sem etiqueta, então não pode ser removida
+// (mas pode ser renomeada/recolorida).
 export default function CategoryManager({ categories, onAdd, onUpdate, onRemove }) {
   const [open, setOpen] = useState(false);
   const [nome, setNome] = useState('');

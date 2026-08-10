@@ -248,6 +248,11 @@ function buildContext(state, c) {
     `Assinaturas: ${BRL(c.totAss)}`,
     `Doações: ${BRL(c.totDoacoes)}`,
     `Compras no cartão: ${BRL(c.totCartao)}`,
+    `Gastos no débito/Pix: ${BRL(c.totDebito)}${
+      c.temOrcamentoDebito
+        ? ` — o orçamento do débito é ${BRL(c.orcamentoDebito)} (o que sobrou no último mês fechado); ainda cabem ${BRL(c.debitoDisponivel)}`
+        : ' (sem orçamento ainda: nenhum mês foi fechado)'
+    }`,
     `Parcela do mês: ${BRL(c.parcelaMensal)} (${c.parcelaAtivas} parcelamento(s) ativo(s)${
       c.parcelaMensalPix > 0 ? `; ${BRL(c.parcelaMensalPix)} via Pix, fora da fatura` : ''
     })`,
@@ -275,6 +280,11 @@ function buildContext(state, c) {
     'Compras no cartão:',
     listaDetalhada(
       state.cartao,
+      (it) => `${it.nome || 'Sem nome'}: ${BRL(toNumber(it.valor))} [${catLabel(it.cat)}]`
+    ),
+    'Gastos no débito/Pix:',
+    listaDetalhada(
+      state.debito,
       (it) => `${it.nome || 'Sem nome'}: ${BRL(toNumber(it.valor))} [${catLabel(it.cat)}]`
     ),
     'Parcelamentos:',

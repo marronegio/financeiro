@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { BRL, maskMoney, toNumber, onlyDigits, computeParcela, compute } from './money.js';
+import {
+  BRL, maskMoney, toNumber, onlyDigits, computeParcela, compute, sobraDoMes,
+} from './money.js';
+
+describe('sobraDoMes', () => {
+  it('desconta o que foi guardado — sobra e poupança são coisas diferentes', () => {
+    // Mês real de um usuário: guardou 100, sobraram 329,25.
+    const h = { salario: 5464.52, rendaExtra: 305.34, gasto: 5340.61, guardado: 100 };
+    expect(sobraDoMes(h)).toBeCloseTo(329.25, 2);
+  });
+
+  it('mês fechado no vermelho devolve valor negativo', () => {
+    expect(sobraDoMes({ salario: 1000, gasto: 1500, guardado: 0 })).toBeCloseTo(-500, 2);
+  });
+
+  it('campos ausentes ou registro vazio valem 0', () => {
+    expect(sobraDoMes({ salario: 500 })).toBeCloseTo(500, 2);
+    expect(sobraDoMes(null)).toBe(0);
+    expect(sobraDoMes({})).toBe(0);
+  });
+});
 
 describe('BRL', () => {
   it('formata como real brasileiro', () => {
@@ -105,6 +125,17 @@ describe('computeParcela', () => {
 });
 
 describe('compute', () => {
+  // Mês fechado com uma sobra conhecida. O `guardado` nunca é zero de
+  // propósito: se algum dia o orçamento voltar a ler esse campo por engano, os
+  // testes que usam este helper quebram na hora.
+  const mesFechado = (periodo, sobra, guardado = 100) => ({
+    periodo,
+    salario: 2000,
+    rendaExtra: 0,
+    gasto: 2000 - sobra - guardado,
+    guardado,
+  });
+
   const baseState = () => ({
     salario: '1.000,00',
     guardar: '100,00',
@@ -128,10 +159,57 @@ describe('compute', () => {
     expect(c.faturaCartao).toBeCloseTo(90, 2); // cartão 30 + assinaturas 50 + parcela 10
     expect(c.gastos).toBeCloseTo(290, 2); // 200 + 50 + 30 + 10
     expect(c.sobra).toBeCloseTo(610, 2); // 1000 - 290 - 100
-    expect(c.pctC).toBe(40);
-    expect(c.pctD).toBe(60);
-    expect(c.credito).toBeCloseTo(244, 2); // 610 * 40%
-    expect(c.debito).toBeCloseTo(366, 2); // 610 * 60%
+  });
+
+  it('sem mês fechado, não há orçamento de débito', () => {
+    const c = compute(baseState());
+    expect(c.temOrcamentoDebito).toBe(false);
+    expect(c.orcamentoDebito).toBe(0);
+  });
+
+  it('o orçamento do débito é a sobra do último mês fechado', () => {
+    const s = baseState();
+    s.historico = [
+      { periodo: '2026-07', salario: 5000, rendaExtra: 0, gasto: 4000, guardado: 200 },
+      // O mais recente é o que vale.
+      { periodo: '2026-08', salario: 5464.52, rendaExtra: 305.34, gasto: 5340.61, guardado: 100 },
+    ];
+    const c = compute(s);
+    expect(c.temOrcamentoDebito).toBe(true);
+    expect(c.orcamentoDebito).toBeCloseTo(329.25, 2);
+    expect(c.orcamentoDebitoPeriodo).toBe('2026-08');
+  });
+
+  it('o orçamento é o que SOBROU, não o que a pessoa guardou', () => {
+    // Mês real: guardou 100, mas sobraram 329,25. O orçamento é 329,25 — usar
+    // o campo `guardado` transformaria a poupança da pessoa no teto de gastos.
+    const s = baseState();
+    s.historico = [
+      { periodo: '2026-08', salario: 5464.52, rendaExtra: 305.34, gasto: 5340.61, guardado: 100 },
+    ];
+    const c = compute(s);
+    expect(c.orcamentoDebito).toBeCloseTo(329.25, 2);
+    expect(c.orcamentoDebito).not.toBeCloseTo(100, 2);
+  });
+
+  it('o orçamento não encolhe conforme a pessoa gasta no mês corrente', () => {
+    const s = baseState();
+    s.historico = [mesFechado('2026-05', 300)];
+    const antes = compute(s);
+    s.debito = [{ nome: 'Mercado', valor: '100,00' }];
+    const depois = compute(s);
+    // A sobra do mês cai (o gasto é real), mas o orçamento é um fato do mês
+    // passado: não se mexe. Só o "ainda cabe" desce.
+    expect(depois.sobra).toBeCloseTo(antes.sobra - 100, 2);
+    expect(depois.orcamentoDebito).toBeCloseTo(300, 2);
+    expect(depois.debitoDisponivel).toBeCloseTo(200, 2);
+  });
+
+  it('mês fechado no vermelho não vira orçamento negativo', () => {
+    const s = baseState();
+    s.historico = [mesFechado('2026-05', -450)];
+    const c = compute(s);
+    expect(c.orcamentoDebito).toBe(0);
   });
 
   it('parcela via Pix entra nos gastos mas fica fora da fatura', () => {
@@ -144,6 +222,73 @@ describe('compute', () => {
     expect(c.faturaCartao).toBeCloseTo(90, 2); // pix não entra na fatura
     expect(c.gastos).toBeCloseTo(300, 2); // 290 + 10 do pix
     expect(c.parcelaAtivas).toBe(2);
+  });
+
+  it('gasto no débito entra nos gastos, mas fica fora da fatura e do limite', () => {
+    const s = baseState();
+    s.limiteCartao = '1.000,00';
+    s.debito = [{ nome: 'Mercado', valor: '80,00' }, { nome: 'Uber', valor: '20,00' }];
+    const c = compute(s);
+    expect(c.totDebito).toBeCloseTo(100, 2);
+    expect(c.gastos).toBeCloseTo(390, 2); // 290 + 100
+    expect(c.sobra).toBeCloseTo(510, 2); // 1000 − 390 − 100
+    expect(c.faturaCartao).toBeCloseTo(90, 2); // inalterada: débito não passa no cartão
+    // 30 do cartão + 50 de assinaturas + 120 do saldo devedor das parcelas —
+    // os 100 do débito não reservam limite nenhum.
+    expect(c.limiteUsado).toBeCloseTo(200, 2);
+  });
+
+  it('sem lista de débito (perfil antigo), totDebito é 0', () => {
+    expect(compute(baseState()).totDebito).toBe(0);
+  });
+
+  it('estourar o orçamento do débito deixa o disponível negativo', () => {
+    const s = baseState();
+    s.historico = [mesFechado('2026-05', 300)];
+    s.debito = [{ nome: 'Viagem', valor: '900,00' }];
+    const c = compute(s);
+    expect(c.debitoDisponivel).toBeLessThan(0);
+  });
+
+  it('o que ainda cabe no débito nunca passa da sobra do mês corrente', () => {
+    // Mês passado sobraram 800 (o orçamento). Mas o mês corrente está apertado:
+    // renda 3.000, fixas 1.000, 1.000 no cartão e 700 no débito → sobram 300.
+    const c = compute({
+      salario: '3.000,00',
+      guardar: '',
+      despesas: [{ nome: 'Aluguel', valor: '1.000,00' }],
+      assinaturas: [],
+      cartao: [{ nome: 'Mercado', valor: '1.000,00' }],
+      debito: [{ nome: 'Pix', valor: '700,00' }],
+      parcelamentos: [],
+      historico: [mesFechado('2026-05', 800)],
+    });
+
+    expect(c.sobra).toBeCloseTo(300, 2);
+    expect(c.orcamentoDebito).toBeCloseTo(800, 2);
+    expect(c.debitoOrcamentoRestante).toBeCloseTo(100, 2); // 800 − 700
+    // Aqui o orçamento é mais apertado que a sobra: quem limita é ele.
+    expect(c.debitoDisponivel).toBeCloseTo(100, 2);
+    expect(c.debitoNoTeto).toBe(false);
+  });
+
+  it('mês corrente mais apertado que o anterior: quem limita é a sobra', () => {
+    const c = compute({
+      salario: '3.000,00',
+      guardar: '',
+      despesas: [{ nome: 'Aluguel', valor: '1.000,00' }],
+      assinaturas: [],
+      cartao: [{ nome: 'Mercado', valor: '1.500,00' }],
+      debito: [{ nome: 'Pix', valor: '200,00' }],
+      parcelamentos: [],
+      historico: [mesFechado('2026-05', 800)],
+    });
+
+    expect(c.sobra).toBeCloseTo(300, 2); // 3.000 − 1.000 − 1.500 − 200
+    expect(c.debitoOrcamentoRestante).toBeCloseTo(600, 2); // 800 − 200
+    // O orçamento diria 600; o dinheiro que existe são 300. Vale o menor.
+    expect(c.debitoDisponivel).toBeCloseTo(300, 2);
+    expect(c.debitoNoTeto).toBe(true);
   });
 
   it('parcelamento quitado não entra na parcela do mês', () => {
@@ -182,12 +327,16 @@ describe('compute', () => {
     expect(compute(baseState()).totRendaExtra).toBe(0);
   });
 
-  it('sobra negativa zera crédito e débito (não usa valor negativo)', () => {
+  it('mês no vermelho não deixa nada disponível no débito', () => {
     const s = baseState();
     s.salario = '100,00'; // gastos passam do salário
+    s.historico = [mesFechado('2026-05', 800)];
     const c = compute(s);
     expect(c.sobra).toBeLessThan(0);
-    expect(c.credito).toBe(0);
-    expect(c.debito).toBe(0);
+    // O orçamento do mês passado continua de pé, mas não há dinheiro no mês
+    // corrente: o teto vira a sobra, negativa.
+    expect(c.orcamentoDebito).toBeCloseTo(800, 2);
+    expect(c.debitoDisponivel).toBeLessThan(0);
+    expect(c.debitoNoTeto).toBe(true);
   });
 });

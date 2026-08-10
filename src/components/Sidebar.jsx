@@ -5,6 +5,7 @@ import {
   FiFileText,
   FiRepeat,
   FiCreditCard,
+  FiDollarSign,
   FiLayers,
   FiTarget,
   FiClock,
@@ -22,7 +23,7 @@ import ConfirmDialog from './ConfirmDialog.jsx';
 const profInitials = (name) => (name || '?').trim().slice(0, 2).toUpperCase();
 
 // Ícone (react-icons) de cada aba — inclusive as que hoje só existem como aba
-// interna da janela de despesas (cartao, assinaturas, parcelamentos).
+// interna da janela de despesas (cartao, debito, assinaturas, parcelamentos).
 // Exportado para o BottomNav (app nativo) e o DespesasTabs usarem exatamente
 // os mesmos ícones.
 export const TAB_ICONS = {
@@ -33,6 +34,7 @@ export const TAB_ICONS = {
   assinaturas: FiRepeat,
   doacoes: FiHeart,
   cartao: FiCreditCard,
+  debito: FiDollarSign,
   parcelamentos: FiLayers,
   economias: FiTarget,
   historico: FiClock,
@@ -62,8 +64,9 @@ export default function Sidebar({
     ? [...planTabs, { id: 'admin', label: 'Admin' }]
     : planTabs;
 
-  // Crédito à vista, assinaturas e parcelamentos são abas dentro da janela de
-  // despesas: com uma delas aberta, quem fica marcado no menu é "Despesas".
+  // Crédito à vista, débito, assinaturas e parcelamentos são abas dentro da
+  // janela de despesas: com uma delas aberta, quem fica marcado no menu é
+  // "Despesas".
   const navTab = isExpenseTab(tab) ? 'despesas' : tab;
 
   // No plano Duo, a troca de perfil não é mais direta: um botão leva de volta à

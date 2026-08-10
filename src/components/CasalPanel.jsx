@@ -185,6 +185,8 @@ export default function CasalPanel({ profiles, active, onOpenProfiles, onReload 
               {(cA.totDoacoes > 0 || cB.totDoacoes > 0) &&
                 row('Doações', cA.totDoacoes, cB.totDoacoes)}
               {row('Cartão', cA.totCartao, cB.totCartao)}
+              {(cA.totDebito > 0 || cB.totDebito > 0) &&
+                row('Débito', cA.totDebito, cB.totDebito)}
               {(cA.parcelaMensal > 0 || cB.parcelaMensal > 0) &&
                 row('Parcelas do mês', cA.parcelaMensal, cB.parcelaMensal)}
               {row('Total de gastos', cA.gastos, cB.gastos)}

@@ -44,7 +44,7 @@ const obKey = (id, profile) => `ob_done_${id}_${profile}`;
 const newItem = (kind) =>
   kind === 'parcelamentos'
     ? { nome: '', total: '', parcelas: '', pagas: '', pix: false }
-    : kind === 'cartao'
+    : kind === 'cartao' || kind === 'debito'
     ? { nome: '', valor: '', cat: '' }
     : kind === 'metas'
     ? { nome: '', valor: '', guardado: '', prazo: '' }
@@ -80,7 +80,7 @@ const HEADERS = {
     ),
     sub: 'Ganhos avulsos como freelas, vendas e bônus. Somam à sua renda disponível e zeram a cada fechamento de mês.',
   },
-  // As quatro abas da janela de despesas dividem o mesmo título — o que muda é
+  // As cinco abas da janela de despesas dividem o mesmo título — o que muda é
   // o subtítulo, que explica a aba aberta. Assim a troca de aba não parece uma
   // troca de tela.
   despesas: {
@@ -106,6 +106,14 @@ const HEADERS = {
       </>
     ),
     sub: 'Compras avulsas no crédito. Lance os gastos do cartão e veja quanto ainda cabe no limite que você planejou.',
+  },
+  debito: {
+    title: (
+      <>
+        Tudo que você <em>gasta</em> no mês.
+      </>
+    ),
+    sub: 'Compras pagas na hora — débito, Pix ou dinheiro. Não entram na fatura do cartão, mas contam no total de gastos do mês.',
   },
   assinaturas: {
     title: (
@@ -520,8 +528,8 @@ export default function Dashboard({
               <DoacoesPanel state={state} c={c} {...listProps} />
             )
           )}
-          {/* Despesas fixas, crédito à vista, assinaturas e parcelamentos:
-              uma janela só, em abas. */}
+          {/* Despesas fixas, crédito à vista, débito, assinaturas e
+              parcelamentos: uma janela só, em abas. */}
           {isExpenseTab(tab) && (
             <DespesasTabs
               tab={tab}

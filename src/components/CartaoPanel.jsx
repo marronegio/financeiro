@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { BRL, toNumber } from '../money.js';
+import { BRL } from '../money.js';
 import { getCardCategories } from '../state.js';
+import { SORTS, ordemCompras, totaisPorCategoria } from '../compras.js';
 import EditableList from './EditableList.jsx';
 import CategoryManager from './CategoryManager.jsx';
+import CategoriasResumo from './CategoriasResumo.jsx';
 import LimiteCartao from './LimiteCartao.jsx';
-
-const SORTS = [
-  { id: 'add', label: 'Data' },
-  { id: 'valor', label: 'Valor' },
-  { id: 'categoria', label: 'Categoria' },
-];
 
 export default function CartaoPanel({
   state,
@@ -18,44 +14,13 @@ export default function CartaoPanel({
   addItem,
   removeItem,
   addCategory,
-  
   updateCategory,
   removeCategory,
 }) {
   const [sort, setSort] = useState('add');
   const categories = getCardCategories(state);
-  const known = new Set(categories.map((cat) => cat.id));
-
-  // Ordem de exibição das compras (índices originais). Mantém os índices intactos
-  // para a edição; itens sem valor preenchido ficam sempre no fim (junto do botão
-  // "Adicionar"), e a ordenação é estável (preserva a ordem de adição em empates).
-  const catRank = new Map(categories.map((cat, i) => [cat.id, i]));
-  const rankOf = (it) => (catRank.has(it.cat) ? catRank.get(it.cat) : catRank.get('outros') ?? categories.length);
-  const order = state.cartao.map((_, i) => i);
-  if (sort !== 'add') {
-    order.sort((a, b) => {
-      const ia = state.cartao[a];
-      const ib = state.cartao[b];
-      const va = toNumber(ia.valor);
-      const vb = toNumber(ib.valor);
-      // Compras ainda vazias (sem valor) vão para o fim, qualquer que seja o modo.
-      if ((va === 0) !== (vb === 0)) return va === 0 ? 1 : -1;
-      const cmp = sort === 'valor' ? vb - va : rankOf(ia) - rankOf(ib);
-      return cmp !== 0 ? cmp : a - b; // empate: ordem de adição (estável)
-    });
-  }
-
-  // Total por categoria (itens sem etiqueta — ou com etiqueta removida — caem em "Outros").
-  const porCategoria = categories
-    .map((cat) => ({
-      ...cat,
-      total: state.cartao.reduce((s, it) => {
-        const id = known.has(it.cat) ? it.cat : 'outros';
-        return s + (id === cat.id ? toNumber(it.valor) : 0);
-      }, 0),
-    }))
-    .filter((cat) => cat.total > 0)
-    .sort((a, b) => b.total - a.total);
+  const order = ordemCompras(state.cartao, categories, sort);
+  const porCategoria = totaisPorCategoria(state.cartao, categories);
 
   return (
     <div className="panel">
@@ -189,32 +154,7 @@ export default function CartaoPanel({
 
           <LimiteCartao c={c} card />
 
-          {porCategoria.length > 0 && (
-            <div className="card">
-              <div className="card-head">
-                <span className="card-title">Gastos por categoria</span>
-              </div>
-              {porCategoria.map((cat) => (
-                <div className="catline" key={cat.id}>
-                  <div className="catline-top">
-                    <span className="catline-lbl">
-                      <span className="dot" style={{ background: cat.color }} />
-                      {cat.label}
-                    </span>
-                    <span className="catline-amt">{BRL(cat.total)}</span>
-                  </div>
-                  <div className="catline-bar">
-                    <span
-                      style={{
-                        width: (c.totCartao > 0 ? (cat.total / c.totCartao) * 100 : 0) + '%',
-                        background: cat.color,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <CategoriasResumo categorias={porCategoria} total={c.totCartao} />
         </div>
       </div>
     </div>

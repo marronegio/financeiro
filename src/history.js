@@ -128,6 +128,7 @@ function snapshotDetalhes(state) {
     assinaturas: snapItems(state.assinaturas, ['venc']),
     doacoes: snapItems(state.doacoes, ['recorrente']),
     cartao: snapItems(state.cartao),
+    debito: snapItems(state.debito),
     rendaExtra: snapItems(state.rendaExtra),
     abates: snapItems(state.abates),
     parcelas,
@@ -137,8 +138,9 @@ function snapshotDetalhes(state) {
   };
 }
 
-// Aplica um fechamento: salva o resumo do mês, zera os gastos avulsos do cartão
-// e avança cada parcelamento ativo em uma parcela. Muta o array `historico` recebido.
+// Aplica um fechamento: salva o resumo do mês, zera os gastos avulsos (cartão e
+// débito) e avança cada parcelamento ativo em uma parcela. Muta o array
+// `historico` recebido.
 function performClose(state, periodo, historico, guardadoReal) {
   const c = compute(state);
   historico.push({
@@ -155,6 +157,7 @@ function performClose(state, periodo, historico, guardadoReal) {
       assinaturas: c.totAss,
       doacoes: c.totDoacoes,
       comprasCartao: c.totCartao,
+      comprasDebito: c.totDebito,
       parcelas: c.parcelaMensal,
       abates: c.totAbates,
     },
@@ -162,6 +165,8 @@ function performClose(state, periodo, historico, guardadoReal) {
   });
 
   const cartao = [{ nome: '', valor: '' }];
+  // As compras no débito são avulsas do mês, como as do cartão: zeram junto.
+  const debito = [{ nome: '', valor: '', cat: '' }];
   // A renda extra é avulsa do mês — zera no fechamento, como o cartão.
   const rendaExtra = [{ nome: '', valor: '' }];
   // Desmarca o "pago" das despesas fixas: começam o novo mês como não pagas.
@@ -176,13 +181,14 @@ function performClose(state, periodo, historico, guardadoReal) {
   const doacoesRecorrentes = (state.doacoes || []).filter((d) => d.recorrente);
   const doacoes = doacoesRecorrentes.length ? doacoesRecorrentes : [{ nome: '', valor: '', recorrente: false }];
 
-  return { ...state, cartao, rendaExtra, despesas, parcelamentos, doacoes };
+  return { ...state, cartao, debito, rendaExtra, despesas, parcelamentos, doacoes };
 }
 
 // ── Desfazer o último fechamento ───────────────────────────────────────────
 // Devolve o mês fechado por engano: tira o resumo do histórico e repõe o que o
-// fechamento zerou (compras do cartão, renda extra, doações avulsas) e o que ele
-// avançou (as parcelas), tudo a partir da fotografia guardada no próprio resumo.
+// fechamento zerou (compras do cartão e do débito, renda extra, doações avulsas)
+// e o que ele avançou (as parcelas), tudo a partir da fotografia guardada no
+// próprio resumo.
 //
 // O `ultimoFechamento` NÃO volta atrás de propósito: o marcador é o que impede o
 // rollover de fechar de novo: devolvê-lo faria o app refechar o mesmo mês no
@@ -242,6 +248,7 @@ export function undoLastClose(state) {
     despesas,
     parcelamentos,
     cartao: repor(state.cartao, d.cartao, { nome: '', valor: '', cat: '' }),
+    debito: repor(state.debito, d.debito, { nome: '', valor: '', cat: '' }),
     rendaExtra: repor(state.rendaExtra, d.rendaExtra, { nome: '', valor: '' }),
     doacoes: repor(state.doacoes, d.doacoes, { nome: '', valor: '', recorrente: false }),
     // Os abates não são tocados pelo fechamento, então não há o que repor.
@@ -330,18 +337,18 @@ export function resumoMes(h, cats = []) {
     total: total !== undefined && total !== null ? num(total) : somaItens(itens),
   });
 
+  // Compras avulsas levam a etiqueta junto (crédito e débito usam a mesma lista).
+  const comEtiqueta = (itens) =>
+    (itens || []).map((it) => {
+      const c = catOf(it.cat);
+      return c ? { ...it, catLabel: c.label, catColor: c.color } : it;
+    });
+
   const grupos = [
     grupo('fixas', 'Despesas fixas', d?.despesas, t?.fixas),
     grupo('assinaturas', 'Assinaturas', d?.assinaturas, t?.assinaturas),
-    grupo(
-      'cartao',
-      'Crédito à vista',
-      (d?.cartao || []).map((it) => {
-        const c = catOf(it.cat);
-        return c ? { ...it, catLabel: c.label, catColor: c.color } : it;
-      }),
-      t?.comprasCartao,
-    ),
+    grupo('cartao', 'Crédito à vista', comEtiqueta(d?.cartao), t?.comprasCartao),
+    grupo('debito', 'Débito', comEtiqueta(d?.debito), t?.comprasDebito),
     grupo(
       'parcelas',
       'Parcelas do mês',

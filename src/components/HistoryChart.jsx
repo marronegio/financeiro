@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { BRL } from '../money.js';
+import { BRL, sobraDoMes } from '../money.js';
 
 // Cores do tema (iguais às vars --positive / --negative).
 const GREEN = '#0e9f6e';
@@ -39,14 +39,9 @@ export default function HistoryChart({ historico }) {
   const guardado = data.map((h) => Number(h.guardado) || 0);
   const cartao = data.map((h) => Number(h.cartao) || 0);
   const rendaExtra = data.map((h) => Number(h.rendaExtra) || 0);
-  // Sobrou = o que ficou livre depois de pagar tudo e guardar (renda − gasto − guardado).
-  const sobrou = data.map(
-    (h) =>
-      (Number(h.salario) || 0) +
-      (Number(h.rendaExtra) || 0) -
-      (Number(h.gasto) || 0) -
-      (Number(h.guardado) || 0)
-  );
+  // Sobrou = o que ficou livre depois de pagar tudo e guardar. A conta mora em
+  // money.js porque o orçamento do débito lê exatamente a mesma coisa.
+  const sobrou = data.map(sobraDoMes);
 
   return (
     <div className="card history-card">

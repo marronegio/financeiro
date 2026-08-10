@@ -6,10 +6,10 @@
 // (supabase/functions/_shared/aiCredits.ts). Daqui para baixo é só interface.
 
 // Abas exclusivas do Pro. Continuam VISÍVEIS com cadeado — no menu, ou na barra
-// de abas da janela de despesas, no caso de 'assinaturas': quem está no grátis
-// precisa enxergar o tamanho do produto que não está usando — esconder faz o
-// app parecer menor do que é.
-export const PRO_TABS = ['rendaextra', 'assinaturas', 'doacoes'];
+// de abas da janela de despesas, no caso de 'assinaturas' e 'debito': quem está
+// no grátis precisa enxergar o tamanho do produto que não está usando — esconder
+// faz o app parecer menor do que é.
+export const PRO_TABS = ['rendaextra', 'assinaturas', 'doacoes', 'debito'];
 
 export const isProTab = (tabId) => PRO_TABS.includes(tabId);
 
@@ -22,6 +22,7 @@ export const FREE_METAS = 1;
 export const UPGRADE_REASONS = {
   rendaextra: 'Registrar renda extra faz parte do plano Pro.',
   assinaturas: 'Controlar assinaturas faz parte do plano Pro.',
+  debito: 'Acompanhar os gastos no débito e no Pix faz parte do plano Pro.',
   doacoes: 'Acompanhar doações faz parte do plano Pro.',
   ia: 'O assistente com IA (texto, áudio e imagem) faz parte do plano Pro.',
   historico: 'Ver o histórico dos meses fechados faz parte do plano Pro.',

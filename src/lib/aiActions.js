@@ -33,10 +33,14 @@ export function applyAiAction(state, name, args = {}) {
   const push = (kind, item) => ({ ...state, [kind]: [...(state[kind] || []), item] });
 
   switch (name) {
-    case 'adicionar_compra_cartao': {
+    // Crédito à vista e débito são a mesma compra avulsa — muda só a lista de
+    // destino e, com ela, se o valor entra ou não na fatura do cartão.
+    case 'adicionar_compra_cartao':
+    case 'adicionar_gasto_debito': {
       const cats = getCardCategories(state).map((cat) => cat.id);
       const cat = cats.includes(args.categoria) ? args.categoria : '';
-      return push('cartao', { nome: args.nome || '', valor: money(args.valor), cat });
+      const lista = name === 'adicionar_gasto_debito' ? 'debito' : 'cartao';
+      return push(lista, { nome: args.nome || '', valor: money(args.valor), cat });
     }
     case 'adicionar_despesa_fixa':
       return push('despesas', {
@@ -81,6 +85,8 @@ export function describeAction(name, args = {}) {
   switch (name) {
     case 'adicionar_compra_cartao':
       return `Compra "${args.nome}" de ${BRL(args.valor)} adicionada ao cartão.`;
+    case 'adicionar_gasto_debito':
+      return `Gasto "${args.nome}" de ${BRL(args.valor)} lançado no débito.`;
     case 'adicionar_despesa_fixa':
       return `Despesa fixa "${args.nome}" de ${BRL(args.valor)} adicionada.`;
     case 'adicionar_assinatura':

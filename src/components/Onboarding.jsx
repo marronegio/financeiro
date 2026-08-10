@@ -20,7 +20,7 @@ const STEPS = [
     icon: '◷',
     title: 'Resumo',
     description:
-      'Comece informando seu salário e quanto quer guardar por mês. O app calcula quanto sobra e como dividir entre crédito e débito.',
+      'Comece informando seu salário e quanto quer guardar por mês. O app desconta tudo que você gasta e mostra quanto sobra.',
   },
   {
     tab: 'rendaextra',
@@ -37,9 +37,9 @@ const STEPS = [
     icon: '⊟',
     title: 'Despesas',
     description:
-      'Tudo que sai da sua conta mora aqui, em quatro abas. Esta é a das contas que se repetem todo mês — aluguel, luz, internet: elas entram automaticamente no total de gastos.',
+      'Tudo que sai da sua conta mora aqui, em cinco abas. Esta é a das contas que se repetem todo mês — aluguel, luz, internet: elas entram automaticamente no total de gastos.',
   },
-  // As outras três abas da janela de despesas: o alvo é o botão da aba, dentro
+  // As outras quatro abas da janela de despesas: o alvo é o botão da aba, dentro
   // do painel (por isso `sheet: false` — no app elas não moram no menu "Mais").
   {
     tab: 'cartao',
@@ -48,6 +48,14 @@ const STEPS = [
     title: 'Crédito à Vista',
     description:
       'As compras avulsas no crédito ficam nesta aba. O app mostra quanto ainda cabe dentro do limite que você planejou.',
+  },
+  {
+    tab: 'debito',
+    target: '[data-tour="tab-debito"]',
+    icon: '◨',
+    title: 'Débito',
+    description:
+      'Pagou na hora, no débito ou no Pix? Lance aqui. Não entra na fatura do cartão, e o app mostra quanto ainda cabe no seu orçamento do mês — que é o que sobrou no mês anterior.',
   },
   {
     tab: 'assinaturas',

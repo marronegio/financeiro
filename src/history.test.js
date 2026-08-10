@@ -88,6 +88,8 @@ describe('applyRollover', () => {
 
     // cartão zerado
     expect(r.cartao).toEqual([{ nome: '', valor: '' }]);
+    // débito zerado também: as compras avulsas são do mês que fechou
+    expect(r.debito).toEqual([{ nome: '', valor: '', cat: '' }]);
     // renda extra zerada
     expect(r.rendaExtra).toEqual([{ nome: '', valor: '' }]);
     // parcela avançou 0 -> 1
@@ -139,6 +141,7 @@ describe('undoLastClose', () => {
           { nome: 'Mercado', valor: '230,00', cat: 'alimentacao' },
           { nome: 'Uber', valor: '45,50' },
         ],
+        debito: [{ nome: 'Farmácia', valor: '60,00', cat: 'saude' }],
         rendaExtra: [{ nome: 'Freela', valor: '300,00' }],
         despesas: [{ nome: 'Aluguel', valor: '200,00', venc: '10', pago: '2026-06' }],
         doacoes: [
@@ -156,6 +159,11 @@ describe('undoLastClose', () => {
       { nome: 'Uber', valor: '45,50', cat: '' },
     ]);
     expect(r.rendaExtra).toEqual([{ nome: 'Freela', valor: '300,00' }]);
+  });
+
+  it('devolve também os gastos do débito', () => {
+    const r = undoLastClose(fechado());
+    expect(r.debito).toEqual([{ nome: 'Farmácia', valor: '60,00', cat: 'saude' }]);
   });
 
   it('tira o mês do histórico sem devolver a âncora (senão o app refecharia)', () => {
@@ -362,6 +370,30 @@ describe('resumoMes', () => {
     const cartao = r.grupos.find((g) => g.id === 'cartao');
     expect(cartao.itens[0].catLabel).toBe('Alimentação');
     expect(cartao.total).toBeCloseTo(30, 2);
+  });
+
+  it('separa crédito e débito em grupos próprios, cada um com sua etiqueta', () => {
+    const h = manualClose(
+      baseState({
+        cartao: [{ nome: 'Mercado', valor: '30,00', cat: 'alimentacao' }],
+        debito: [{ nome: 'Farmácia', valor: '60,00', cat: 'saude' }],
+      }),
+      TODAY,
+    ).historico[0];
+    const r = resumoMes(h, [
+      { id: 'alimentacao', label: 'Alimentação', color: '#e0564c' },
+      { id: 'saude', label: 'Saúde', color: '#0e9f6e' },
+    ]);
+
+    const debito = r.grupos.find((g) => g.id === 'debito');
+    expect(debito.total).toBeCloseTo(60, 2);
+    expect(debito.itens[0].catLabel).toBe('Saúde');
+    expect(r.grupos.find((g) => g.id === 'cartao').total).toBeCloseTo(30, 2);
+    expect(r.gasto).toBeCloseTo(350, 2); // 290 + 60 do débito
+  });
+
+  it('mês sem gasto no débito não cria o grupo vazio', () => {
+    expect(resumoMes(registro()).grupos.some((g) => g.id === 'debito')).toBe(false);
   });
 
   it('mês antigo (só totais) vira resumo sem detalhes', () => {

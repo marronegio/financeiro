@@ -684,10 +684,14 @@ h1 em {
 }
 
 /* ---------- abas internas (janela de despesas) ----------
-   Despesas fixas, crédito à vista, assinaturas e parcelamentos numa tela só.
-   Fica logo abaixo do cabeçalho, acima do painel da aba aberta. */
+   Despesas fixas, crédito à vista, débito, assinaturas e parcelamentos numa
+   tela só. Fica logo abaixo do cabeçalho, acima do painel da aba aberta. */
 .subtabs {
   display: inline-flex;
+  /* Com cinco abas a barra encosta na borda em telas estreitas antes de a grade
+     do celular assumir (640px). Quebrar em duas linhas é feio uma vez; cortar a
+     última aba esconderia uma tela do app. */
+  flex-wrap: wrap;
   gap: 3px;
   background: var(--surface-2);
   border: 1px solid var(--line-strong);
@@ -740,13 +744,19 @@ h1 em {
 }
 
 @media (max-width: 640px) {
-  /* Quatro abas não cabem numa linha no celular: viram uma grade 2×2, com a
-     barra ocupando a largura toda. Rolagem lateral esconderia abas — aqui as
-     quatro ficam sempre visíveis. */
+  /* As abas não cabem numa linha no celular: viram uma grade de duas colunas,
+     com a barra ocupando a largura toda. Rolagem lateral esconderia abas — aqui
+     todas ficam sempre visíveis. */
   .subtabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3px;
+  }
+
+  /* Número ímpar de abas: a última, sozinha na linha, ocupa as duas colunas —
+     meia aba solta no canto pareceria erro de layout. */
+  .subtab:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 
   .subtab {
@@ -1904,26 +1914,10 @@ input::placeholder {
   background: var(--accent-soft);
 }
 
-.split-head {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.split-pill {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.split-pill.c {
-  color: var(--credit);
-}
-
-.split-pill.d {
-  color: var(--debit);
-}
-
+/* O slider da divisão crédito/débito foi removido: o orçamento do débito é a
+   sobra do último mês fechado, não uma porcentagem escolhida (ver compute em
+   src/money.js). As regras abaixo continuam porque o CropEditor usa um range —
+   ele herda esta aparência. */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
