@@ -134,7 +134,7 @@ export default function BottomNav({
       {/* Barra fixa inferior */}
       <nav className="bnav" data-tour="bottom-nav">
         {barItem('plan')}
-        {barItem('cartao')}
+        {barItem('despesas')}
         <div className="bnav-ai-slot">
           {aiEnabled && (
             <button
