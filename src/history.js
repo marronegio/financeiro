@@ -132,6 +132,13 @@ function snapshotDetalhes(state) {
     rendaExtra: snapItems(state.rendaExtra),
     abates: snapItems(state.abates),
     parcelas,
+    // As linhas cruas dos parcelamentos, como estavam ANTES de o fechamento
+    // avançar a parcela. `parcelas` acima é a vitrine do mês (o "3/12" que o
+    // resumo mostra); estas são o que permite recriar do zero um parcelamento
+    // apagado depois de um fechamento errado.
+    parcelamentos: (state.parcelamentos || [])
+      .filter((it) => String(it.nome || '').trim() || toNumber(it.total) > 0)
+      .map((it) => ({ ...it })),
     // Etiquetas das compras no momento do fechamento: se a pessoa renomear ou
     // apagar uma categoria depois, o mês antigo continua legível.
     categorias: (state.cardCategories || []).map((c) => ({ id: c.id, label: c.label, color: c.color })),
@@ -184,11 +191,21 @@ function performClose(state, periodo, historico, guardadoReal) {
   return { ...state, cartao, debito, rendaExtra, despesas, parcelamentos, doacoes };
 }
 
-// ── Desfazer o último fechamento ───────────────────────────────────────────
-// Devolve o mês fechado por engano: tira o resumo do histórico e repõe o que o
-// fechamento zerou (compras do cartão e do débito, renda extra, doações avulsas)
-// e o que ele avançou (as parcelas), tudo a partir da fotografia guardada no
-// próprio resumo.
+// ── Desfazer o último fechamento ────────────────────────────────────────
+// Fechou o mês sem querer? Este é o botão de voltar atrás, e ele devolve o mês
+// INTEIRO: o resumo sai do histórico e todo lançamento que estava no perfil na
+// hora do fechamento volta para o perfil — as compras do cartão e do débito, a
+// renda extra, as doações, os abates, as despesas fixas, as assinaturas e os
+// parcelamentos — a partir da fotografia guardada no próprio resumo.
+//
+// Não volta só o que o fechamento zerou: volta também o que a pessoa apagou
+// DEPOIS do fechamento errado. Quem fecha o mês por engano costuma mexer na tela
+// antes de achar o botão de desfazer, e um "desfazer" que devolve metade do mês
+// obriga a redigitar a outra metade de memória.
+//
+// O que ela lançou ou editou depois continua como ela deixou: nada é sobrescrito
+// e nada é duplicado — o desfazer soma o mês de volta, não joga um retrato por
+// cima do que existe hoje.
 //
 // O `ultimoFechamento` NÃO volta atrás de propósito: o marcador é o que impede o
 // rollover de fechar de novo: devolvê-lo faria o app refechar o mesmo mês no
@@ -197,19 +214,79 @@ function performClose(state, periodo, historico, guardadoReal) {
 // Número (30) → o texto com máscara que os campos do app usam ('30,00').
 const paraCampo = (v) => maskMoney(String(Math.round((Number(v) || 0) * 100)));
 
-// Junta a lista de hoje com a do fechamento, sem repetir o que já está lá
-// (as doações recorrentes, por exemplo, sobrevivem ao fechamento).
+const nomeChave = (n) => String(n || '').trim().toLowerCase();
+const itemChave = (nome, valor) => `${nomeChave(nome)}|${(Number(valor) || 0).toFixed(2)}`;
+
+// Item da fotografia → linha do app (o valor numérico vira campo com máscara).
+const paraLinha = (it, vazio) => {
+  const { valor, ...resto } = it;
+  return { ...vazio, ...resto, valor: paraCampo(valor) };
+};
+
+// O que fica quando a lista termina sem nada. `vazio` nulo = lista que vive
+// vazia mesmo (os abates), sem a linha em branco de digitação no fim.
+const listaOu = (lista, vazio) => (lista.length ? lista : vazio ? [{ ...vazio }] : []);
+
+// Lançamentos avulsos do mês (compras, renda extra, doações pontuais, abates):
+// a mesma compra pode aparecer duas vezes no mês, então a comparação é por
+// MULTICONJUNTO — conta quantas cópias de cada nome+valor já estão na lista e
+// repõe só as que faltam. Comparar por presença engolia a repetida: dois Uber de
+// 20,00 no mesmo mês voltavam como um só.
 function repor(atual, doSnapshot, vazio) {
   const atuais = (atual || []).filter((it) => toNumber(it.valor) > 0);
-  const chave = (nome, valor) => `${String(nome || '').trim().toLowerCase()}|${valor.toFixed(2)}`;
-  const vistos = new Set(atuais.map((it) => chave(it.nome, toNumber(it.valor))));
+  const restam = new Map();
+  for (const it of atuais) {
+    const k = itemChave(it.nome, toNumber(it.valor));
+    restam.set(k, (restam.get(k) || 0) + 1);
+  }
 
-  const voltando = (doSnapshot || [])
-    .filter((it) => !vistos.has(chave(it.nome, Number(it.valor) || 0)))
-    .map(({ valor, ...resto }) => ({ ...vazio, ...resto, valor: paraCampo(valor) }));
+  const voltando = [];
+  for (const it of doSnapshot || []) {
+    const k = itemChave(it.nome, it.valor);
+    const n = restam.get(k) || 0;
+    // Já está na lista (sobreviveu ao fechamento ou foi redigitado): não duplica.
+    if (n > 0) {
+      restam.set(k, n - 1);
+      continue;
+    }
+    voltando.push(paraLinha(it, vazio));
+  }
 
-  const lista = [...voltando, ...atuais];
-  return lista.length ? lista : [{ ...vazio }];
+  return listaOu([...voltando, ...atuais], vazio);
+}
+
+// Listas que se repetem todo mês (despesas fixas, assinaturas, doações
+// recorrentes): a linha é a mesma sempre e o NOME é a identidade dela — comparar
+// por nome+valor faria uma conta de luz reajustada depois do fechamento voltar
+// como uma segunda "Luz". Quem continua na lista fica como o usuário deixou; só
+// os campos que o fechamento mexeu voltam (o "pago" das fixas). Quem sumiu
+// depois do fechamento errado volta inteiro.
+function reporRecorrentes(atual, doSnapshot, vazio, campos = []) {
+  // Linha sem nome cai no valor: é tudo que a distingue de outra sem nome.
+  const chaveAtual = (it) => nomeChave(it.nome) || `#${toNumber(it.valor).toFixed(2)}`;
+  const chaveSnap = (it) => nomeChave(it.nome) || `#${(Number(it.valor) || 0).toFixed(2)}`;
+
+  const porChave = new Map();
+  for (const it of doSnapshot || []) {
+    const k = chaveSnap(it);
+    if (!porChave.has(k)) porChave.set(k, it);
+  }
+
+  const vistos = new Set();
+  const mantidos = (atual || []).map((it) => {
+    const k = chaveAtual(it);
+    vistos.add(k);
+    const snap = porChave.get(k);
+    if (!snap) return it;
+    let out = it;
+    for (const campo of campos) if (snap[campo] && !out[campo]) out = { ...out, [campo]: snap[campo] };
+    return out;
+  });
+
+  const voltando = [];
+  for (const [k, it] of porChave) if (!vistos.has(k)) voltando.push(paraLinha(it, vazio));
+
+  return listaOu([...voltando, ...mantidos], vazio);
 }
 
 export function undoLastClose(state) {
@@ -223,11 +300,16 @@ export function undoLastClose(state) {
   if (!d) return { ...state, historico };
 
   // Cada parcelamento ativo avançou uma parcela; a fotografia diz qual parcela
-  // era a do mês. Só volta quem continua exatamente onde o fechamento deixou —
+  // era a do mês. Só recua quem continua exatamente onde o fechamento deixou —
   // se a pessoa mexeu no parcelamento depois, a edição dela manda.
-  const parcelamentos = (state.parcelamentos || []).map((it) => {
-    const nome = String(it.nome || '').trim().toLowerCase();
-    const snap = (d.parcelas || []).find((p) => String(p.nome || '').trim().toLowerCase() === nome);
+  const doMes = new Map();
+  for (const p of d.parcelas || []) doMes.set(nomeChave(p.nome), p);
+
+  const vistosParc = new Set();
+  const parcelamentosAtuais = (state.parcelamentos || []).map((it) => {
+    const k = nomeChave(it.nome);
+    vistosParc.add(k);
+    const snap = doMes.get(k);
     if (!snap) return it;
     const eraPagas = parseInt(String(snap.parcela).split('/')[0], 10) - 1;
     const agora = parseInt(it.pagas, 10) || 0;
@@ -235,23 +317,58 @@ export function undoLastClose(state) {
     return { ...it, pagas: String(eraPagas) };
   });
 
-  // As fixas voltam a ficar marcadas como pagas onde estavam.
-  const despesas = (state.despesas || []).map((dsp) => {
-    const nome = String(dsp.nome || '').trim().toLowerCase();
-    const snap = (d.despesas || []).find((x) => String(x.nome || '').trim().toLowerCase() === nome);
-    return snap?.pago && !dsp.pago ? { ...dsp, pago: snap.pago } : dsp;
+  // Parcelamento apagado depois do fechamento errado volta como estava na hora
+  // do fechamento — as linhas cruas da fotografia já guardam o `pagas` de antes
+  // do avanço, então não há o que recuar aqui.
+  const parcelamentosVoltando = (d.parcelamentos || [])
+    .filter((it) => !vistosParc.has(nomeChave(it.nome)))
+    .map((it) => ({ ...it }));
+
+  const parcelamentos = listaOu([...parcelamentosVoltando, ...parcelamentosAtuais], {
+    nome: '',
+    total: '',
+    parcelas: '',
+    pagas: '',
   });
+
+  // Doações: as recorrentes sobrevivem ao fechamento, então voltam pelo nome (só
+  // as que a pessoa apagou depois); as avulsas, que o fechamento levou embora,
+  // voltam pelo multiconjunto, como qualquer outro lançamento do mês.
+  const vazioDoacao = { nome: '', valor: '', recorrente: false };
+  const doacoesSnap = d.doacoes || [];
+  const doacoes = repor(
+    reporRecorrentes(state.doacoes, doacoesSnap.filter((x) => x.recorrente), vazioDoacao),
+    doacoesSnap.filter((x) => !x.recorrente),
+    vazioDoacao,
+  );
+
+  // As etiquetas que as compras do mês usavam: se alguma foi apagada depois do
+  // fechamento, ela volta junto — senão a compra reaparece sem etiqueta nenhuma.
+  const usadas = new Set(
+    [...(d.cartao || []), ...(d.debito || [])].map((it) => it.cat).filter(Boolean),
+  );
+  const catsAtuais = state.cardCategories || [];
+  const temCat = new Set(catsAtuais.map((c) => c.id));
+  const catsFaltando = (d.categorias || []).filter((c) => usadas.has(c.id) && !temCat.has(c.id));
 
   return {
     ...state,
     historico,
-    despesas,
+    // O `pago` e só ele: é o único campo destas listas que o fechamento mexe.
+    // Repor o `venc` junto desfaria uma data que a pessoa mudou depois.
+    despesas: reporRecorrentes(state.despesas, d.despesas, { nome: '', valor: '', venc: '' }, [
+      'pago',
+    ]),
+    assinaturas: reporRecorrentes(state.assinaturas, d.assinaturas, { nome: '', valor: '', venc: '' }),
     parcelamentos,
+    doacoes,
     cartao: repor(state.cartao, d.cartao, { nome: '', valor: '', cat: '' }),
     debito: repor(state.debito, d.debito, { nome: '', valor: '', cat: '' }),
     rendaExtra: repor(state.rendaExtra, d.rendaExtra, { nome: '', valor: '' }),
-    doacoes: repor(state.doacoes, d.doacoes, { nome: '', valor: '', recorrente: false }),
-    // Os abates não são tocados pelo fechamento, então não há o que repor.
+    // Os abates não são zerados pelo fechamento, então só voltam os que a pessoa
+    // apagou depois. A lista vive vazia mesmo — sem linha em branco no fim.
+    abates: repor(state.abates, d.abates, null),
+    ...(catsFaltando.length ? { cardCategories: [...catsAtuais, ...catsFaltando] } : {}),
   };
 }
 

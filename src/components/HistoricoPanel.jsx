@@ -108,7 +108,7 @@ export default function HistoricoPanel({
           </div>
         )}
 
-        {/* Fechou sem querer? Devolve os lançamentos daquele mês. */}
+        {/* Fechou sem querer? Devolve o mês inteiro para o perfil. */}
         {ultimo && onUndoClose && (
           <button className="undo-close" onClick={() => setDesfazendo(true)}>
             ↩ Desfazer o fechamento de {fmtPeriodo(ultimo.periodo)}
@@ -224,7 +224,7 @@ export default function HistoricoPanel({
           title={`Desfazer o fechamento de ${fmtPeriodo(ultimo?.periodo)}?`}
           message={
             ultimo?.detalhes
-              ? 'O resumo sai do histórico e os lançamentos daquele mês voltam: as compras do cartão, a renda extra, as doações avulsas, as parcelas recuam uma posição e as despesas fixas voltam a ficar marcadas como pagas. O que você lançou depois do fechamento continua onde está.'
+              ? 'O resumo sai do histórico e o mês inteiro volta para o seu perfil: as compras do cartão e do débito, a renda extra, as doações, os abates, as despesas fixas, as assinaturas e os parcelamentos — inclusive o que você apagou depois do fechamento. As parcelas recuam uma posição e as fixas voltam a ficar marcadas como pagas. O que você lançou ou editou depois continua como está, e nada é duplicado.'
               : 'Este mês foi fechado antes de o app guardar o detalhamento, então só dá para tirar o resumo do histórico — os lançamentos daquele mês não foram salvos e não voltam.'
           }
           confirmLabel="Desfazer o fechamento"

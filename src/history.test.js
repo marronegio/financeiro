@@ -211,6 +211,106 @@ describe('undoLastClose', () => {
     const s = baseState();
     expect(undoLastClose(s)).toBe(s);
   });
+
+  // ── Desfazer devolve o mês INTEIRO ────────────────────────────────────
+  // Quem fecha sem querer costuma mexer na tela antes de achar o botão de
+  // desfazer: o que ela apagou nesse meio-tempo também tem que voltar.
+
+  it('devolve a despesa fixa apagada depois do fechamento', () => {
+    const s = fechado();
+    const semAluguel = { ...s, despesas: [{ nome: 'Luz', valor: '90,00', venc: '' }] };
+    const r = undoLastClose(semAluguel);
+    const aluguel = r.despesas.find((d) => d.nome === 'Aluguel');
+    expect(aluguel).toMatchObject({ valor: '200,00', venc: '10', pago: '2026-06' });
+    expect(r.despesas.map((d) => d.nome)).toContain('Luz');
+  });
+
+  it('a fixa reajustada depois do fechamento não vira uma segunda linha', () => {
+    const s = fechado();
+    const reajustada = { ...s, despesas: [{ nome: 'Aluguel', valor: '250,00', venc: '10' }] };
+    const r = undoLastClose(reajustada);
+    expect(r.despesas.filter((d) => d.nome === 'Aluguel')).toHaveLength(1);
+    expect(r.despesas[0].valor).toBe('250,00'); // a edição do usuário manda
+    expect(r.despesas[0].pago).toBe('2026-06'); // mas o "já paguei" volta
+  });
+
+  it('devolve a assinatura apagada depois do fechamento', () => {
+    const s = fechado();
+    const semSpotify = { ...s, assinaturas: [{ nome: '', valor: '', venc: '' }] };
+    const r = undoLastClose(semSpotify);
+    expect(r.assinaturas.find((a) => a.nome === 'Spotify')).toMatchObject({ valor: '50,00' });
+  });
+
+  it('devolve o parcelamento apagado, na parcela em que ele estava', () => {
+    const s = fechado();
+    expect(s.parcelamentos[0].pagas).toBe('1'); // o fechamento avançou
+    const semNotebook = { ...s, parcelamentos: [{ nome: '', total: '', parcelas: '', pagas: '' }] };
+    const r = undoLastClose(semNotebook);
+    expect(r.parcelamentos[0]).toMatchObject({
+      nome: 'Notebook',
+      total: '120,00',
+      parcelas: '12',
+      pagas: '0',
+    });
+  });
+
+  it('devolve o abate apagado depois do fechamento (e não inventa linha vazia)', () => {
+    const comAbate = manualClose(
+      baseState({ abates: [{ nome: 'Estorno', valor: '25,00' }] }),
+      TODAY,
+    );
+    const semAbate = { ...comAbate, abates: [] };
+    expect(undoLastClose(semAbate).abates).toEqual([{ nome: 'Estorno', valor: '25,00' }]);
+    // O abate que sobreviveu ao fechamento não é duplicado.
+    expect(undoLastClose(comAbate).abates).toHaveLength(1);
+  });
+
+  it('devolve a doação recorrente apagada depois do fechamento', () => {
+    const s = fechado();
+    const semIgreja = { ...s, doacoes: [{ nome: '', valor: '', recorrente: false }] };
+    const nomes = undoLastClose(semIgreja).doacoes.map((d) => d.nome);
+    expect(nomes).toContain('Igreja');
+    expect(nomes).toContain('Vaquinha');
+  });
+
+  it('duas compras iguais no mesmo mês voltam as duas', () => {
+    const s = manualClose(
+      baseState({
+        cartao: [
+          { nome: 'Uber', valor: '20,00' },
+          { nome: 'Uber', valor: '20,00' },
+        ],
+      }),
+      TODAY,
+    );
+    expect(undoLastClose(s).cartao.filter((c) => c.nome === 'Uber')).toHaveLength(2);
+  });
+
+  it('a compra redigitada depois do fechamento não vira duplicata', () => {
+    const s = fechado();
+    const redigitada = { ...s, cartao: [{ nome: 'Mercado', valor: '230,00', cat: 'alimentacao' }] };
+    const r = undoLastClose(redigitada);
+    expect(r.cartao.filter((c) => c.nome === 'Mercado')).toHaveLength(1);
+    expect(r.cartao.map((c) => c.nome)).toContain('Uber');
+  });
+
+  it('devolve a etiqueta apagada, para a compra não voltar sem categoria', () => {
+    const s = manualClose(
+      baseState({
+        cartao: [{ nome: 'Mercado', valor: '230,00', cat: 'alimentacao' }],
+        cardCategories: [
+          { id: 'alimentacao', label: 'Alimentação', color: '#e0564c' },
+          { id: 'lazer', label: 'Lazer', color: '#9b6bff' },
+        ],
+      }),
+      TODAY,
+    );
+    const semEtiqueta = { ...s, cardCategories: [{ id: 'lazer', label: 'Lazer', color: '#9b6bff' }] };
+    const r = undoLastClose(semEtiqueta);
+    expect(r.cardCategories.map((c) => c.id)).toEqual(['lazer', 'alimentacao']);
+    // Etiqueta que ninguém do mês usava continua apagada: foi escolha do usuário.
+    expect(undoLastClose(s).cardCategories.map((c) => c.id)).toEqual(['alimentacao', 'lazer']);
+  });
 });
 
 describe('setFechamentoDia', () => {
