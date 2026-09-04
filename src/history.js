@@ -25,27 +25,6 @@ function latestDuePeriod(today, dia) {
   return periodKey(prev.getFullYear(), prev.getMonth());
 }
 
-// Data em que o ciclo de um período devido fecha (o dia escolhido, ajustado ao mês).
-function dataDeFechamento(periodo, dia) {
-  const [y, m] = periodo.split('-').map(Number); // m é 1-based
-  return new Date(y, m - 1, diaDoMes(dia, y, m - 1));
-}
-
-// ── Que mês esse fechamento está fechando? ─────────────────────────────────
-// O ciclo que termina em `fim` começou um mês antes, então o mês fechado é
-// aquele onde caiu a maior parte dele: o mês do MEIO do intervalo. Quem fecha
-// no dia 2 de setembro está fechando agosto; quem fecha no dia 28 está fechando
-// o próprio mês. O resumo saía carimbado com o mês do clique — fechar no dia 1º
-// virava um "setembro" que só tinha agosto dentro.
-//
-// Isto é só a ETIQUETA do resumo. O `ultimoFechamento` continua sendo o período
-// devido (ver manualClose): ele é o marcador que impede o rollover de refechar.
-const MEIO_DO_CICLO = 15;
-function periodoDoCiclo(fim) {
-  const meio = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate() - MEIO_DO_CICLO);
-  return periodKey(meio.getFullYear(), meio.getMonth());
-}
-
 // 'YYYY-MM' → 'jun/2026'
 export function fmtPeriodo(p) {
   if (!p) return '—';
@@ -326,7 +305,7 @@ export function applyRollover(state, today = new Date()) {
   while (cursor < due && guard < 240) {
     cursor = nextPeriod(cursor);
     guard += 1;
-    next = performClose(next, periodoDoCiclo(dataDeFechamento(cursor, dia)), historico);
+    next = performClose(next, cursor, historico);
   }
 
   return { ...next, historico, ultimoFechamento: due };
@@ -405,24 +384,12 @@ export function resumoMes(h, cats = []) {
   };
 }
 
-// Fechamento manual (botão "Fechar mês agora"), independente da data. O ciclo
-// termina agora, então a etiqueta sai de `periodoDoCiclo` — quem aperta o botão
-// nos primeiros dias de setembro está fechando agosto, e é assim que o resumo
-// entra no histórico.
+// Fechamento manual (botão "Fechar mês agora"), independente da data.
 export function manualClose(state, today = new Date(), guardadoReal) {
-  const periodo = periodoDoCiclo(today);
+  const periodo = periodKey(today.getFullYear(), today.getMonth());
   const historico = [...(state.historico || [])];
   const next = performClose(state, periodo, historico, guardadoReal);
-
-  // A âncora NÃO é a etiqueta: ela acompanha o período devido do ciclo. Gravar a
-  // etiqueta aqui jogaria o marcador para trás e, com o fechamento automático
-  // ligado, o app refecharia o mesmo mês no próximo carregamento.
-  const dia = parseInt(state.fechamentoDia, 10);
-  const due =
-    dia >= 1 && dia <= 31
-      ? latestDuePeriod(today, dia)
-      : periodKey(today.getFullYear(), today.getMonth());
   const ultimo =
-    state.ultimoFechamento && state.ultimoFechamento > due ? state.ultimoFechamento : due;
+    state.ultimoFechamento && state.ultimoFechamento > periodo ? state.ultimoFechamento : periodo;
   return { ...next, historico, ultimoFechamento: ultimo };
 }

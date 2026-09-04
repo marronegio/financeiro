@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { createDefaultProfiles, migrateState, createDefaultState, PROFILE_NAMES } from '../state.js';
-import { onAppStateChange } from '../lib/native.js';
 
 // ── Perfil ativo é uma escolha POR DISPOSITIVO ─────────────────────────────
 // Guardado no localStorage (não na nuvem): no plano Duo, cada pessoa fica no
@@ -54,11 +53,6 @@ export function useProfiles(userId, planTier) {
   // ── Fila de gravação: quais perfis mudaram desde o último flush ──────────
   const pendingRef = useRef(new Set());
   const saveTimer = useRef(null);
-  // true quando a última tentativa de gravar falhou. A tela já avisava quando o
-  // CARREGAMENTO falhava, mas a falha ao SALVAR ficava só no console: o mês
-  // fechado seguia na tela como se estivesse guardado, e só no outro aparelho a
-  // pessoa descobria que nunca foi.
-  const [saveError, setSaveError] = useState(false);
 
   const flush = useCallback(async () => {
     clearTimeout(saveTimer.current);
@@ -68,17 +62,6 @@ export function useProfiles(userId, planTier) {
 
     const blob = rawRef.current;
     if (!blob) return;
-
-    // Gravação que falhou volta para a fila e é tentada de novo — sozinha em
-    // alguns segundos, e junto da próxima edição/volta para o app. Sem isso um
-    // segundo de rede ruim perdia a alteração em silêncio.
-    let falha = false;
-    const falhou = (pid) => {
-      pendingRef.current.add(pid);
-      falha = true;
-      clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(flush, 10000);
-    };
 
     for (const pid of pending) {
       // Perfil ausente no blob = foi removido → pdata null apaga no servidor.
@@ -93,27 +76,17 @@ export function useProfiles(userId, planTier) {
         const { error: upErr } = await supabase
           .from('finances')
           .upsert({ user_id: userIdRef.current, state: blob, updated_at: new Date().toISOString() });
-        if (upErr) {
-          console.error('Falha ao salvar dados:', upErr);
-          falhou(pid);
-        }
-        setSaveError(falha);
+        if (upErr) console.error('Falha ao salvar dados:', upErr);
         return;
       }
       console.error('Falha ao salvar perfil:', error);
-      falhou(pid);
     }
-
-    setSaveError(falha);
   }, []);
 
-  // `immediate` pula a espera de 600ms. Vale para o que não pode se perder se o
-  // app morrer no segundo seguinte (fechar mês, desfazer fechamento); a digitação
-  // continua agrupada, senão seria uma gravação por tecla.
-  const queueSave = useCallback((pid, immediate) => {
+  const queueSave = useCallback((pid) => {
     pendingRef.current.add(pid);
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(flush, immediate ? 0 : 600);
+    saveTimer.current = setTimeout(flush, 600);
   }, [flush]);
 
   // Grava o que estiver pendente ao desmontar/trocar de usuário.
@@ -168,10 +141,6 @@ export function useProfiles(userId, planTier) {
   const reload = useCallback(async () => {
     try {
       await flush();
-      // Sobrou coisa na fila (a gravação falhou): trazer o servidor por cima
-      // apagaria justamente a alteração que ainda não subiu. Fica com o que está
-      // aqui até conseguir salvar.
-      if (pendingRef.current.size > 0) return;
       const dbState = await fetchBlob();
       if (dbState?.v === 2) setRawState(migrateState(dbState));
     } catch (err) {
@@ -179,58 +148,18 @@ export function useProfiles(userId, planTier) {
     }
   }, [flush, fetchBlob]);
 
-  // ── Sair de cena grava; voltar recarrega ──────────────────────────────────
-  // O debounce não sobrevive ao app indo para segundo plano (o WebView congela e
-  // pode ser encerrado pelo sistema) nem à aba sendo fechada: a alteração ficava
-  // na tela e nunca chegava ao servidor. E na volta é preciso rebuscar o blob —
-  // uma aba aberta há horas guarda um estado velho e, na primeira edição,
-  // regravaria o perfil inteiro por cima do que foi feito no celular.
-  useEffect(() => {
-    if (!userId) return;
-    let escondido = false;
-
-    const aoEsconder = () => {
-      escondido = true;
-      flush();
-    };
-    const aoVoltar = () => {
-      if (!escondido) return; // ignora eventos repetidos (visibility + Capacitor)
-      escondido = false;
-      reload();
-    };
-    const onVisibility = () =>
-      document.visibilityState === 'hidden' ? aoEsconder() : aoVoltar();
-
-    document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('pagehide', aoEsconder);
-    const offAppState = onAppStateChange((ativo) => (ativo ? aoVoltar() : aoEsconder()));
-
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('pagehide', aoEsconder);
-      offAppState();
-    };
-  }, [userId, flush, reload]);
-
   // ── Mutações ──────────────────────────────────────────────────────────────
 
   // Escreve apenas no perfil ativo. Aceita updater (função) ou valor.
-  // `opts.immediate` grava na hora, sem o debounce (ver queueSave).
-  const setState = useCallback((updater, opts) => {
+  const setState = useCallback((updater) => {
     setRawState((r) => {
       if (!r) return r;
       const id = activeRef.current;
       const cur = r.profiles[id].data;
       const next = typeof updater === 'function' ? updater(cur) : updater;
       if (next === cur) return r; // no-op (ex.: rollover sem nada a fechar)
-      const nextRaw = { ...r, profiles: { ...r.profiles, [id]: { ...r.profiles[id], data: next } } };
-      // O flush lê o blob por este ref, que normalmente só é atualizado no
-      // render seguinte. Adiantar aqui garante que uma gravação imediata mande o
-      // estado novo — e não o anterior, apagando justamente o que acabou de ser
-      // feito (o ref é reescrito no render, então isto nunca fica dessincronizado).
-      rawRef.current = nextRaw;
-      queueSave(id, opts?.immediate);
-      return nextRaw;
+      queueSave(id);
+      return { ...r, profiles: { ...r.profiles, [id]: { ...r.profiles[id], data: next } } };
     });
   }, [queueSave]);
 
@@ -321,7 +250,6 @@ export function useProfiles(userId, planTier) {
     state,
     setState,
     status,
-    saveError,
     active,
     allProfiles,
     reload,

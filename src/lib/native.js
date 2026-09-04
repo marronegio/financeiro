@@ -51,16 +51,6 @@ export function initOAuthDeepLink(onTokens, onError = () => {}) {
   return () => { handle.then((h) => h.remove()).catch(() => {}); };
 }
 
-// Avisa quando o app nativo vai para segundo plano (false) e quando volta (true).
-// O `visibilitychange` do webview nem sempre chega no Android — e é justamente
-// nesse momento que o que ainda não foi salvo precisa ir para o servidor.
-// Devolve a função de limpeza; no navegador não faz nada.
-export function onAppStateChange(cb) {
-  if (!isNativeApp) return () => {};
-  const handle = CapApp.addListener('appStateChange', ({ isActive }) => cb(!!isActive));
-  return () => { handle.then((h) => h.remove()).catch(() => {}); };
-}
-
 // Ícones da status bar acompanham o fundo da tela: fundo claro → ícones
 // escuros (LIGHT) e vice-versa. Só a status bar — a gesture bar de baixo fica
 // sobre o menu inferior navy, então mantém o estilo do config (ícones claros).

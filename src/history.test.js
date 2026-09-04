@@ -82,8 +82,7 @@ describe('applyRollover', () => {
 
     expect(r.ultimoFechamento).toBe('2026-06');
     expect(r.historico).toHaveLength(1);
-    // O ciclo fechou em 10/jun e começou em 10/mai: a maior parte dele foi maio.
-    expect(r.historico[0].periodo).toBe('2026-05');
+    expect(r.historico[0].periodo).toBe('2026-06');
     expect(r.historico[0].gasto).toBeCloseTo(290, 2);
     expect(r.historico[0].guardado).toBeCloseTo(610, 2); // sobra real
 
@@ -104,7 +103,7 @@ describe('applyRollover', () => {
     const s = baseState({ ultimoFechamento: '2026-03' });
     const r = applyRollover(s, TODAY);
 
-    expect(r.historico.map((h) => h.periodo)).toEqual(['2026-03', '2026-04', '2026-05']);
+    expect(r.historico.map((h) => h.periodo)).toEqual(['2026-04', '2026-05', '2026-06']);
     expect(r.ultimoFechamento).toBe('2026-06');
     // três fechamentos => parcela avança 3 (0 -> 3)
     expect(r.parcelamentos[0].pagas).toBe('3');
@@ -284,36 +283,14 @@ describe('computeInsights', () => {
 });
 
 describe('manualClose', () => {
-  it('fecha independentemente da data, com a etiqueta do ciclo', () => {
+  it('fecha o mês atual independentemente da data', () => {
     const s = baseState({ ultimoFechamento: '' });
     const r = manualClose(s, TODAY);
     expect(r.historico).toHaveLength(1);
-    // Fechou em 15/jun: o ciclo veio de maio, a âncora segue no período devido.
-    expect(r.historico[0].periodo).toBe('2026-05');
+    expect(r.historico[0].periodo).toBe('2026-06');
     expect(r.ultimoFechamento).toBe('2026-06');
     expect(r.cartao).toEqual([{ nome: '', valor: '' }]);
     expect(r.parcelamentos[0].pagas).toBe('1');
-  });
-
-  it('fechar no começo do mês carimba o mês anterior', () => {
-    // O caso que motivou a regra: fechar em 3/set é fechar AGOSTO, não setembro.
-    const s = baseState({ fechamentoDia: '', ultimoFechamento: '' });
-    const r = manualClose(s, new Date(2026, 8, 3));
-    expect(r.historico[0].periodo).toBe('2026-08');
-    expect(r.ultimoFechamento).toBe('2026-09');
-  });
-
-  it('fechar no fim do mês carimba o próprio mês', () => {
-    const s = baseState({ fechamentoDia: '', ultimoFechamento: '' });
-    expect(manualClose(s, new Date(2026, 7, 30)).historico[0].periodo).toBe('2026-08');
-  });
-
-  it('a âncora nunca anda para trás (senão o rollover refecharia)', () => {
-    const s = baseState({ ultimoFechamento: '2026-07' });
-    const r = manualClose(s, TODAY);
-    expect(r.historico[0].periodo).toBe('2026-05');
-    expect(r.ultimoFechamento).toBe('2026-07');
-    expect(applyRollover(r, TODAY)).toBe(r);
   });
 
   it('zera a renda extra e a registra no resumo do mês', () => {
