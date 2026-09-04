@@ -190,7 +190,7 @@ export default function Dashboard({
   const openUpgrade = (feature) => setUpgrade({ feature });
   const { theme, toggle: toggleTheme } = useTheme();
   const {
-    state, setState, status,
+    state, setState, status, saveError,
     active, profileList, isDuo, canAddPartner,
     switchProfile, addPartner, renameProfile, removePartner,
     mainNeedsPinSetup, verifyPin, setProfilePin,
@@ -363,12 +363,15 @@ export default function Dashboard({
     return describeAction(name, args);
   };
 
+  // Fechar e desfazer gravam sem o debounce: são as duas ações que reescrevem o
+  // mês inteiro, e a tela já mostra o resultado. Esperar meio segundo era o
+  // suficiente para o app ir para segundo plano com o fechamento só na memória.
   const fecharMes = (guardadoReal) => {
-    setState((s) => manualClose(s, new Date(), guardadoReal));
+    setState((s) => manualClose(s, new Date(), guardadoReal), { immediate: true });
   };
 
   const desfazerFechamento = () => {
-    setState((s) => undoLastClose(s));
+    setState((s) => undoLastClose(s), { immediate: true });
   };
 
   // Fechamento automático dos meses pendentes ao abrir o app.
@@ -466,7 +469,7 @@ export default function Dashboard({
       <main className="main">
         <div className="wrap">
           <header style={{ position: 'relative' }}>
-            {status === 'error' && (
+            {(status === 'error' || saveError) && (
               <div className="sync-warn">⚠ offline — suas mudanças não estão sendo salvas</div>
             )}
             <h1>{head.title}</h1>
