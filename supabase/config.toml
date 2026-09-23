@@ -12,11 +12,11 @@ project_id = "kbyobwxpsyntfygtqjir"
 # Authentication → Email Templates, se o projeto não usar config declarativo).
 [auth.email.template.recovery]
 subject = "Redefina sua senha — DinPrev"
-content_path = "./templates/recovery.html"
+content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.confirmation]
 subject = "Confirme seu e-mail — DinPrev"
-content_path = "./templates/confirmation.html"
+content_path = "./supabase/templates/confirmation.html"
 
 # --- Edge Functions -----------------------------------------------------------
 # A stripe-webhook recebe chamadas do Stripe, que NÃO enviam um JWT do Supabase
