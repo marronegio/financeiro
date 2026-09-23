@@ -94,6 +94,43 @@ export const migrateState = (raw) => {
   };
 };
 
+// ── Mescla do que chega de outro dispositivo ────────────────────────────────
+// O app relê a nuvem em tempo real (ver useProfiles): quando o desktop grava,
+// o notebook recebe o aviso e busca o blob novo. Encaixar esse blob NÃO é uma
+// troca cega — duas coisas locais precisam sobreviver:
+//
+//   1. o que ainda não subiu daqui (`isOurs(pid)`): uma releitura no meio da
+//      digitação devolveria o estado de antes e apagaria o que foi escrito;
+//   2. a aba aberta, que é escolha DESTE aparelho e só viaja no blob por
+//      acidente de história — navegar no desktop não pode trocar a tela de
+//      quem está com o notebook aberto.
+//
+// `cur` e `incoming` já vêm de migrateState. Devolve `cur` quando nada mudou,
+// para a tela não repintar à toa a cada aviso.
+export const mergeRemoteProfiles = (cur, incoming, isOurs = () => false) => {
+  if (!cur) return incoming;
+  const profiles = {};
+  for (const [id, p] of Object.entries(incoming.profiles)) {
+    const local = cur.profiles[id];
+    // Sem cópia local é porque o perfil acabou de ser APAGADO aqui: deixar o
+    // que veio do servidor entrar o ressuscitaria.
+    if (isOurs(id)) {
+      if (local) profiles[id] = local;
+      continue;
+    }
+    profiles[id] = local ? { ...p, data: { ...p.data, tab: local.data.tab } } : p;
+  }
+  // Perfil apagado em outro aparelho some daqui também. O que ainda não subiu
+  // (um parceiro recém-criado, por exemplo) fica.
+  for (const [id, local] of Object.entries(cur.profiles)) {
+    if (!profiles[id] && isOurs(id)) profiles[id] = local;
+  }
+  // 'main' nunca some: sem ele o Dashboard fica sem estado para mostrar.
+  if (!profiles.main) profiles.main = cur.profiles.main;
+  const next = { ...incoming, profiles };
+  return JSON.stringify(next) === JSON.stringify(cur) ? cur : next;
+};
+
 // Os ícones de cada aba ficam na Sidebar (react-icons), mapeados por id.
 // `duoOnly` esconde a aba fora do plano Duo (a Sidebar filtra). `proOnly` NÃO
 // esconde: no grátis a aba continua no menu, com cadeado, e abre o convite de

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { App as CapApp } from '@capacitor/app';
 import { supabase } from '../lib/supabase.js';
-import { createDefaultProfiles, migrateState, createDefaultState, PROFILE_NAMES } from '../state.js';
+import { isNativeApp } from '../lib/native.js';
+import {
+  createDefaultProfiles,
+  migrateState,
+  mergeRemoteProfiles,
+  createDefaultState,
+  PROFILE_NAMES,
+} from '../state.js';
 
 // ── Perfil ativo é uma escolha POR DISPOSITIVO ─────────────────────────────
 // Guardado no localStorage (não na nuvem): no plano Duo, cada pessoa fica no
@@ -14,6 +22,14 @@ function readStoredActive(userId) {
     return 'main';
   }
 }
+
+// ── Sincronização entre dispositivos ───────────────────────────────────────
+// Janela para juntar pedidos de releitura que chegam quase juntos.
+const PULL_DEBOUNCE = 400;
+// Rede de segurança: com a tela à vista, confere o servidor de tempos em
+// tempos. Só entra em ação se o aviso em tempo real não chegar (Realtime não
+// habilitado no banco, websocket bloqueado por firewall, etc.).
+const POLL_MS = 5 * 60 * 1000;
 
 function storeActive(userId, id) {
   try {
@@ -53,13 +69,17 @@ export function useProfiles(userId, planTier) {
   // ── Fila de gravação: quais perfis mudaram desde o último flush ──────────
   const pendingRef = useRef(new Set());
   const saveTimer = useRef(null);
+  // Perfis com RPC em voo. Junto com `pendingRef` formam "o que é nosso e ainda
+  // não está confirmado no servidor" — o que chega de fora não pode atropelar.
+  const writingRef = useRef(new Set());
+  const flushingRef = useRef(null);
 
-  const flush = useCallback(async () => {
-    clearTimeout(saveTimer.current);
-    const pending = pendingRef.current;
-    if (pending.size === 0 || !userIdRef.current) return;
-    pendingRef.current = new Set();
+  const isOurs = useCallback(
+    (pid) => pendingRef.current.has(pid) || writingRef.current.has(pid),
+    []
+  );
 
+  const writePending = useCallback(async (pending) => {
     const blob = rawRef.current;
     if (!blob) return;
 
@@ -82,6 +102,27 @@ export function useProfiles(userId, planTier) {
       console.error('Falha ao salvar perfil:', error);
     }
   }, []);
+
+  // Sobe a fila. Em série (uma gravação por vez) porque agora existe quem
+  // espere por ela: toda releitura vinda de fora dá flush antes de buscar, e
+  // dois flushes sobrepostos deixariam a busca correr contra a gravação.
+  const flush = useCallback(() => {
+    clearTimeout(saveTimer.current);
+    const run = async () => {
+      const pending = pendingRef.current;
+      if (pending.size === 0 || !userIdRef.current) return;
+      pendingRef.current = new Set();
+      writingRef.current = pending;
+      try {
+        await writePending(pending);
+      } finally {
+        writingRef.current = new Set();
+      }
+    };
+    const next = (flushingRef.current ?? Promise.resolve()).then(run, run);
+    flushingRef.current = next;
+    return next;
+  }, [writePending]);
 
   const queueSave = useCallback((pid) => {
     pendingRef.current.add(pid);
@@ -136,17 +177,102 @@ export function useProfiles(userId, planTier) {
     return () => { alive = false; };
   }, [userId, fetchBlob]);
 
-  // Rebusca o blob (o outro perfil pode ter sido editado em outro aparelho).
+  // ── Chegada de fora ───────────────────────────────────────────────────────
+  // Encaixa no local o blob que veio do servidor. Não é uma troca cega: o que
+  // ainda não subiu daqui continua valendo, senão uma releitura no meio da
+  // digitação apagaria o que a pessoa acabou de escrever.
+  const applyRemote = useCallback((dbState) => {
+    const incoming = migrateState(dbState);
+    setRawState((cur) => mergeRemoteProfiles(cur, incoming, isOurs));
+  }, [isOurs]);
+
+  // Rebusca o blob (o outro perfil, ou o outro aparelho, pode ter editado).
   // Grava o pendente antes, para o fetch já voltar com as nossas mudanças.
   const reload = useCallback(async () => {
+    if (!userIdRef.current) return;
     try {
       await flush();
       const dbState = await fetchBlob();
-      if (dbState?.v === 2) setRawState(migrateState(dbState));
+      if (dbState?.v === 2) applyRemote(dbState);
     } catch (err) {
       console.error('Falha ao atualizar dados:', err);
     }
-  }, [flush, fetchBlob]);
+  }, [flush, fetchBlob, applyRemote]);
+
+  // Vários gatilhos podem pedir releitura ao mesmo tempo (o aviso do Realtime
+  // chega junto com o foco da janela, por exemplo). Uma busca só resolve todos.
+  //
+  // Fora de vista, o aviso não vira busca — quem volta para a tela busca de
+  // qualquer jeito (ver o efeito de "acordar"), então nada se perde. Ninguém
+  // está olhando mesmo, e o blob rebuscado é a parte cara disto: ele carrega
+  // as fotos de perfil. Sem esta guarda, dez minutos de digitação no desktop
+  // baixariam o blob inteiro a cada 600 ms no notebook esquecido aberto atrás
+  // da janela.
+  const pullTimer = useRef(null);
+  const pullSoon = useCallback(() => {
+    clearTimeout(pullTimer.current);
+    pullTimer.current = setTimeout(reload, PULL_DEBOUNCE);
+  }, [reload]);
+
+  // Para os avisos que chegam de fora. Quem está voltando para a tela usa o
+  // `pullSoon` direto: ali a busca é justamente o que se quer.
+  const schedulePull = useCallback(() => {
+    if (document.visibilityState === 'hidden') return;
+    pullSoon();
+  }, [pullSoon]);
+
+  useEffect(() => () => clearTimeout(pullTimer.current), []);
+
+  // Aviso em tempo real: o gatilho do banco carimba `finances_sync` a cada
+  // gravação e o Supabase avisa os outros aparelhos ligados na mesma conta.
+  // O evento não carrega os dados (ver a migração 20260922000000) — ele só diz
+  // "mudou"; quem busca é o reload.
+  //
+  // Sem a migração aplicada, o canal simplesmente nunca recebe nada: o app
+  // continua igual, atualizando ao voltar para a tela.
+  useEffect(() => {
+    if (!userId) return;
+    let subscribedBefore = false;
+    const channel = supabase
+      .channel(`finances-sync:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'finances_sync', filter: `user_id=eq.${userId}` },
+        schedulePull
+      )
+      .subscribe((chanStatus) => {
+        // Reconexão (dormiu, caiu a rede): o que passou enquanto estávamos
+        // fora não é reenviado, então buscamos na mão ao voltar.
+        if (chanStatus !== 'SUBSCRIBED') return;
+        if (subscribedBefore) schedulePull();
+        subscribedBefore = true;
+      });
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, schedulePull]);
+
+  // Voltar para o app confere o servidor — é o caminho que cobre o aparelho
+  // que passou a noite suspenso, quando nem o websocket sobrevive. Sair de
+  // vista faz o contrário: empurra logo o que ainda estava na fila.
+  useEffect(() => {
+    if (!userId) return;
+    const onWake = () => {
+      if (document.visibilityState === 'hidden') flush();
+      else pullSoon();
+    };
+    window.addEventListener('focus', onWake);
+    window.addEventListener('online', onWake);
+    document.addEventListener('visibilitychange', onWake);
+    // No app empacotado a aba nunca "perde o foco": quem avisa é o Capacitor.
+    const native = isNativeApp ? CapApp.addListener('resume', pullSoon) : null;
+    const poll = setInterval(schedulePull, POLL_MS);
+    return () => {
+      window.removeEventListener('focus', onWake);
+      window.removeEventListener('online', onWake);
+      document.removeEventListener('visibilitychange', onWake);
+      native?.then((h) => h.remove()).catch(() => {});
+      clearInterval(poll);
+    };
+  }, [userId, pullSoon, schedulePull, flush]);
 
   // ── Mutações ──────────────────────────────────────────────────────────────
 

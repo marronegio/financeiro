@@ -45,3 +45,9 @@ as $$
          updated_at = now()
    where user_id = auth.uid();
 $$;
+
+-- ── Sincronização entre dispositivos ──────────────────────────────────────
+-- O aviso de "os dados mudaram" (tabela finances_sync + gatilho + Realtime)
+-- mora em supabase/migrations/20260922000000_realtime_sync.sql. Rode aquele
+-- arquivo também: sem ele o app continua funcionando, só que cada aparelho só
+-- descobre as novidades ao voltar para a tela (sem o tempo real).
