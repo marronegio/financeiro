@@ -31,7 +31,8 @@ create policy "apagar proprios dados"
 -- ── Gravação por perfil (plano Duo, edição simultânea) ────────────────────
 -- Grava apenas UM perfil dentro do blob, de forma atômica no servidor: cada
 -- dispositivo salva só o próprio perfil e nunca sobrescreve o do parceiro.
--- pdata = null remove o perfil (usado ao excluir o perfil do parceiro).
+-- pdata = null remove o perfil (usado ao excluir o perfil do parceiro). Cada
+-- gravação avança o `rev` do perfil (ver patch_profile, abaixo).
 create or replace function public.save_profile(pid text, pdata jsonb)
 returns void
 language sql
@@ -40,11 +41,22 @@ as $$
   update public.finances
      set state = case
            when pdata is null then state #- array['profiles', pid]
-           else jsonb_set(state, array['profiles', pid], pdata, true)
+           else jsonb_set(
+                  state,
+                  array['profiles', pid],
+                  pdata || jsonb_build_object(
+                    'rev', coalesce((state #>> array['profiles', pid, 'rev'])::bigint, 0) + 1),
+                  true)
          end,
          updated_at = now()
    where user_id = auth.uid();
 $$;
+
+-- A edição do dia a dia não usa mais o save_profile: o app sobe só os campos
+-- que mudaram, e só se o perfil ainda estiver na versão de onde a edição partiu
+-- (patch_profile). Ela mora em supabase/migrations/20261004000000_patch_profile.sql
+-- — rode aquele arquivo também. Sem ele o app continua funcionando, gravando o
+-- perfil inteiro como antes (e sem proteção contra a tela velha de outro aparelho).
 
 -- ── Sincronização entre dispositivos ──────────────────────────────────────
 -- O aviso de "os dados mudaram" (tabela finances_sync + gatilho + Realtime)

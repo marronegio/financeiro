@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { migrateState, mergeRemoteProfiles, createDefaultState } from './state.js';
+import { migrateState, createDefaultState } from './state.js';
 
 const main = (raw) => migrateState(raw).profiles.main.data;
 
@@ -41,77 +41,5 @@ describe('migrateState', () => {
     // sem ciclo antigo (nunca teve dia de recebimento), fica no padrão novo
     expect(d.fechamentoAuto).toBe(false);
     expect(d.doacoes).toEqual([{ nome: '', valor: '', recorrente: false }]);
-  });
-});
-
-describe('mergeRemoteProfiles', () => {
-  const blob = (profiles) => migrateState({ v: 2, profiles });
-  const p = (data, name = 'Você') => ({ name, data });
-  const nada = () => false;
-
-  it('o que o outro aparelho gravou chega aqui', () => {
-    const local = blob({ main: p({ salario: '1000' }) });
-    const remoto = blob({ main: p({ salario: '2000' }) });
-    expect(mergeRemoteProfiles(local, remoto, nada).profiles.main.data.salario).toBe('2000');
-  });
-
-  it('nada mudou: devolve o mesmo objeto, sem repintar a tela', () => {
-    const local = blob({ main: p({ salario: '1000' }) });
-    const remoto = blob({ main: p({ salario: '1000' }) });
-    expect(mergeRemoteProfiles(local, remoto, nada)).toBe(local);
-  });
-
-  it('não apaga a digitação que ainda não subiu', () => {
-    const local = blob({ main: p({ salario: '1500' }) });
-    const remoto = blob({ main: p({ salario: '1000' }) }); // servidor ainda no valor antigo
-    const meu = (id) => id === 'main';
-    expect(mergeRemoteProfiles(local, remoto, meu).profiles.main.data.salario).toBe('1500');
-  });
-
-  it('a aba aberta é de cada aparelho: navegar lá não muda a tela daqui', () => {
-    const local = blob({ main: p({ tab: 'historico', salario: '1000' }) });
-    const remoto = blob({ main: p({ tab: 'despesas', salario: '2000' }) });
-    const merged = mergeRemoteProfiles(local, remoto, nada).profiles.main.data;
-    expect(merged.tab).toBe('historico');
-    expect(merged.salario).toBe('2000');
-  });
-
-  it('só a aba diferente não conta como mudança', () => {
-    const local = blob({ main: p({ tab: 'historico', salario: '1000' }) });
-    const remoto = blob({ main: p({ tab: 'despesas', salario: '1000' }) });
-    expect(mergeRemoteProfiles(local, remoto, nada)).toBe(local);
-  });
-
-  it('parceiro criado em outro aparelho aparece; apagado lá some daqui', () => {
-    const so = blob({ main: p({}) });
-    const casal = blob({ main: p({}), partner: p({ salario: '900' }, 'Ana') });
-    expect(mergeRemoteProfiles(so, casal, nada).profiles.partner.data.salario).toBe('900');
-    expect(mergeRemoteProfiles(casal, so, nada).profiles.partner).toBeUndefined();
-  });
-
-  it('parceiro recém-criado aqui não some com a releitura', () => {
-    const local = blob({ main: p({}), partner: p({ salario: '900' }, 'Ana') });
-    const remoto = blob({ main: p({}) }); // a criação ainda não subiu
-    const meu = (id) => id === 'partner';
-    expect(mergeRemoteProfiles(local, remoto, meu).profiles.partner.name).toBe('Ana');
-  });
-
-  it('parceiro apagado aqui não ressuscita com a releitura', () => {
-    const local = blob({ main: p({}) });
-    const remoto = blob({ main: p({}), partner: p({ salario: '900' }, 'Ana') });
-    const meu = (id) => id === 'partner';
-    expect(mergeRemoteProfiles(local, remoto, meu).profiles.partner).toBeUndefined();
-  });
-
-  it('o perfil principal nunca some, mesmo se o servidor vier sem ele', () => {
-    const local = blob({ main: p({ salario: '1000' }) });
-    const meu = (id) => id === 'main';
-    const merged = mergeRemoteProfiles(local, { v: 2, profiles: {} }, meu);
-    expect(merged.profiles.main.data.salario).toBe('1000');
-  });
-
-  it('primeira carga (sem estado local) usa o que veio inteiro', () => {
-    const remoto = blob({ main: p({ salario: '2000' }) });
-    expect(mergeRemoteProfiles(null, remoto, nada)).toBe(remoto);
   });
 });

@@ -1,14 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { App as CapApp } from '@capacitor/app';
 import { supabase } from '../lib/supabase.js';
 import { isNativeApp } from '../lib/native.js';
-import {
-  createDefaultProfiles,
-  migrateState,
-  mergeRemoteProfiles,
-  createDefaultState,
-  PROFILE_NAMES,
-} from '../state.js';
+import { createDefaultState, PROFILE_NAMES } from '../state.js';
+import { createSyncEngine } from '../sync.js';
 
 // ── Perfil ativo é uma escolha POR DISPOSITIVO ─────────────────────────────
 // Guardado no localStorage (não na nuvem): no plano Duo, cada pessoa fica no
@@ -39,12 +34,82 @@ function storeActive(userId, id) {
   }
 }
 
+// ── Aba aberta também é POR DISPOSITIVO ───────────────────────────────────
+// Ela mora no blob por acidente de história, mas não sobe mais para a nuvem
+// (ver LOCAL_ONLY em sync.js). Para o app ainda reabrir onde a pessoa parou,
+// cada aparelho guarda a sua aqui.
+const tabKey = (userId, pid) => `dinprev-tab:${userId}:${pid}`;
+
+function storeTab(userId, pid, tab) {
+  try {
+    localStorage.setItem(tabKey(userId, pid), tab);
+  } catch {
+    /* sem localStorage o app só reabre na aba que veio da nuvem */
+  }
+}
+
+function withStoredTabs(raw, userId) {
+  if (!raw) return raw;
+  const profiles = {};
+  for (const [id, p] of Object.entries(raw.profiles)) {
+    let tab = null;
+    try {
+      tab = localStorage.getItem(tabKey(userId, id));
+    } catch {
+      /* idem */
+    }
+    profiles[id] = tab && tab !== p.data.tab ? { ...p, data: { ...p.data, tab } } : p;
+  }
+  return { ...raw, profiles };
+}
+
+// O que o motor de sincronização (sync.js) precisa do Supabase.
+function supabaseApi(userId, getRaw) {
+  const saveBlob = async (state) => {
+    const { error } = await supabase
+      .from('finances')
+      .upsert({ user_id: userId, state, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  };
+  return {
+    async fetch() {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('state')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.state;
+    },
+    saveBlob,
+    async saveProfile(pid, pdata) {
+      const { error } = await supabase.rpc('save_profile', { pid, pdata });
+      if (!error) return;
+      // Função ainda não criada no banco (rode supabase/schema.sql): cai no
+      // upsert do blob inteiro — comportamento antigo, funcional porém sem
+      // proteção contra edição simultânea.
+      if (error.code === 'PGRST202') return saveBlob(getRaw());
+      throw error;
+    },
+    async patchProfile(pid, baseRev, dataPatch, metaPatch) {
+      const { data, error } = await supabase.rpc('patch_profile', {
+        pid,
+        base_rev: baseRev,
+        data_patch: dataPatch,
+        meta_patch: metaPatch,
+      });
+      if (error) throw error;
+      return data;
+    },
+  };
+}
+
 // Expõe o estado financeiro do PERFIL ATIVO com o mesmo contrato de sempre
 // (`state` + `setState`), mais a gestão de perfis do plano Duo.
 //
-// Persistência: cada alteração grava APENAS o perfil alterado, de forma
-// atômica no servidor (RPC save_profile + jsonb_set). Assim dois aparelhos
-// podem editar perfis diferentes ao mesmo tempo sem um sobrescrever o outro.
+// Persistência: cada alteração grava APENAS os campos que mudaram no perfil
+// alterado, e só se o servidor ainda estiver na versão de onde a edição partiu
+// — o resto (mescla com o outro aparelho, ordem das gravações) mora em sync.js.
 export function useProfiles(userId, planTier) {
   const [raw, setRawState] = useState(null); // blob completo { v, profiles }
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
@@ -55,10 +120,22 @@ export function useProfiles(userId, planTier) {
   // Refs para callbacks estáveis (o Dashboard depende da identidade de setState).
   const isDuoRef = useRef(isDuo);
   isDuoRef.current = isDuo;
-  const rawRef = useRef(raw);
-  rawRef.current = raw;
   const userIdRef = useRef(userId);
   userIdRef.current = userId;
+
+  // O blob mora neste ref e o React recebe cópias. Gravação e releitura leem
+  // daqui, nunca do último render: uma releitura que chegou e ainda não pintou
+  // seria lida pela gravação seguinte como "edição daqui" e subiria por cima do
+  // servidor. Por isso também nada de updater do React — cada mudança é aplicada
+  // na hora, em cima da anterior.
+  const rawRef = useRef(null);
+  const update = useCallback((fn) => {
+    const cur = rawRef.current;
+    const next = fn(cur);
+    if (next === cur) return;
+    rawRef.current = next;
+    setRawState(next);
+  }, []);
 
   // O perfil pedido só vale se existir (e o Duo estiver ativo); senão, 'main'.
   const active =
@@ -66,138 +143,81 @@ export function useProfiles(userId, planTier) {
   const activeRef = useRef(active);
   activeRef.current = active;
 
-  // ── Fila de gravação: quais perfis mudaram desde o último flush ──────────
-  const pendingRef = useRef(new Set());
+  // Um motor por conta: trocar de usuário começa do zero (base, fila, tudo). O
+  // de uma conta anterior que ainda tenha algo em voo não enxerga nem mexe na
+  // tela da conta nova.
+  const engineRef = useRef(null);
+  const engine = useMemo(() => {
+    if (!userId) return null;
+    const own = () => engineRef.current === e;
+    const getRaw = () => (own() ? rawRef.current : null);
+    const e = createSyncEngine({
+      api: supabaseApi(userId, getRaw),
+      getRaw,
+      update: (fn) => { if (own()) update(fn); },
+    });
+    return e;
+  }, [userId, update]);
+  engineRef.current = engine;
+
+  // ── Fila de gravação ──────────────────────────────────────────────────────
   const saveTimer = useRef(null);
-  // Perfis com RPC em voo. Junto com `pendingRef` formam "o que é nosso e ainda
-  // não está confirmado no servidor" — o que chega de fora não pode atropelar.
-  const writingRef = useRef(new Set());
-  const flushingRef = useRef(null);
 
-  const isOurs = useCallback(
-    (pid) => pendingRef.current.has(pid) || writingRef.current.has(pid),
-    []
-  );
-
-  const writePending = useCallback(async (pending) => {
-    const blob = rawRef.current;
-    if (!blob) return;
-
-    for (const pid of pending) {
-      // Perfil ausente no blob = foi removido → pdata null apaga no servidor.
-      const pdata = blob.profiles[pid] ?? null;
-      const { error } = await supabase.rpc('save_profile', { pid, pdata });
-      if (!error) continue;
-
-      // Função ainda não criada no banco (rode supabase/schema.sql): cai no
-      // upsert do blob inteiro — comportamento antigo, funcional porém sem
-      // proteção contra edição simultânea.
-      if (error.code === 'PGRST202') {
-        const { error: upErr } = await supabase
-          .from('finances')
-          .upsert({ user_id: userIdRef.current, state: blob, updated_at: new Date().toISOString() });
-        if (upErr) console.error('Falha ao salvar dados:', upErr);
-        return;
-      }
-      console.error('Falha ao salvar perfil:', error);
-    }
-  }, []);
-
-  // Sobe a fila. Em série (uma gravação por vez) porque agora existe quem
-  // espere por ela: toda releitura vinda de fora dá flush antes de buscar, e
-  // dois flushes sobrepostos deixariam a busca correr contra a gravação.
   const flush = useCallback(() => {
     clearTimeout(saveTimer.current);
-    const run = async () => {
-      const pending = pendingRef.current;
-      if (pending.size === 0 || !userIdRef.current) return;
-      pendingRef.current = new Set();
-      writingRef.current = pending;
-      try {
-        await writePending(pending);
-      } finally {
-        writingRef.current = new Set();
-      }
-    };
-    const next = (flushingRef.current ?? Promise.resolve()).then(run, run);
-    flushingRef.current = next;
-    return next;
-  }, [writePending]);
+    return engine ? engine.flush() : Promise.resolve();
+  }, [engine]);
 
   const queueSave = useCallback((pid) => {
-    pendingRef.current.add(pid);
+    engine?.markDirty(pid);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(flush, 600);
-  }, [flush]);
+  }, [engine, flush]);
 
   // Grava o que estiver pendente ao desmontar/trocar de usuário.
   useEffect(() => () => { flush(); }, [flush]);
 
   // ── Carregamento ──────────────────────────────────────────────────────────
-  const fetchBlob = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('finances')
-      .select('state')
-      .eq('user_id', userIdRef.current)
-      .maybeSingle();
-    if (error) throw error;
-    return data?.state;
-  }, []);
-
+  // Se a primeira leitura falha (notebook que abriu antes do Wi-Fi conectar),
+  // a tela fica num perfil em branco com o aviso de offline, e NADA é gravado
+  // até uma releitura dar certo — antes, o primeiro toque gravava o perfil em
+  // branco por cima da conta. A releitura vem pelos mesmos gatilhos de sempre
+  // (volta da rede, foco, a conferida periódica).
   useEffect(() => {
-    if (!userId) return;
+    if (!engine) return;
     let alive = true;
     setStatus('loading');
     setActiveLocal(readStoredActive(userId));
-    pendingRef.current = new Set();
+    update(() => null);
 
-    (async () => {
-      try {
-        const dbState = await fetchBlob();
-        const migrated = migrateState(dbState);
-        // Normaliza o banco para a forma v2 (conta nova ou blob antigo v1):
-        // a gravação por perfil (jsonb_set) precisa do caminho profiles.* já
-        // existente na linha.
-        if (!dbState || dbState.v !== 2) {
-          await supabase
-            .from('finances')
-            .upsert({ user_id: userId, state: migrated, updated_at: new Date().toISOString() });
-        }
+    engine.pull().then(
+      () => {
         if (!alive) return;
-        setRawState(migrated);
+        update((r) => withStoredTabs(r, userId));
         setStatus('ready');
-      } catch (err) {
+      },
+      (err) => {
         if (!alive) return;
         console.error('Falha ao carregar dados:', err);
-        setRawState(migrateState(undefined));
         setStatus('error');
       }
-    })();
+    );
 
     return () => { alive = false; };
-  }, [userId, fetchBlob]);
+  }, [engine, userId, update]);
 
   // ── Chegada de fora ───────────────────────────────────────────────────────
-  // Encaixa no local o blob que veio do servidor. Não é uma troca cega: o que
-  // ainda não subiu daqui continua valendo, senão uma releitura no meio da
-  // digitação apagaria o que a pessoa acabou de escrever.
-  const applyRemote = useCallback((dbState) => {
-    const incoming = migrateState(dbState);
-    setRawState((cur) => mergeRemoteProfiles(cur, incoming, isOurs));
-  }, [isOurs]);
-
-  // Rebusca o blob (o outro perfil, ou o outro aparelho, pode ter editado).
-  // Grava o pendente antes, para o fetch já voltar com as nossas mudanças.
+  // Rebusca o blob (o outro perfil, ou o outro aparelho, pode ter editado) e
+  // encaixa na tela sem atropelar o que ainda não subiu daqui.
   const reload = useCallback(async () => {
-    if (!userIdRef.current) return;
+    if (!engine) return;
     try {
-      await flush();
-      const dbState = await fetchBlob();
-      if (dbState?.v === 2) applyRemote(dbState);
+      // true = era a primeira leitura que dava certo (depois de uma falha).
+      if (await engine.pull()) setStatus('ready');
     } catch (err) {
       console.error('Falha ao atualizar dados:', err);
     }
-  }, [flush, fetchBlob, applyRemote]);
+  }, [engine]);
 
   // Vários gatilhos podem pedir releitura ao mesmo tempo (o aviso do Realtime
   // chega junto com o foco da janela, por exemplo). Uma busca só resolve todos.
@@ -276,18 +296,21 @@ export function useProfiles(userId, planTier) {
 
   // ── Mutações ──────────────────────────────────────────────────────────────
 
-  // Escreve apenas no perfil ativo. Aceita updater (função) ou valor.
+  // Escreve apenas no perfil ativo. Aceita updater (função) ou valor. Trocar
+  // de aba passa por aqui, mas não vira gravação: o motor só sobe campo que
+  // mudou, e a aba não viaja.
   const setState = useCallback((updater) => {
-    setRawState((r) => {
+    update((r) => {
       if (!r) return r;
       const id = activeRef.current;
       const cur = r.profiles[id].data;
       const next = typeof updater === 'function' ? updater(cur) : updater;
       if (next === cur) return r; // no-op (ex.: rollover sem nada a fechar)
+      if (next.tab !== cur.tab) storeTab(userIdRef.current, id, next.tab);
       queueSave(id);
       return { ...r, profiles: { ...r.profiles, [id]: { ...r.profiles[id], data: next } } };
     });
-  }, [queueSave]);
+  }, [update, queueSave]);
 
   const switchProfile = useCallback((id) => {
     if (id === 'partner' && !(isDuoRef.current && rawRef.current?.profiles?.partner)) return;
@@ -298,7 +321,7 @@ export function useProfiles(userId, planTier) {
 
   // Cria o perfil do parceiro e o torna ativo NESTE dispositivo.
   const addPartner = useCallback((opts = {}) => {
-    setRawState((r) => {
+    update((r) => {
       if (!r || !isDuoRef.current || r.profiles.partner) return r;
       const data = createDefaultState();
       if (opts.avatar) data.avatar = opts.avatar;
@@ -309,7 +332,7 @@ export function useProfiles(userId, planTier) {
     });
     storeActive(userIdRef.current, 'partner');
     setActiveLocal('partner');
-  }, [queueSave]);
+  }, [update, queueSave]);
 
   // Confere o PIN de um perfil. Perfil sem PIN é sempre liberado.
   const verifyPin = useCallback((id, pin) => {
@@ -321,7 +344,7 @@ export function useProfiles(userId, planTier) {
 
   // Define (4 dígitos) ou remove (vazio) o PIN de um perfil.
   const setProfilePin = useCallback((id, pin) => {
-    setRawState((r) => {
+    update((r) => {
       if (!r || !r.profiles[id]) return r;
       const p = { ...r.profiles[id] };
       if (pin) p.pin = pin;
@@ -330,18 +353,18 @@ export function useProfiles(userId, planTier) {
       queueSave(id);
       return { ...r, profiles: { ...r.profiles, [id]: p } };
     });
-  }, [queueSave]);
+  }, [update, queueSave]);
 
   const renameProfile = useCallback((id, name) => {
-    setRawState((r) => {
+    update((r) => {
       if (!r || !r.profiles[id]) return r;
       queueSave(id);
       return { ...r, profiles: { ...r.profiles, [id]: { ...r.profiles[id], name } } };
     });
-  }, [queueSave]);
+  }, [update, queueSave]);
 
   const removePartner = useCallback(() => {
-    setRawState((r) => {
+    update((r) => {
       if (!r || !r.profiles.partner) return r;
       const { partner, ...rest } = r.profiles;
       queueSave('partner'); // ausente no blob → o flush apaga no servidor
@@ -349,7 +372,7 @@ export function useProfiles(userId, planTier) {
     });
     storeActive(userIdRef.current, 'main');
     setActiveLocal('main');
-  }, [queueSave]);
+  }, [update, queueSave]);
 
   const hasPartner = !!raw?.profiles?.partner;
   const state = raw ? raw.profiles[active].data : null;
